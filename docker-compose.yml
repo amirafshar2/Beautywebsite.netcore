@@ -1,0 +1,25 @@
+# Beauty by Negin
+#   docker compose up -d --build
+#   Site:  http://SERVER_IP:8080   (put Nginx/Caddy with SSL in front of it, see README)
+#   Admin password reset:
+#   docker compose exec web dotnet BeautyByNegin.Web.dll admin reset-password <user> <new-password>
+
+services:
+  web:
+    build: .
+    image: beautybynegin:latest
+    container_name: beautybynegin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"   # only reachable from the server itself; the reverse proxy publishes it
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Site__TrustAllProxies=true
+    volumes:
+      # Named volumes keep the right file permissions for the non-root container user.
+      - appdata:/app/App_Data
+      - uploads:/app/wwwroot/uploads
+
+volumes:
+  appdata:
+  uploads:

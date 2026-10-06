@@ -9,7 +9,13 @@ using BeautyByNegin.Web.Infrastructure.Startup;
 using Microsoft.AspNetCore.ResponseCompression;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+// A published app always uses its own folder as content root (App_Data, wwwroot), even when it is
+// started from another directory (systemd without WorkingDirectory, Plesk scheduled task, CLI calls).
+// During development (dotnet run) the project folder is used as usual.
+var publishedRoot = AppContext.BaseDirectory;
+var builder = Directory.Exists(Path.Combine(publishedRoot, "wwwroot"))
+    ? WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ContentRootPath = publishedRoot })
+    : WebApplication.CreateBuilder(args);
 var contentRoot = builder.Environment.ContentRootPath;
 
 // ---------- Logging: rolling files in App_Data/logs (no technical details are ever shown to visitors)

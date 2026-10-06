@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/App_Data/
+**/wwwroot/uploads/
+.git/
+.vs/
+.vscode/
+.idea/
+publish/
+data/
+*.user
