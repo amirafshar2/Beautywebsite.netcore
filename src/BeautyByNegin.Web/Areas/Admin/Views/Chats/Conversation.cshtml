@@ -1,0 +1,44 @@
+@model ChatVisitor
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = Model.Name;
+    ViewData["Nav"] = "chats";
+    var messages = (IReadOnlyList<ChatMessage>)ViewData["Messages"]!;
+}
+<p><a href="@P.Url("chats")">← @P["common.backToList"]</a></p>
+<div class="card">
+    <div class="card-head">
+        <div>
+            <h2>@Model.Name</h2>
+            <span class="soft ltr">@Model.Email</span> · <span class="soft">@Model.LanguageCode.ToUpperInvariant()</span>
+        </div>
+        <div class="row-actions">
+            <a class="btn btn-sm" href="mailto:@Model.Email"><svg class="i"><use href="#a-mail" /></svg>@P["appt.email"]</a>
+            <form asp-antiforgery="true" method="post" action="@P.Url($"chats/block/{Model.Id}")">
+                <input type="hidden" name="blocked" value="@((!Model.IsBlocked).ToString().ToLowerInvariant())" />
+                <button class="btn btn-sm" type="submit">@(Model.IsBlocked ? P["chat.unblock"] : P["chat.block"])</button>
+            </form>
+            <form asp-antiforgery="true" method="post" action="@P.Url($"chats/delete/{Model.Id}")" data-confirm="@P["common.confirmTrash"]">
+                <button class="btn btn-sm btn-danger" type="submit"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
+            </form>
+        </div>
+    </div>
+    <div class="chat-log">
+        @foreach (var m in messages)
+        {
+            <div class="bubble @(m.FromAdmin ? "admin" : "visitor")">
+                @m.Text
+                <small>@P.Date(m.CreatedAtUtc)@if (!m.FromAdmin && m.PageUrl is not null) { <span> · <span class="ltr">@m.PageUrl</span></span> }@if (!m.FromAdmin && m.TelegramDelivered) { <span> · ✓ Telegram</span> }</small>
+            </div>
+        }
+        <span id="bottom"></span>
+    </div>
+    <form asp-antiforgery="true" class="form mt" method="post" action="@P.Url($"chats/reply/{Model.Id}")">
+        <div class="field">
+            <label for="reply">@P["chat.reply"]</label>
+            <textarea id="reply" name="text" required maxlength="2000"></textarea>
+            <p class="help">@P["chat.replyHelp"]</p>
+        </div>
+        <div><button class="btn btn-primary" type="submit"><svg class="i"><use href="#a-send" /></svg>@P["chat.send"]</button></div>
+    </form>
+</div>

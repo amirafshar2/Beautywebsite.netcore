@@ -1,0 +1,104 @@
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.contact"];
+    ViewData["Nav"] = "contact";
+    var s = P.Settings;
+    var hours = (IReadOnlyList<OpeningHour>)ViewData["Hours"]!;
+    var insta = (IReadOnlyList<InstagramPost>)ViewData["Instagram"]!;
+    var culture = System.Globalization.CultureInfo.GetCultureInfo(P.Lang switch { "fa" => "fa-IR", "tr" => "tr-TR", "de" => "de-DE", _ => "en-GB" });
+}
+<partial name="_PageIntro" model='("intro.contact", $"/{P.DefaultLanguage.Code}/contact")' />
+
+<form asp-antiforgery="true" method="post" data-dirty>
+    <div class="card form">
+        <h2>@P["contact.channels"]</h2>
+        @foreach (var (name, id, value, label, help, kind, type) in new[]
+        {
+            ("phone", "c-phone", s.Phone, "contact.phone", "contact.phoneHelp", "tel", "tel"),
+            ("whatsApp", "c-wa", s.WhatsApp, "contact.whatsapp", "contact.whatsappHelp", "wa", "tel"),
+            ("email", "c-mail", s.Email, "contact.email", "contact.emailHelp", "mail", "email"),
+            ("instagram", "c-ig", s.Instagram, "contact.instagram", "contact.instagramHelp", "ig", "text"),
+            ("telegram", "c-tg", s.Telegram, "contact.telegram", "contact.telegramHelp", "tg", "text"),
+            ("mapUrl", "c-map", s.MapUrl, "contact.mapUrl", "contact.mapUrlHelp", "url", "url"),
+        })
+        {
+            <div class="field">
+                <label for="@id">@P[label]</label>
+                <div class="input-row">
+                    <input id="@id" name="@name" value="@value" type="@type" dir="ltr" />
+                    <button type="button" class="btn" data-test-link="@id" data-kind="@kind">@P["common.test"]</button>
+                </div>
+                <p class="help">@P[help]</p>
+            </div>
+        }
+    </div>
+
+    <div class="grid-2">
+        <div class="card form">
+            <h2>@P["contact.address"]</h2>
+            @{ ViewData["TextsGroup"] = "address"; }
+            <partial name="_TextsEditor" model='(IReadOnlyList<SiteText>)ViewData["Address"]!' view-data="ViewData" />
+            <partial name="_ImageField" model='new ImageField("mapImageId", s.MapImageId, ViewData["Map"] as string, "contact.mapImage", "contact.mapImageHelp", 16.0 / 9)' />
+        </div>
+        <div class="card">
+            <h2>@P["contact.hours"]</h2>
+            <p class="help">@P["contact.hoursHelp"]</p>
+            <div class="hours">
+                @for (var i = 0; i < hours.Count; i++)
+                {
+                    var h = hours[i];
+                    <div class="hour-row" data-hour-row>
+                        <input type="hidden" name="hours[@i].Id" value="@h.Id" />
+                        <strong>@culture.DateTimeFormat.GetDayName(h.Day)</strong>
+                        <label class="check small"><input type="checkbox" name="hours[@i].IsClosed" value="true" checked="@h.IsClosed" data-closed /> @P["contact.closed"]</label>
+                        <input type="time" name="hours[@i].Opens" value="@h.Opens?.ToString("HH:mm")" aria-label="@P["contact.opens"]" />
+                        <span>–</span>
+                        <input type="time" name="hours[@i].Closes" value="@h.Closes?.ToString("HH:mm")" aria-label="@P["contact.closes"]" />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card form">
+        <h2>@P["contact.templates"]</h2>
+        <p class="help">@P["contact.templatesHelp"]</p>
+        @{ ViewData["TextsGroup"] = "templates"; }
+        <partial name="_TextsEditor" model='(IReadOnlyList<SiteText>)ViewData["Templates"]!' view-data="ViewData" />
+    </div>
+
+    <div class="card form">
+        <h2>@P["contact.instagramBlock"]</h2>
+        @{ ViewData["TextsGroup"] = "insta"; }
+        <partial name="_TextsEditor" model='(IReadOnlyList<SiteText>)ViewData["InstagramTitle"]!' view-data="ViewData" />
+    </div>
+
+    <div class="card save-bar"><button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button></div>
+</form>
+
+<div class="card">
+    <div class="card-head">
+        <h2>@P["contact.instagramPhotos"]</h2>
+        <label class="btn btn-primary"><svg class="i"><use href="#a-upload" /></svg>@P["gal.choosePhotos"]
+            <input type="file" accept="image/*" multiple class="visually-hidden" data-multi-upload="@P.Url("contact/addinstagram")" data-status="#insta-status" />
+        </label>
+    </div>
+    <p class="help">@P["contact.instagramPhotosHelp"]</p>
+    <span id="insta-status" class="soft"></span>
+    <div class="thumbs" data-sortable="@P.Url("contact/sortinstagram")">
+        @foreach (var p in insta)
+        {
+            <div class="thumb-card @(p.IsVisible ? "" : "is-hidden")" data-id="@p.Id" data-hide-when-off>
+                @if (p.Image is not null) { <img src="@MediaUrls.Url(p.Image, p.Image.WidthList.Min())" alt="" loading="lazy" /> }
+                <form asp-antiforgery="true" class="insta-link" method="post" action="@P.Url($"contact/instagramlink/{p.Id}")" data-ajax-save>
+                    <input class="input" name="url" value="@p.LinkUrl" placeholder="@P["contact.postLink"]" dir="ltr" />
+                </form>
+                <div class="actions">
+                    <span class="drag-handle"><svg class="i"><use href="#a-drag" /></svg></span>
+                    <label class="switch"><input type="checkbox" checked="@p.IsVisible" data-toggle-url="@P.Url($"contact/toggleinstagram/{p.Id}")" /><span class="track"></span></label>
+                    <button type="button" class="icon-btn" data-post="@P.Url($"contact/deleteinstagram/{p.Id}")" data-confirm="@P["common.confirmTrash"]" data-remove=".thumb-card"><svg class="i"><use href="#a-trash" /></svg></button>
+                </div>
+            </div>
+        }
+    </div>
+</div>

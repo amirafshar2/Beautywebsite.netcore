@@ -1,0 +1,66 @@
+@model DashboardStats
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.dashboard"];
+    ViewData["Nav"] = "dashboard";
+    (string Key, string Icon, string Url, int Badge, bool AdminOnly)[] tiles =
+    [
+        ("appointments", "a-calendar", "appointments", Model.NewAppointments, false),
+        ("messages", "a-mail", "messages", Model.UnreadMessages, false),
+        ("chats", "a-chat", "chats", Model.UnreadChats, false),
+        ("services", "a-spa", "services", 0, false),
+        ("gallery", "a-image", "gallery", 0, false),
+        ("reviews", "a-star", "reviews", Model.PendingReviews, false),
+        ("home", "a-home", "homepage", 0, false),
+        ("about", "a-user", "about", 0, false),
+        ("contact", "a-phone", "contact", 0, false),
+        ("pages", "a-file", "pages", 0, false),
+        ("texts", "a-type", "texts", 0, false),
+        ("newsletter", "a-news", "newsletter", 0, false),
+        ("languages", "a-globe", "languages", 0, true),
+        ("settings", "a-gear", "settings", 0, true),
+        ("backup", "a-database", "backup", 0, true),
+        ("trash", "a-trash", "trash", 0, false),
+        ("account", "a-user", "account/password", 0, false),
+        ("help", "a-help", "help", 0, false),
+    ];
+}
+<div class="stat-row">
+    <div class="stat"><b>@Model.AppointmentsLast7Days</b>@P["dash.last7"]</div>
+    <div class="stat"><b>@Model.NewAppointments</b>@P["dash.newRequests"]</div>
+    <div class="stat"><b>@Model.Subscribers</b>@P["dash.subscribers"]</div>
+</div>
+
+@if (Model.LatestAppointments.Count > 0)
+{
+    <div class="card">
+        <div class="card-head">
+            <h2>@P["dash.latest"]</h2>
+            <a class="btn btn-sm" href="@P.Url("appointments")">@P["common.viewAll"]</a>
+        </div>
+        <div class="list">
+            @foreach (var a in Model.LatestAppointments)
+            {
+                <a class="item" href="@P.Url($"appointments/details/{a.Id}")">
+                    <div class="body">
+                        <span class="title">@a.FullName</span>
+                        <span class="meta"><span>@P.Date(a.CreatedAtUtc)</span><span>@(a.WantsConsultation ? P["appt.consultation"] : a.ServiceNameSnapshot)</span></span>
+                    </div>
+                    <span class="chip s-@a.Status.ToString().ToLowerInvariant()">@P["status." + a.Status.ToString().ToLowerInvariant()]</span>
+                </a>
+            }
+        </div>
+    </div>
+}
+
+<div class="tiles">
+    @foreach (var t in tiles.Where(t => !t.AdminOnly || P.IsAdmin))
+    {
+        <a class="tile" href="@P.Url(t.Url)">
+            <svg class="i" aria-hidden="true"><use href="#@t.Icon" /></svg>
+            <strong>@P["nav." + t.Key]</strong>
+            <span>@P["tile." + t.Key]</span>
+            @if (t.Badge > 0) { <b class="badge">@t.Badge</b> }
+        </a>
+    }
+</div>

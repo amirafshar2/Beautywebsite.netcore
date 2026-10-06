@@ -1,0 +1,64 @@
+@model IReadOnlyList<GalleryItem>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.gallery"];
+    ViewData["Nav"] = "gallery";
+    var cats = (IReadOnlyList<GalleryCategory>)ViewData["Categories"]!;
+    var current = ViewData["Category"] as int?;
+    var lang = P.DefaultLanguage.Code;
+    string CatName(GalleryCategory c) => (c.Translations.FirstOrDefault(t => t.LanguageCode == lang) ?? c.Translations.FirstOrDefault())?.Name ?? "—";
+}
+<partial name="_PageIntro" model='("intro.gallery", $"/{lang}/gallery")' />
+
+<div class="card">
+    <div class="card-head">
+        <h2>@P["gal.add"]</h2>
+        <a class="btn btn-sm" href="@P.Url("gallery/categories")">@P["gal.manageCategories"]</a>
+    </div>
+    <div class="filters">
+        <div class="field">
+            <label for="upload-category">@P["gal.category"]</label>
+            <select id="upload-category" name="categoryId" data-upload-extra>
+                <option value="">@P["gal.noCategory"]</option>
+                @foreach (var c in cats) { <option value="@c.Id" selected="@(current == c.Id)">@CatName(c)</option> }
+            </select>
+        </div>
+        <div class="row-actions">
+            <label class="btn btn-primary btn-lg"><svg class="i"><use href="#a-upload" /></svg>@P["gal.choosePhotos"]
+                <input type="file" accept="image/*" multiple class="visually-hidden" data-multi-upload="@P.Url("gallery/add")" data-extra="[data-upload-extra]" data-status="#upload-status" />
+            </label>
+            <span id="upload-status" class="soft"></span>
+        </div>
+    </div>
+    <p class="help">@P["gal.addHelp"]</p>
+</div>
+
+<div class="tabs-line">
+    <a href="@P.Url("gallery")" class="@(current is null ? "is-active" : "")">@P["common.all"]</a>
+    @foreach (var c in cats) { <a href="@P.Url($"gallery?category={c.Id}")" class="@(current == c.Id ? "is-active" : "")">@CatName(c)</a> }
+    <a href="@P.Url("gallery?category=0")" class="@(current == 0 ? "is-active" : "")">@P["gal.noCategory"]</a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="card empty">@P["gal.empty"]</div>
+}
+else
+{
+    <p class="help">@P["common.dragHelp"]</p>
+    <div class="thumbs" data-sortable="@P.Url("gallery/sort")">
+        @foreach (var g in Model)
+        {
+            <div class="thumb-card @(g.IsVisible ? "" : "is-hidden")" data-id="@g.Id" data-hide-when-off>
+                @if (g.Image is not null) { <a href="@P.Url($"gallery/edit/{g.Id}")"><img src="@MediaUrls.Url(g.Image, g.Image.WidthList.Min())" alt="" loading="lazy" /></a> }
+                @if (g.IsBeforeAfter) { <span class="chip tag">@P["gal.beforeAfter"]</span> }
+                <div class="actions">
+                    <span class="drag-handle"><svg class="i"><use href="#a-drag" /></svg></span>
+                    <label class="switch" title="@P["common.visibleHelp"]"><input type="checkbox" checked="@g.IsVisible" data-toggle-url="@P.Url($"gallery/toggle/{g.Id}")" /><span class="track"></span></label>
+                    <a class="icon-btn" href="@P.Url($"gallery/edit/{g.Id}")" title="@P["common.edit"]"><svg class="i"><use href="#a-edit" /></svg></a>
+                    <button type="button" class="icon-btn" data-post="@P.Url($"gallery/delete/{g.Id}")" data-confirm="@P["common.confirmTrash"]" data-remove=".thumb-card" title="@P["common.delete"]"><svg class="i"><use href="#a-trash" /></svg></button>
+                </div>
+            </div>
+        }
+    </div>
+}

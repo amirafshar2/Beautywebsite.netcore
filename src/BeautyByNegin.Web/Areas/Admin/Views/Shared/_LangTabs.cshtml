@@ -1,0 +1,15 @@
+@model LangTabs
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+}
+<div class="lang-tabs" role="tablist" data-tabs="@Model.Group">
+    @foreach (var l in Model.Languages)
+    {
+        var first = l.Code == Model.Languages[0].Code;
+        <button type="button" role="tab" class="lang-tab @(first ? "is-active" : "") @(l.IsEnabled ? "" : "is-off")" data-tab="@l.Code" aria-selected="@(first ? "true" : "false")"
+                title="@(Model.Missing.Contains(l.Code) ? P["tabs.missing"] : l.NativeName)">
+            @l.ShortLabel
+            @if (Model.Missing.Contains(l.Code)) { <span class="dot" aria-label="@P["tabs.missing"]"></span> }
+        </button>
+    }
+</div>

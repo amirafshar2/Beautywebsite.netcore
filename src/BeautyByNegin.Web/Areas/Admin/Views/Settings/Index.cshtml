@@ -1,0 +1,183 @@
+@using BeautyByNegin.DataAccess
+@using BeautyByNegin.Web.Areas.Admin.Controllers
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.settings"];
+    ViewData["Nav"] = "settings";
+    var s = P.Settings;
+    var images = (Dictionary<string, string?>)ViewData["Images"]!;
+    var slots = (IReadOnlyList<TimeSlot>)ViewData["Slots"]!;
+    var hasSmtpPassword = ViewData["HasSmtpPassword"] is true;
+    var hasToken = ViewData["HasTelegramToken"] is true;
+    string Chk(string key) => s.Bool(key) ? "checked" : "";
+}
+<partial name="_PageIntro" model='("intro.settings", (string?)null)' />
+<nav class="tabs-line">
+    <a href="#general">@P["set.general"]</a><a href="#features">@P["set.features"]</a><a href="#email">@P["set.email"]</a>
+    <a href="#telegram">Telegram</a><a href="#slots">@P["set.slots"]</a><a href="#security">@P["set.security"]</a>
+</nav>
+
+<form asp-antiforgery="true" method="post" data-dirty>
+    <div class="card form" id="general">
+        <h2>@P["set.general"]</h2>
+        <div class="grid-2">
+            <div class="field"><label for="brandName">@P["set.brandName"]</label><input id="brandName" name="brandName" value="@s.BrandName" /><p class="help">@P["set.brandNameHelp"]</p></div>
+            <div class="field"><label for="siteUrl">@P["set.siteUrl"]</label><input id="siteUrl" name="siteUrl" value="@s.SiteUrl" dir="ltr" placeholder="https://beautybynegin.com" /><p class="help">@P["set.siteUrlHelp"]</p></div>
+            <div class="field">
+                <label for="country">@P["set.country"]</label>
+                <select id="country" name="country" data-country>
+                    @foreach (var (code, tz) in SettingsController.Countries) { <option value="@code" data-tz="@tz" selected="@(s.Text(SettingKeys.CountryCode) == code)">@P["country." + code]</option> }
+                </select>
+                <p class="help">@P["set.countryHelp"]</p>
+            </div>
+            <div class="field">
+                <label for="timeZone">@P["set.timeZone"]</label>
+                <select id="timeZone" name="timeZone" dir="ltr">
+                    @foreach (var tz in SettingsController.TimeZones) { <option value="@tz" selected="@(s.Text(SettingKeys.TimeZoneId) == tz)">@tz</option> }
+                </select>
+                <p class="help">@P["set.timeZoneHelp"]</p>
+            </div>
+            <div class="field"><label for="city">@P["set.city"]</label><input id="city" name="city" value="@s.City" /><label class="check small"><input type="checkbox" name="addCityToTitles" value="true" @Chk(SettingKeys.AddCityToTitles) /> @P["set.addCity"]</label><p class="help">@P["set.cityHelp"]</p></div>
+        </div>
+        <div class="grid-2">
+            <partial name="_ImageField" model='new ImageField("logoImageId", s.LogoImageId, images["logo"], "set.logo", "set.logoHelp", 0)' />
+            <partial name="_ImageField" model='new ImageField("logoDarkImageId", s.LogoDarkImageId, images["logoDark"], "set.logoDark", "set.logoDarkHelp", 0)' />
+            <partial name="_ImageField" model='new ImageField("faviconImageId", s.FaviconImageId, images["favicon"], "set.favicon", "set.faviconHelp", 1)' />
+            <partial name="_ImageField" model='new ImageField("shareImageId", s.ShareImageId, images["share"], "set.shareImage", "set.shareImageHelp", 1.91)' />
+        </div>
+    </div>
+
+    <div class="card form" id="features">
+        <h2>@P["set.features"]</h2>
+        @foreach (var (name, key, label, help) in new[]
+        {
+            ("showPrices", SettingKeys.ShowPrices, "set.showPrices", "set.showPricesHelp"),
+            ("visitorReviews", SettingKeys.AllowVisitorReviews, "set.visitorReviews", "set.visitorReviewsHelp"),
+            ("privacyRequired", SettingKeys.PrivacyConsentRequired, "set.privacyRequired", "set.privacyRequiredHelp"),
+            ("newsletter", SettingKeys.NewsletterEnabled, "set.newsletter", "set.newsletterHelp"),
+            ("chat", SettingKeys.ChatEnabled, "set.chat", "set.chatHelp"),
+            ("maintenance", SettingKeys.MaintenanceMode, "set.maintenance", "set.maintenanceHelp"),
+            ("autoBackup", SettingKeys.AutoBackupEnabled, "set.autoBackup", "set.autoBackupHelp"),
+        })
+        {
+            <div class="field">
+                <label class="switch"><input type="checkbox" name="@name" value="true" @Chk(key) /><span class="track"></span>@P[label]</label>
+                <p class="help">@P[help]</p>
+            </div>
+        }
+    </div>
+
+    <div class="card form" id="email">
+        <h2>@P["set.email"]</h2>
+        <p class="help">@P["set.emailIntro"]</p>
+        <label class="switch"><input type="checkbox" name="smtpEnabled" value="true" @Chk(SettingKeys.SmtpEnabled) /><span class="track"></span>@P["set.smtpEnabled"]</label>
+        <div class="grid-2">
+            <div class="field"><label for="notifyEmail">@P["set.notifyEmail"]</label><input id="notifyEmail" name="notifyEmail" value="@s.Text(SettingKeys.NotificationEmail)" dir="ltr" type="email" /><p class="help">@P["set.notifyEmailHelp"]</p></div>
+            <div class="field"><label for="smtpFrom">@P["set.smtpFrom"]</label><input id="smtpFrom" name="smtpFrom" value="@s.Text(SettingKeys.SmtpFromAddress)" dir="ltr" type="email" /></div>
+            <div class="field"><label for="smtpFromName">@P["set.smtpFromName"]</label><input id="smtpFromName" name="smtpFromName" value="@s.Text(SettingKeys.SmtpFromName)" /></div>
+        </div>
+        <details class="advanced" open="@(!s.SmtpConfigured)">
+            <summary>@P["set.smtpServer"]</summary>
+            <div class="form">
+                <div class="grid-2">
+                    <div class="field"><label for="smtpHost">@P["set.smtpHost"]</label><input id="smtpHost" name="smtpHost" value="@s.Text(SettingKeys.SmtpHost)" dir="ltr" placeholder="smtp.gmail.com" /></div>
+                    <div class="field"><label for="smtpPort">@P["set.smtpPort"]</label><input id="smtpPort" name="smtpPort" value="@(s.Int(SettingKeys.SmtpPort) ?? 587)" dir="ltr" inputmode="numeric" /><p class="help">@P["set.smtpPortHelp"]</p></div>
+                    <div class="field"><label for="smtpUser">@P["set.smtpUser"]</label><input id="smtpUser" name="smtpUser" value="@s.Text(SettingKeys.SmtpUser)" dir="ltr" autocomplete="off" /></div>
+                    <div class="field">
+                        <label for="smtpPassword">@P["set.smtpPassword"]</label>
+                        <input id="smtpPassword" name="smtpPassword" type="password" dir="ltr" autocomplete="new-password" placeholder="@(hasSmtpPassword ? "●●●●●●●● " + P["set.secretSaved"] : "")" />
+                        @if (hasSmtpPassword) { <label class="check small"><input type="checkbox" name="smtpPasswordClear" value="true" /> @P["set.secretClear"]</label> }
+                        <p class="help">@P["set.secretHelp"]</p>
+                    </div>
+                </div>
+                <label class="check"><input type="checkbox" name="smtpSsl" value="true" @Chk(SettingKeys.SmtpUseSsl) /> @P["set.smtpSsl"]</label>
+            </div>
+        </details>
+        <div class="row-actions">
+            <button type="button" class="btn" data-post="@P.Url("settings/testemail")"><svg class="i"><use href="#a-send" /></svg>@P["set.testEmail"]</button>
+            <span class="help">@P["set.testAfterSave"]</span>
+        </div>
+    </div>
+
+    <div class="card form" id="telegram">
+        <h2>Telegram</h2>
+        <p class="hint-note">@P["set.tgIranNote"]</p>
+        <label class="switch"><input type="checkbox" name="telegramEnabled" value="true" @Chk(SettingKeys.TelegramEnabled) /><span class="track"></span>@P["set.tgEnabled"]</label>
+        <details class="advanced" open="@(!hasToken)">
+            <summary>@P["set.tgHowTo"]</summary>
+            <ol class="soft small">
+                <li>@P["set.tgStep1"]</li><li>@P["set.tgStep2"]</li><li>@P["set.tgStep3"]</li><li>@P["set.tgStep4"]</li><li>@P["set.tgStep5"]</li>
+            </ol>
+        </details>
+        <div class="grid-2">
+            <div class="field">
+                <label for="telegramToken">@P["set.tgToken"]</label>
+                <input id="telegramToken" name="telegramToken" type="password" dir="ltr" autocomplete="off" placeholder="@(hasToken ? "●●●●●●●● " + P["set.secretSaved"] : "123456:ABC-DEF…")" />
+                @if (hasToken) { <label class="check small"><input type="checkbox" name="telegramTokenClear" value="true" /> @P["set.secretClear"]</label> }
+            </div>
+            <div class="field">
+                <label for="telegramChatId">Chat ID</label>
+                <div class="input-row">
+                    <input id="telegramChatId" name="telegramChatId" value="@s.Text(SettingKeys.TelegramChatId)" dir="ltr" />
+                    <button type="button" class="btn" data-find-chat="@P.Url("settings/findchatid")">@P["set.tgFind"]</button>
+                </div>
+                <p class="help" data-chat-list>@P["set.tgChatHelp"]</p>
+            </div>
+        </div>
+        <span class="label">@P["set.tgWhat"]</span>
+        <div class="row-actions">
+            <label class="check"><input type="checkbox" name="tgAppointments" value="true" @Chk(SettingKeys.TelegramNotifyAppointments) /> @P["nav.appointments"]</label>
+            <label class="check"><input type="checkbox" name="tgMessages" value="true" @Chk(SettingKeys.TelegramNotifyMessages) /> @P["nav.messages"]</label>
+            <label class="check"><input type="checkbox" name="tgChat" value="true" @Chk(SettingKeys.TelegramNotifyChat) /> @P["nav.chats"]</label>
+            <label class="check"><input type="checkbox" name="tgNewsletter" value="true" @Chk(SettingKeys.TelegramNotifyNewsletter) /> @P["nav.newsletter"]</label>
+        </div>
+        <div class="row-actions">
+            <button type="button" class="btn" data-post="@P.Url("settings/testtelegram")"><svg class="i"><use href="#a-send" /></svg>@P["set.tgTest"]</button>
+            <span class="help">@P["set.testAfterSave"]</span>
+        </div>
+    </div>
+
+    <div class="card form" id="security">
+        <h2>@P["set.security"]</h2>
+        <div class="field"><label class="switch"><input type="checkbox" name="httpsRedirect" value="true" @Chk(SettingKeys.HttpsRedirect) /><span class="track"></span>@P["set.https"]</label><p class="help">@P["set.httpsHelp"]</p></div>
+        <div class="field"><label class="switch"><input type="checkbox" name="hsts" value="true" @Chk(SettingKeys.Hsts) /><span class="track"></span>HSTS</label><p class="help">@P["set.hstsHelp"]</p></div>
+    </div>
+
+    <div class="card save-bar"><button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button></div>
+</form>
+
+<div class="card" id="slots">
+    <h2>@P["set.slots"]</h2>
+    <p class="help">@P["set.slotsHelp"]</p>
+    <div class="list" data-sortable="@P.Url("settings/sortslots")">
+        @foreach (var slot in slots)
+        {
+            <div class="item @(slot.IsVisible ? "" : "is-hidden")" data-id="@slot.Id" data-hide-when-off>
+                <span class="drag-handle"><svg class="i"><use href="#a-drag" /></svg></span>
+                <form asp-antiforgery="true" class="body form" method="post" action="@P.Url("settings/saveslot")">
+                    <input type="hidden" name="Id" value="@slot.Id" />
+                    <input type="hidden" name="IsVisible" value="@slot.IsVisible.ToString().ToLowerInvariant()" />
+                    <div class="lang-inline">
+                        @foreach (var l in P.ContentLanguages)
+                        {
+                            <label class="field"><span class="small soft">@l.ShortLabel</span><input name="Text[@l.Code]" value="@slot.Translations.FirstOrDefault(t => t.LanguageCode == l.Code)?.Label" dir="@l.Dir" /></label>
+                        }
+                    </div>
+                    <div><button class="btn btn-sm" type="submit">@P["common.save"]</button></div>
+                </form>
+                <div class="actions">
+                    <label class="switch"><input type="checkbox" checked="@slot.IsVisible" data-toggle-url="@P.Url($"settings/toggleslot/{slot.Id}")" /><span class="track"></span></label>
+                    <button type="button" class="icon-btn" data-post="@P.Url($"settings/deleteslot/{slot.Id}")" data-confirm="@P["common.confirmTrash"]" data-remove=".item"><svg class="i"><use href="#a-trash" /></svg></button>
+                </div>
+            </div>
+        }
+    </div>
+    <form asp-antiforgery="true" class="form mt" method="post" action="@P.Url("settings/saveslot")">
+        <input type="hidden" name="IsVisible" value="true" />
+        <span class="label">@P["common.addNew"]</span>
+        <div class="lang-inline">
+            @foreach (var l in P.ContentLanguages) { <label class="field"><span class="small soft">@l.ShortLabel</span><input name="Text[@l.Code]" dir="@l.Dir" /></label> }
+        </div>
+        <div><button class="btn btn-primary btn-sm" type="submit"><svg class="i"><use href="#a-plus" /></svg>@P["common.add"]</button></div>
+    </form>
+</div>

@@ -1,0 +1,29 @@
+@model IReadOnlyList<NewsletterSubscriber>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.newsletter"];
+    ViewData["Nav"] = "newsletter";
+}
+<partial name="_PageIntro" model='("intro.newsletter", (string?)null)' />
+<div class="card">
+    <div class="card-head">
+        <h2>@P.F("news.count", Model.Count)</h2>
+        @if (Model.Count > 0) { <a class="btn" href="@P.Url("newsletter/export")"><svg class="i"><use href="#a-download" /></svg>@P["appt.export"]</a> }
+    </div>
+    @if (Model.Count == 0)
+    {
+        <p class="empty">@P["news.empty"]</p>
+    }
+    else
+    {
+        <div class="list">
+            @foreach (var s in Model)
+            {
+                <div class="item">
+                    <div class="body"><span class="title ltr">@s.Email</span><span class="meta"><span>@P.Date(s.CreatedAtUtc)</span><span>@s.LanguageCode.ToUpperInvariant()</span></span></div>
+                    <div class="actions"><button class="icon-btn" type="button" data-post="@P.Url($"newsletter/delete/{s.Id}")" data-confirm="@P["common.confirmTrash"]" data-remove=".item" title="@P["common.delete"]"><svg class="i"><use href="#a-trash" /></svg></button></div>
+                </div>
+            }
+        </div>
+    }
+</div>

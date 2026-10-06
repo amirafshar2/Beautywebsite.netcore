@@ -1,0 +1,46 @@
+@model IReadOnlyList<Service>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.services"];
+    ViewData["Nav"] = "services";
+    var lang = P.DefaultLanguage.Code;
+}
+<partial name="_PageIntro" model='("intro.services", "/" + lang)' />
+<div class="card-head">
+    <h2>@P.F("svc.count", Model.Count)</h2>
+    <a class="btn btn-primary" href="@P.Url("services/create")"><svg class="i"><use href="#a-plus" /></svg>@P["svc.add"]</a>
+</div>
+@if (Model.Count == 0)
+{
+    <div class="card empty">@P["svc.empty"]</div>
+}
+else
+{
+    <p class="help">@P["common.dragHelp"]</p>
+    <div class="list" data-sortable="@P.Url("services/sort")">
+        @foreach (var s in Model)
+        {
+            var t = s.Translations.FirstOrDefault(x => x.LanguageCode == lang) ?? s.Translations.FirstOrDefault();
+            var thumb = s.CoverImage is null ? null : MediaUrls.Url(s.CoverImage, s.CoverImage.WidthList.Min());
+            <div class="item @(s.IsVisible ? "" : "is-hidden")" data-id="@s.Id" data-hide-when-off>
+                <span class="drag-handle" title="@P["common.drag"]"><svg class="i"><use href="#a-drag" /></svg></span>
+                @if (thumb is not null) { <img class="thumb" src="@thumb" alt="" loading="lazy" /> } else { <span class="thumb"></span> }
+                <div class="body">
+                    <a class="title" href="@P.Url($"services/edit/{s.Id}")">@(t?.Name ?? "—")</a>
+                    <span class="meta">
+                        @foreach (var l in P.ContentLanguages.Where(l => s.Translations.All(x => x.LanguageCode != l.Code)))
+                        {
+                            <span class="chip warn">⚠ @l.ShortLabel</span>
+                        }
+                    </span>
+                </div>
+                <div class="actions">
+                    <label class="switch" title="@P["common.visibleHelp"]"><input type="checkbox" checked="@s.IsVisible" data-toggle-url="@P.Url($"services/toggle/{s.Id}")" /><span class="track"></span><span class="small">@P["common.visible"]</span></label>
+                    <label class="switch" title="@P["svc.onHomeHelp"]"><input type="checkbox" checked="@s.ShowOnHome" data-toggle-url="@P.Url($"services/home/{s.Id}")" /><span class="track"></span><span class="small">@P["svc.onHome"]</span></label>
+                    <span class="move-btns"><button type="button" class="icon-btn" data-move="up" aria-label="@P["common.moveUp"]"><svg class="i"><use href="#a-up" /></svg></button><button type="button" class="icon-btn" data-move="down" aria-label="@P["common.moveDown"]"><svg class="i"><use href="#a-down" /></svg></button></span>
+                    <a class="icon-btn" href="@P.Url($"services/edit/{s.Id}")" title="@P["common.edit"]"><svg class="i"><use href="#a-edit" /></svg></a>
+                </div>
+            </div>
+        }
+    </div>
+}

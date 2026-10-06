@@ -1,0 +1,9 @@
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.help"];
+    ViewData["Nav"] = "help";
+    var html = ViewData["Html"] as string;
+}
+<div class="card doc" dir="rtl" lang="fa">
+    @if (html is null) { <p>@P["help.missing"]</p> } else { @Html.Raw(html) }
+</div>

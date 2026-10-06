@@ -1,0 +1,67 @@
+@model PageInput
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    var isNew = Model.Id == 0;
+    var systemKey = ViewData["SystemKey"] as string;
+    ViewData["Title"] = isNew ? P["page.add"] : P["page.edit"];
+    ViewData["Nav"] = "pages";
+    var errors = ViewData["Errors"] as Dictionary<string, string> ?? [];
+    var langs = P.ContentLanguages;
+    var missing = langs.Where(l => string.IsNullOrWhiteSpace(Model.Tr.GetValueOrDefault(l.Code)?.Title)).Select(l => l.Code).ToHashSet();
+    var slug = Model.Tr.GetValueOrDefault(P.DefaultLanguage.Code)?.Slug;
+    string Err(string k) => errors.ContainsKey(k) ? "has-error" : "";
+}
+<p><a href="@P.Url("pages")">← @P["common.backToList"]</a></p>
+<partial name="_PageIntro" model='("intro.pageEdit", isNew || slug is null ? null : $"/{P.DefaultLanguage.Code}/{slug}")' />
+@if (systemKey is not null)
+{
+    <p class="hint-note">⚖ @P["page.legalNote"]</p>
+}
+<form asp-antiforgery="true" class="form" method="post" action="@P.Url("pages/save")" data-dirty>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <div class="card">
+        <div class="row-actions">
+            <label class="switch"><input type="checkbox" name="IsVisible" value="true" checked="@Model.IsVisible" /><span class="track"></span>@P["common.showOnSite"]</label>
+            <label class="switch"><input type="checkbox" name="ShowInFooter" value="true" checked="@Model.ShowInFooter" /><span class="track"></span>@P["page.inFooter"]</label>
+            <label class="switch"><input type="checkbox" name="ShowInMenu" value="true" checked="@Model.ShowInMenu" /><span class="track"></span>@P["page.inMenu"]</label>
+        </div>
+    </div>
+    <div class="card">
+        <partial name="_LangTabs" model='new LangTabs("Tr", langs, missing)' />
+        @foreach (var l in langs)
+        {
+            var t = Model.Tr.GetValueOrDefault(l.Code) ?? new PageTrInput();
+            var p = $"Tr[{l.Code}]";
+            <div class="tab-pane @(l == langs[0] ? "is-active" : "")" data-lang="@l.Code" dir="@l.Dir">
+                <partial name="_LangMissing" model="missing.Contains(l.Code)" />
+                <div class="field @Err(p + ".Title")">
+                    <label>@P["page.title"] @(l.Code == P.DefaultLanguage.Code ? "*" : "")</label>
+                    <input name="@(p).Title" value="@t.Title" maxlength="200" />
+                    @if (errors.TryGetValue(p + ".Title", out var e1)) { <p class="err">@e1</p> }
+                </div>
+                <div class="field"><label>@P["page.content"]</label><textarea name="@(p).Content" data-rich>@t.Content</textarea></div>
+                <details class="advanced" open="@errors.ContainsKey(p + ".Slug")">
+                    <summary>@P["common.advanced"]</summary>
+                    <div class="form">
+                        <div class="field @Err(p + ".Slug")">
+                            <label>@P["common.slug"]</label>
+                            <input name="@(p).Slug" value="@t.Slug" dir="ltr" maxlength="150" />
+                            <p class="help">@P["common.slugHelp"]</p>
+                            @if (errors.TryGetValue(p + ".Slug", out var e2)) { <p class="err">@e2</p> }
+                        </div>
+                        <div class="field"><label>@P["common.metaTitle"]</label><input name="@(p).MetaTitle" value="@t.MetaTitle" maxlength="150" /><p class="help">@P["common.metaTitleHelp"]</p></div>
+                        <div class="field"><label>@P["common.metaDescription"]</label><textarea name="@(p).MetaDescription" maxlength="300" rows="2">@t.MetaDescription</textarea></div>
+                    </div>
+                </details>
+            </div>
+        }
+    </div>
+    <div class="card save-bar">
+        <button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button>
+        <span class="spacer"></span>
+        @if (!isNew && systemKey is null)
+        {
+            <button class="btn btn-danger" type="submit" formaction="@P.Url($"pages/delete/{Model.Id}")" data-confirm-btn="@P["common.confirmTrash"]"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
+        }
+    </div>
+</form>

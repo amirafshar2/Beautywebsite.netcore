@@ -1,0 +1,22 @@
+@model ImageField
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    var id = Model.Id ?? "img-" + Model.Name.Replace(".", "-").Replace("[", "-").Replace("]", "");
+}
+<div class="field image-field" data-image-field data-ratio="@Model.Ratio.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+    <span class="label">@P[Model.LabelKey]</span>
+    <div class="image-box @(Model.PreviewUrl is null ? "is-empty" : "")">
+        <img src="@Model.PreviewUrl" alt="" data-preview hidden="@(Model.PreviewUrl is null)" />
+        <span class="empty-text" hidden="@(Model.PreviewUrl is not null)">@P["image.none"]</span>
+        <div class="progress" data-progress hidden><span></span></div>
+    </div>
+    <input type="hidden" name="@Model.Name" id="@id" value="@Model.Value" data-value />
+    <div class="row-actions">
+        <label class="btn btn-sm">
+            <svg class="i"><use href="#a-upload" /></svg>@P["image.choose"]
+            <input type="file" accept="image/*" class="visually-hidden" data-file />
+        </label>
+        <button type="button" class="btn btn-sm btn-ghost" data-remove hidden="@(Model.Value is null)">@P["image.remove"]</button>
+    </div>
+    <p class="help">@P[Model.HintKey]</p>
+</div>

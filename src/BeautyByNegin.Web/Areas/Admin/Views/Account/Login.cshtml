@@ -1,0 +1,25 @@
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["login.title"];
+}
+<div class="auth">
+    <div class="auth-card">
+        <span class="brand-mark">@P.Settings.BrandName.ToUpperInvariant()</span>
+        <span class="brand-sub">@P["panel.name"]</span>
+        @if (ViewData["Error"] is string error) { <div class="toast toast-err" role="alert">@error</div> }
+        <form asp-antiforgery="true" class="form" method="post">
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+            <div class="field">
+                <label for="userName">@P["login.user"]</label>
+                <input id="userName" name="userName" value="@ViewData["UserName"]" autocomplete="username" required dir="ltr" autofocus />
+            </div>
+            <div class="field">
+                <label for="password">@P["login.password"]</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required dir="ltr" />
+            </div>
+            <label class="check"><input type="checkbox" name="rememberMe" value="true" checked /> @P["login.remember"]</label>
+            <button class="btn btn-primary btn-lg" type="submit">@P["login.submit"]</button>
+            <a class="small" href="@P.Url("account/forgot")">@P["login.forgot"]</a>
+        </form>
+    </div>
+</div>

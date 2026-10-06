@@ -1,0 +1,51 @@
+@using BeautyByNegin.Web.Areas.Admin.Controllers
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["setup.title"];
+    var errors = ViewData["Errors"] as Dictionary<string, string> ?? [];
+    string Err(string k) => errors.ContainsKey(k) ? "has-error" : "";
+}
+<div class="auth">
+    <div class="auth-card setup-card">
+        <span class="brand-mark">BEAUTY BY NEGIN</span>
+        <span class="brand-sub">@P["setup.title"]</span>
+        <p class="soft">@P["setup.intro"]</p>
+        <form asp-antiforgery="true" class="form" method="post">
+            <h2>1. @P["setup.account"]</h2>
+            <div class="field @Err("userName")"><label for="userName">@P["login.user"]</label><input id="userName" name="userName" value="@(Context.Request.HasFormContentType ? Context.Request.Form["userName"].ToString() : "")" required dir="ltr" autocomplete="username" />@if (errors.TryGetValue("userName", out var e1)) { <p class="err">@e1</p> }</div>
+            <div class="field"><label for="displayName">@P["users.displayName"]</label><input id="displayName" name="displayName" value="Negin" /></div>
+            <div class="field @Err("password")"><label for="password">@P["login.password"]</label><input id="password" name="password" type="password" required dir="ltr" autocomplete="new-password" /><p class="help">@P["account.passwordRules"]</p>@if (errors.TryGetValue("password", out var e2)) { <p class="err">@e2</p> }</div>
+            <div class="field @Err("confirm")"><label for="confirm">@P["account.confirmPassword"]</label><input id="confirm" name="confirm" type="password" required dir="ltr" autocomplete="new-password" />@if (errors.TryGetValue("confirm", out var e3)) { <p class="err">@e3</p> }</div>
+            <div class="field">
+                <label for="panelLanguage">@P["account.panelLanguage"]</label>
+                <select id="panelLanguage" name="panelLanguage"><option value="fa">فارسی</option><option value="tr">Türkçe</option><option value="de">Deutsch</option><option value="en">English</option></select>
+            </div>
+
+            <h2>2. @P["setup.business"]</h2>
+            <div class="field">
+                <label for="country">@P["set.country"]</label>
+                <select id="country" name="country" data-country>
+                    @foreach (var (code, tz) in SettingsController.Countries) { <option value="@code" data-tz="@tz">@P["country." + code]</option> }
+                </select>
+            </div>
+            <div class="field">
+                <label for="timeZone">@P["set.timeZone"]</label>
+                <select id="timeZone" name="timeZone" dir="ltr">@foreach (var tz in SettingsController.TimeZones) { <option value="@tz">@tz</option> }</select>
+            </div>
+            <div class="field">
+                <label for="defaultLanguage">@P["lang.default"]</label>
+                <select id="defaultLanguage" name="defaultLanguage">
+                    @foreach (var l in P.ContentLanguages) { <option value="@l.Code" selected="@l.IsDefault">@l.NativeName</option> }
+                </select>
+                <p class="help">@P["setup.defaultLanguageHelp"]</p>
+            </div>
+
+            <h2>3. @P["contact.channels"]</h2>
+            <div class="field"><label for="phone">@P["contact.phone"]</label><input id="phone" name="phone" type="tel" dir="ltr" placeholder="+98 912 …" /></div>
+            <div class="field"><label for="whatsApp">@P["contact.whatsapp"]</label><input id="whatsApp" name="whatsApp" type="tel" dir="ltr" /><p class="help">@P["contact.whatsappHelp"]</p></div>
+            <div class="field @Err("email")"><label for="email">@P["contact.email"]</label><input id="email" name="email" type="email" dir="ltr" />@if (errors.TryGetValue("email", out var e4)) { <p class="err">@e4</p> }</div>
+
+            <button class="btn btn-primary btn-lg" type="submit">@P["setup.finish"]</button>
+        </form>
+    </div>
+</div>

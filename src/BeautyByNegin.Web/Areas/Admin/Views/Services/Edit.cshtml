@@ -1,0 +1,90 @@
+@model ServiceInput
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    var entity = ViewData["Entity"] as Service;
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? P["svc.add"] : P["svc.edit"];
+    ViewData["Nav"] = "services";
+    var errors = ViewData["Errors"] as Dictionary<string, string> ?? [];
+    var langs = P.ContentLanguages;
+    var missing = langs.Where(l => string.IsNullOrWhiteSpace(Model.Tr.GetValueOrDefault(l.Code)?.Name)).Select(l => l.Code).ToHashSet();
+    var defaultSlug = Model.Tr.GetValueOrDefault(P.DefaultLanguage.Code)?.Slug;
+    string? cover = entity?.CoverImage is { } c ? MediaUrls.Url(c, c.WidthList.Min()) : null;
+    var extra = entity?.Images.Where(i => i.MediaImage is not null).OrderBy(i => i.SortOrder)
+        .Select(i => (i.MediaImageId, MediaUrls.Url(i.MediaImage!, i.MediaImage!.WidthList.Min()))).ToList() ?? [];
+    string Err(string key) => errors.ContainsKey(key) ? "has-error" : "";
+}
+<p><a href="@P.Url("services")">← @P["common.backToList"]</a></p>
+<partial name="_PageIntro" model='("intro.serviceEdit", isNew || defaultSlug is null ? null : $"/{P.DefaultLanguage.Code}/services/{defaultSlug}")' />
+
+<form asp-antiforgery="true" class="form" method="post" action="@P.Url("services/save")" data-dirty>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <div class="grid-side">
+        <div class="card">
+            <h2>@P["svc.texts"]</h2>
+            <partial name="_LangTabs" model="new LangTabs(nameof(Model.Tr), langs, missing)" />
+            @foreach (var l in langs)
+            {
+                var t = Model.Tr.GetValueOrDefault(l.Code) ?? new ServiceTrInput();
+                var p = $"Tr[{l.Code}]";
+                <div class="tab-pane @(l == langs[0] ? "is-active" : "")" data-lang="@l.Code" dir="@l.Dir">
+                    <partial name="_LangMissing" model="missing.Contains(l.Code)" />
+                    <div class="field @Err(p + ".Name")">
+                        <label>@P["svc.name"] @(l.Code == P.DefaultLanguage.Code ? "*" : "")</label>
+                        <input name="@(p).Name" value="@t.Name" maxlength="150" />
+                        <p class="help">@P["svc.nameHelp"]</p>
+                        @if (errors.TryGetValue(p + ".Name", out var e1)) { <p class="err">@e1</p> }
+                    </div>
+                    <div class="field"><label>@P["svc.subtitle"]</label><input name="@(p).Subtitle" value="@t.Subtitle" maxlength="250" /><p class="help">@P["svc.subtitleHelp"]</p></div>
+                    <div class="field"><label>@P["svc.short"]</label><textarea name="@(p).ShortDescription" maxlength="1000" rows="3">@t.ShortDescription</textarea><p class="help">@P["svc.shortHelp"]</p></div>
+                    <div class="field">
+                        <label>@P["svc.description"]</label>
+                        <textarea name="@(p).Description" data-rich>@t.Description</textarea>
+                        <p class="hint-note">@P["svc.hwg"]</p>
+                    </div>
+                    <div class="field"><label>@P["svc.suitable"]</label><input name="@(p).SuitableFor" value="@t.SuitableFor" maxlength="1000" /><p class="help">@P["svc.suitableHelp"]</p></div>
+                    <div class="field"><label>@P["svc.result"]</label><input name="@(p).ExpectedResult" value="@t.ExpectedResult" maxlength="1000" /></div>
+                    <div class="field"><label>@P["svc.duration"]</label><input name="@(p).Duration" value="@t.Duration" maxlength="100" /><p class="help">@P["svc.durationHelp"]</p></div>
+                    <details class="advanced" open="@errors.ContainsKey(p + ".Slug")">
+                        <summary>@P["common.advanced"]</summary>
+                        <div class="form">
+                            <div class="field @Err(p + ".Slug")">
+                                <label>@P["common.slug"]</label>
+                                <input name="@(p).Slug" value="@t.Slug" dir="ltr" maxlength="150" />
+                                <p class="help">@P["common.slugHelp"]</p>
+                                @if (errors.TryGetValue(p + ".Slug", out var e2)) { <p class="err">@e2</p> }
+                            </div>
+                            <div class="field"><label>@P["common.metaTitle"]</label><input name="@(p).MetaTitle" value="@t.MetaTitle" maxlength="150" /><p class="help">@P["common.metaTitleHelp"]</p></div>
+                            <div class="field"><label>@P["common.metaDescription"]</label><textarea name="@(p).MetaDescription" maxlength="300" rows="2">@t.MetaDescription</textarea><p class="help">@P["common.metaDescriptionHelp"]</p></div>
+                        </div>
+                    </details>
+                </div>
+            }
+        </div>
+
+        <div>
+            <div class="card form">
+                <label class="switch"><input type="checkbox" name="IsVisible" value="true" checked="@Model.IsVisible" /><span class="track"></span>@P["common.showOnSite"]</label>
+                <label class="switch"><input type="checkbox" name="ShowOnHome" value="true" checked="@Model.ShowOnHome" /><span class="track"></span>@P["svc.onHome"]</label>
+                <partial name="_ImageField" model='new ImageField("CoverImageId", Model.CoverImageId, cover, "svc.cover", "svc.coverHelp", 0.8)' />
+                <partial name="_ImagesField" model='("ImageIds", (IReadOnlyList<(int, string)>)extra, "svc.extraImages", "svc.extraImagesHelp")' />
+                <div class="field">
+                    <label for="Price">@P["svc.price"]</label>
+                    <input id="Price" name="Price" value="@Model.Price?.ToString(System.Globalization.CultureInfo.InvariantCulture)" inputmode="decimal" dir="ltr" />
+                    <p class="help">@(P.Settings.ShowPrices ? P["svc.priceShown"] : P["svc.priceHidden"])</p>
+                </div>
+            </div>
+            <partial name="_WhereOnSite" model='new WhereOnSite("cards")' />
+        </div>
+    </div>
+
+    <div class="card save-bar">
+        <button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button>
+        <span class="spacer"></span>
+        @if (!isNew)
+        {
+            <button class="btn" type="submit" formaction="@P.Url($"services/duplicate/{Model.Id}")" formnovalidate><svg class="i"><use href="#a-copy" /></svg>@P["common.duplicate"]</button>
+            <button class="btn btn-danger" type="submit" formaction="@P.Url($"services/delete/{Model.Id}")" formnovalidate data-confirm-btn="@P["common.confirmTrash"]"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
+        }
+    </div>
+</form>

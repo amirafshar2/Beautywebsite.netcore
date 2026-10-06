@@ -1,0 +1,48 @@
+@model IReadOnlyList<SiteText>?
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.texts"];
+    ViewData["Nav"] = "texts";
+    var groups = (IReadOnlyList<(string Group, int Count, int Missing)>)ViewData["Groups"]!;
+    var current = ViewData["Group"] as string;
+    var q = ViewData["Q"] as string;
+    ViewData["TextsGroup"] = "texts";
+}
+<partial name="_PageIntro" model='("intro.texts", "/" + P.DefaultLanguage.Code)' />
+<form class="filters card" method="get">
+    <div class="field"><label for="q">@P["common.search"]</label><input id="q" name="q" value="@q" placeholder="@P["texts.searchHint"]" /></div>
+    <button class="btn btn-primary" type="submit">@P["common.search"]</button>
+</form>
+@if (Model is null)
+{
+    <div class="tiles">
+        @foreach (var g in groups)
+        {
+            <a class="tile" href="@P.Url($"texts?group={g.Group}")">
+                <strong>@P["group." + g.Group]</strong>
+                <span>@P.F("texts.count", g.Count)</span>
+                @if (g.Missing > 0) { <span class="chip warn">⚠ @P.F("texts.missing", g.Missing)</span> }
+            </a>
+        }
+    </div>
+}
+else
+{
+    <p><a href="@P.Url("texts")">← @P["texts.allGroups"]</a></p>
+    @if (Model.Count == 0)
+    {
+        <div class="card empty">@P["texts.none"]</div>
+    }
+    else
+    {
+        <form asp-antiforgery="true" method="post" data-dirty>
+            <input type="hidden" name="group" value="@current" />
+            <input type="hidden" name="q" value="@q" />
+            <div class="card form">
+                <h2>@(current is null ? P["common.search"] + ": " + q : P["group." + current])</h2>
+                <partial name="_TextsEditor" model="Model" view-data="ViewData" />
+            </div>
+            <div class="card save-bar"><button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button></div>
+        </form>
+    }
+}

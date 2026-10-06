@@ -1,0 +1,37 @@
+@model IReadOnlyList<SiteText>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    var langs = P.ContentLanguages;
+    var group = ViewData["TextsGroup"] as string ?? "texts";
+    var missing = langs.Where(l => Model.Any(t => string.IsNullOrWhiteSpace(t.Translations.FirstOrDefault(x => x.LanguageCode == l.Code)?.Value))).Select(l => l.Code).ToHashSet();
+}
+@* Edits site texts: posts Texts[key][lang]. Hints (from the database) say where each text appears. *@
+<partial name="_LangTabs" model="new LangTabs(group, langs, missing)" />
+@foreach (var l in langs)
+{
+    <div class="tab-pane @(l == langs[0] ? "is-active" : "")" data-lang="@l.Code" dir="@l.Dir">
+        <partial name="_LangMissing" model="missing.Contains(l.Code)" />
+        @foreach (var t in Model)
+        {
+            var value = t.Translations.FirstOrDefault(x => x.LanguageCode == l.Code)?.Value;
+            var name = $"Texts[{t.Key}][{l.Code}]";
+            <div class="field">
+                <label>@(PanelText.Has("text." + t.Key) ? P["text." + t.Key] : t.Hint ?? t.Key)</label>
+                @switch (t.Kind)
+                {
+                    case TextKind.Line:
+                        <input name="@name" value="@value" />
+                        break;
+                    case TextKind.Multiline:
+                        <textarea name="@name" rows="3">@value</textarea>
+                        break;
+                    default:
+                        <textarea name="@name" data-rich>@value</textarea>
+                        break;
+                }
+                @if (string.IsNullOrWhiteSpace(value)) { <p class="help">⚠ @P["tabs.textMissing"]</p> }
+                else if (t.Hint is not null && PanelText.Has("text." + t.Key)) { <p class="help">@t.Hint</p> }
+            </div>
+        }
+    </div>
+}

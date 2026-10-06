@@ -1,0 +1,49 @@
+@model List<(AppUser User, bool IsAdmin)>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.users"];
+    ViewData["Nav"] = "users";
+}
+<partial name="_PageIntro" model='("intro.users", (string?)null)' />
+<div class="list">
+    @foreach (var (u, isAdmin) in Model)
+    {
+        <div class="item">
+            <div class="body">
+                <span class="title">@u.DisplayName <span class="soft ltr">(@u.UserName)</span></span>
+                <span class="meta"><span class="chip @(isAdmin ? "ok" : "")">@(isAdmin ? P["users.admin"] : P["users.editor"])</span>@if (u.Email is not null) { <span class="ltr">@u.Email</span> }@if (u.LockoutEnd > DateTimeOffset.UtcNow) { <span class="chip warn">@P["users.locked"]</span> }</span>
+            </div>
+            <div class="actions">
+                <details class="advanced">
+                    <summary>@P["users.resetPassword"]</summary>
+                    <form asp-antiforgery="true" class="form" method="post" action="@P.Url("users/resetpassword")">
+                        <input type="hidden" name="id" value="@u.Id" />
+                        <input class="input" name="password" type="text" dir="ltr" placeholder="@P["users.tempPassword"]" autocomplete="off" />
+                        <button class="btn btn-sm" type="submit">@P["common.save"]</button>
+                    </form>
+                </details>
+                @if (u.Id != P.User.Id)
+                {
+                    <form asp-antiforgery="true" method="post" action="@P.Url("users/delete")" data-confirm="@P["common.confirmDelete"]"><input type="hidden" name="id" value="@u.Id" /><button class="icon-btn" type="submit"><svg class="i"><use href="#a-trash" /></svg></button></form>
+                }
+            </div>
+        </div>
+    }
+</div>
+<div class="card mt">
+    <h2>@P["users.add"]</h2>
+    <form asp-antiforgery="true" class="form" method="post" action="@P.Url("users/create")">
+        <div class="grid-2">
+            <div class="field"><label for="userName">@P["login.user"]</label><input id="userName" name="userName" required dir="ltr" autocomplete="off" /></div>
+            <div class="field"><label for="displayName">@P["users.displayName"]</label><input id="displayName" name="displayName" /></div>
+            <div class="field"><label for="email">@P["appt.emailAddress"]</label><input id="email" name="email" type="email" dir="ltr" /><p class="help">@P["users.emailHelp"]</p></div>
+            <div class="field"><label for="password">@P["users.tempPassword"]</label><input id="password" name="password" required dir="ltr" autocomplete="off" /><p class="help">@P["account.passwordRules"]</p></div>
+            <div class="field">
+                <label for="role">@P["users.role"]</label>
+                <select id="role" name="role"><option value="Editor">@P["users.editor"]</option><option value="Admin">@P["users.admin"]</option></select>
+                <p class="help">@P["users.roleHelp"]</p>
+            </div>
+        </div>
+        <div><button class="btn btn-primary" type="submit"><svg class="i"><use href="#a-plus" /></svg>@P["users.add"]</button></div>
+    </form>
+</div>

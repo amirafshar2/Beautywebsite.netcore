@@ -1,0 +1,12 @@
+@model (string IntroKey, string? SiteUrl)
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+}
+@* 1–2 sentence explanation on top of every screen + "View on site" *@
+<div class="intro">
+    <p>@P[Model.IntroKey]</p>
+    @if (Model.SiteUrl is not null)
+    {
+        <a class="btn btn-sm" href="@Model.SiteUrl" target="_blank" rel="noopener"><svg class="i"><use href="#a-external" /></svg>@P["common.viewOnSite"]</a>
+    }
+</div>

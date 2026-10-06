@@ -1,0 +1,22 @@
+@model WhereOnSite
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    string Cls(string area) => Model.Area == area ? "hl" : "";
+}
+@* Tiny wireframe of a site page with the edited part highlighted *@
+<figure class="where">
+    <svg viewBox="0 0 120 160" role="img" aria-label="@P["where.title"]">
+        <rect x="1" y="1" width="118" height="158" rx="6" class="frame" />
+        <rect x="8" y="8" width="104" height="8" rx="2" class="@Cls("header")" />
+        <rect x="8" y="20" width="104" height="34" rx="3" class="@Cls("hero")" />
+        <rect x="8" y="58" width="50" height="22" rx="3" class="@Cls("intro")" />
+        <rect x="62" y="58" width="50" height="22" rx="3" class="@Cls("about")" />
+        <rect x="8" y="84" width="32" height="22" rx="3" class="@Cls("cards")" />
+        <rect x="44" y="84" width="32" height="22" rx="3" class="@Cls("cards")" />
+        <rect x="80" y="84" width="32" height="22" rx="3" class="@Cls("cards")" />
+        <rect x="8" y="110" width="104" height="14" rx="3" class="@Cls("gallery")" />
+        <rect x="8" y="128" width="104" height="8" rx="2" class="@Cls("reviews")" />
+        <rect x="8" y="140" width="104" height="13" rx="2" class="@Cls("footer")" />
+    </svg>
+    <figcaption>@P["where." + Model.Area]</figcaption>
+</figure>

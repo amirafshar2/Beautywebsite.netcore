@@ -1,0 +1,33 @@
+@model ContactMessage
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["msg.details"];
+    ViewData["Nav"] = "messages";
+    var isMail = Model.ContactInfo.Contains('@');
+    var tel = isMail ? null : BeautyByNegin.Business.Content.ContactLinks.Tel(Model.ContactInfo);
+    var wa = isMail ? null : BeautyByNegin.Business.Content.ContactLinks.WhatsApp(Model.ContactInfo);
+    var mail = isMail ? BeautyByNegin.Business.Content.ContactLinks.Mail(Model.ContactInfo) : null;
+}
+<p><a href="@P.Url("messages")">← @P["common.backToList"]</a></p>
+<div class="grid-2">
+    <div class="card">
+        <h2>@Model.Name</h2>
+        <p class="soft"><span class="ltr">@Model.ContactInfo</span> · @P.Date(Model.CreatedAtUtc) · @Model.LanguageCode.ToUpperInvariant()</p>
+        <div class="row-actions">
+            @if (tel is not null) { <a class="btn btn-primary" href="@tel"><svg class="i"><use href="#a-phone" /></svg>@P["appt.call"]</a> }
+            @if (wa is not null) { <a class="btn" href="@wa" target="_blank" rel="noopener"><svg class="i"><use href="#a-whatsapp" /></svg>@P["appt.whatsapp"]</a> }
+            @if (mail is not null) { <a class="btn btn-primary" href="@mail"><svg class="i"><use href="#a-mail" /></svg>@P["appt.email"]</a> }
+        </div>
+        <h3 class="mt">@P["appt.message"]</h3>
+        <p class="pre-wrap">@Model.Message</p>
+    </div>
+    <div class="card">
+        <form asp-antiforgery="true" class="form" method="post" data-dirty>
+            <div class="field"><label for="adminNotes">@P["appt.notes"]</label><textarea id="adminNotes" name="adminNotes">@Model.AdminNotes</textarea><p class="help">@P["appt.notesHelp"]</p></div>
+            <div><button class="btn btn-primary" type="submit">@P["common.save"]</button></div>
+        </form>
+        <form asp-antiforgery="true" class="mt" method="post" action="@P.Url($"messages/delete/{Model.Id}")" data-confirm="@P["common.confirmTrash"]">
+            <button class="btn btn-danger" type="submit"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
+        </form>
+    </div>
+</div>

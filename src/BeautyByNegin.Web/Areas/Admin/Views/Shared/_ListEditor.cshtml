@@ -1,0 +1,50 @@
+@model (string ListKey, IReadOnlyList<ListItem> Items, string Action, bool WithDetail)
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    var langs = P.ContentLanguages;
+}
+@* Editable translatable list (one row per item, one input per language) *@
+<div class="list" id="@Model.ListKey" data-sortable="@P.Url(Model.Action + "/sortitems")">
+    @foreach (var item in Model.Items)
+    {
+        <div class="item @(item.IsVisible ? "" : "is-hidden")" data-id="@item.Id" data-hide-when-off>
+            <span class="drag-handle"><svg class="i"><use href="#a-drag" /></svg></span>
+            <form asp-antiforgery="true" class="body form" method="post" action="@P.Url(Model.Action + "/saveitem")">
+                <input type="hidden" name="listKey" value="@Model.ListKey" />
+                <input type="hidden" name="Id" value="@item.Id" />
+                <input type="hidden" name="IsVisible" value="@item.IsVisible.ToString().ToLowerInvariant()" />
+                <div class="lang-inline">
+                    @foreach (var l in langs)
+                    {
+                        var t = item.Translations.FirstOrDefault(x => x.LanguageCode == l.Code);
+                        <label class="field"><span class="small soft">@l.ShortLabel</span>
+                            <input name="Text[@l.Code]" value="@t?.Text" dir="@l.Dir" />
+                            @if (Model.WithDetail) { <input name="Detail[@l.Code]" value="@t?.Detail" dir="@l.Dir" placeholder="@P["about.detailPlaceholder"]" /> }
+                        </label>
+                    }
+                </div>
+                <div><button class="btn btn-sm" type="submit">@P["common.save"]</button></div>
+            </form>
+            <div class="actions">
+                <span class="move-btns"><button type="button" class="icon-btn" data-move="up"><svg class="i"><use href="#a-up" /></svg></button><button type="button" class="icon-btn" data-move="down"><svg class="i"><use href="#a-down" /></svg></button></span>
+                <label class="switch"><input type="checkbox" checked="@item.IsVisible" data-toggle-url="@P.Url($"{Model.Action}/toggleitem/{item.Id}")" /><span class="track"></span></label>
+                <button type="button" class="icon-btn" data-post="@P.Url($"{Model.Action}/deleteitem/{item.Id}")" data-confirm="@P["common.confirmTrash"]" data-remove=".item"><svg class="i"><use href="#a-trash" /></svg></button>
+            </div>
+        </div>
+    }
+</div>
+<form asp-antiforgery="true" class="form mt" method="post" action="@P.Url(Model.Action + "/saveitem")">
+    <input type="hidden" name="listKey" value="@Model.ListKey" />
+    <input type="hidden" name="IsVisible" value="true" />
+    <span class="label">@P["common.addNew"]</span>
+    <div class="lang-inline">
+        @foreach (var l in langs)
+        {
+            <label class="field"><span class="small soft">@l.ShortLabel</span>
+                <input name="Text[@l.Code]" dir="@l.Dir" />
+                @if (Model.WithDetail) { <input name="Detail[@l.Code]" dir="@l.Dir" placeholder="@P["about.detailPlaceholder"]" /> }
+            </label>
+        }
+    </div>
+    <div><button class="btn btn-primary btn-sm" type="submit"><svg class="i"><use href="#a-plus" /></svg>@P["common.add"]</button></div>
+</form>

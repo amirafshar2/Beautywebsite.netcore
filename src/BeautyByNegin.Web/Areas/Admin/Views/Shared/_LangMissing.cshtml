@@ -1,0 +1,8 @@
+@model bool
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+}
+@if (Model)
+{
+    <p class="missing-note">⚠ @P["tabs.missingNote"]</p>
+}

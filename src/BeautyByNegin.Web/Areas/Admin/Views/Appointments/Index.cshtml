@@ -1,0 +1,78 @@
+@model PagedResult<AppointmentRequest>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.appointments"];
+    ViewData["Nav"] = "appointments";
+    var f = (AppointmentFilter)ViewData["Filter"]!;
+    var qs = $"status={f.Status}&from={f.From:yyyy-MM-dd}&to={f.To:yyyy-MM-dd}&q={Uri.EscapeDataString(f.Search ?? "")}";
+}
+<partial name="_PageIntro" model='("intro.appointments", (string?)null)' />
+
+<div class="tabs-line">
+    <a href="@P.Url("appointments")" class="@(f.Status is null ? "is-active" : "")">@P["common.all"]</a>
+    @foreach (var s in Enum.GetValues<AppointmentStatus>())
+    {
+        <a href="@P.Url($"appointments?status={s}")" class="@(f.Status == s ? "is-active" : "")">@P["status." + s.ToString().ToLowerInvariant()]</a>
+    }
+</div>
+
+<form class="filters card" method="get">
+    @if (f.Status is not null) { <input type="hidden" name="status" value="@f.Status" /> }
+    <div class="field"><label for="q">@P["common.search"]</label><input id="q" name="q" value="@f.Search" placeholder="@P["appt.searchHint"]" /></div>
+    <div class="field"><label for="from">@P["common.from"]</label><input id="from" name="from" type="date" value="@f.From?.ToString("yyyy-MM-dd")" /></div>
+    <div class="field"><label for="to">@P["common.to"]</label><input id="to" name="to" type="date" value="@f.To?.ToString("yyyy-MM-dd")" /></div>
+    <div class="row-actions">
+        <button class="btn btn-primary" type="submit">@P["common.filter"]</button>
+        <a class="btn" href="@P.Url("appointments/export?" + qs)"><svg class="i"><use href="#a-download" /></svg>@P["appt.export"]</a>
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="card empty">@P["appt.empty"]</div>
+}
+else
+{
+    <div class="list">
+        @foreach (var a in Model.Items)
+        {
+            var wa = BeautyByNegin.Business.Content.ContactLinks.WhatsApp(a.Phone);
+            <div class="item">
+                <div class="body">
+                    <a class="title" href="@P.Url($"appointments/details/{a.Id}")">@a.FullName</a>
+                    <span class="meta">
+                        <span>@P.Date(a.CreatedAtUtc)</span>
+                        <span>💆‍♀️ @(a.WantsConsultation ? P["appt.consultation"] : a.ServiceNameSnapshot ?? "—")</span>
+                        @if (a.PreferredDate is DateOnly d) { <span>🗓 @P.Day(d) @a.TimeSlotSnapshot</span> }
+                    </span>
+                </div>
+                <div class="actions">
+                    <select class="input" aria-label="@P["appt.status"]" name="status" data-post-change="@P.Url($"appointments/status/{a.Id}")">
+                        @foreach (var s in Enum.GetValues<AppointmentStatus>())
+                        {
+                            <option value="@s" selected="@(a.Status == s)">@P["status." + s.ToString().ToLowerInvariant()]</option>
+                        }
+                    </select>
+                    @if (BeautyByNegin.Business.Content.ContactLinks.Tel(a.Phone) is string tel)
+                    {
+                        <a class="icon-btn" href="@tel" title="@P["appt.call"]"><svg class="i"><use href="#a-phone" /></svg></a>
+                    }
+                    @if (wa is not null)
+                    {
+                        <a class="icon-btn" href="@wa" target="_blank" rel="noopener" title="@P["appt.whatsapp"]"><svg class="i"><use href="#a-whatsapp" /></svg></a>
+                    }
+                    <a class="icon-btn" href="@P.Url($"appointments/details/{a.Id}")" title="@P["common.open"]"><svg class="i"><use href="#a-edit" /></svg></a>
+                </div>
+            </div>
+        }
+    </div>
+    @if (Model.Pages > 1)
+    {
+        <div class="pager">
+            @for (var i = 1; i <= Model.Pages; i++)
+            {
+                <a class="btn btn-sm @(i == Model.Page ? "btn-primary" : "")" href="@P.Url($"appointments?{qs}&page={i}")">@i</a>
+            }
+        </div>
+    }
+}

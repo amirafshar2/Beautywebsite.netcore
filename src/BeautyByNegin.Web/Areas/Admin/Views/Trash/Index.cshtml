@@ -1,0 +1,29 @@
+@model IReadOnlyList<TrashEntry>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.trash"];
+    ViewData["Nav"] = "trash";
+}
+<partial name="_PageIntro" model='("intro.trash", (string?)null)' />
+@if (Model.Count == 0)
+{
+    <div class="card empty">@P["trash.empty"]</div>
+}
+else
+{
+    <div class="list">
+        @foreach (var e in Model)
+        {
+            <div class="item">
+                <div class="body">
+                    <span class="title">@e.Title</span>
+                    <span class="meta"><span class="chip">@P["kind." + e.Kind]</span><span>@P.Date(e.DeletedAtUtc)</span><span>@P.F("trash.daysLeft", e.DaysLeft)</span></span>
+                </div>
+                <div class="actions">
+                    <button type="button" class="btn btn-sm btn-primary" data-post="@P.Url($"trash/restore?kind={e.Kind}&id={e.Id}")" data-remove=".item"><svg class="i"><use href="#a-restore" /></svg>@P["trash.restore"]</button>
+                    <button type="button" class="btn btn-sm btn-danger" data-post="@P.Url($"trash/delete?kind={e.Kind}&id={e.Id}")" data-confirm="@P["trash.confirmForever"]" data-remove=".item">@P["trash.deleteForever"]</button>
+                </div>
+            </div>
+        }
+    </div>
+}

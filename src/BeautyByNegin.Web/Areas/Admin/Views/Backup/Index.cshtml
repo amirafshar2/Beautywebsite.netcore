@@ -1,0 +1,42 @@
+@model IReadOnlyList<BackupFile>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.backup"];
+    ViewData["Nav"] = "backup";
+}
+<partial name="_PageIntro" model='("intro.backup", (string?)null)' />
+<div class="grid-2">
+    <div class="card">
+        <h2>@P["backup.download"]</h2>
+        <p class="soft">@P["backup.downloadHelp"]</p>
+        <form asp-antiforgery="true" method="post" action="@P.Url("backup/download")">
+            <button class="btn btn-primary btn-lg" type="submit"><svg class="i"><use href="#a-download" /></svg>@P["backup.downloadBtn"]</button>
+        </form>
+    </div>
+    <div class="card">
+        <h2>@P["backup.restore"]</h2>
+        <p class="hint-note">⚠ @P["backup.restoreWarning"]</p>
+        <form asp-antiforgery="true" class="form" method="post" action="@P.Url("backup/restore")" enctype="multipart/form-data" data-confirm="@P["backup.restoreConfirm"]">
+            <div class="field"><label for="file">@P["backup.file"]</label><input id="file" name="file" type="file" accept=".zip,application/zip" required /></div>
+            <label class="check"><input type="checkbox" name="confirm" value="true" required /> @P["backup.understand"]</label>
+            <div><button class="btn btn-danger" type="submit"><svg class="i"><use href="#a-restore" /></svg>@P["backup.restoreBtn"]</button></div>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <h2>@P["backup.list"]</h2>
+    <p class="help">@P["backup.listHelp"]</p>
+    @if (Model.Count == 0) { <p class="empty">@P["backup.none"]</p> }
+    <div class="list">
+        @foreach (var b in Model)
+        {
+            <div class="item">
+                <div class="body"><span class="title ltr">@b.Name</span><span class="meta"><span>@P.Date(b.CreatedAtUtc)</span><span class="ltr">@((b.SizeBytes / 1024d / 1024d).ToString("0.0")) MB</span>@if (b.Name.Contains("-auto")) { <span class="chip">@P["backup.auto"]</span> }</span></div>
+                <div class="actions">
+                    <a class="btn btn-sm" href="@P.Url("backup/file?name=" + Uri.EscapeDataString(b.Name))"><svg class="i"><use href="#a-download" /></svg>@P["backup.get"]</a>
+                    <form asp-antiforgery="true" method="post" action="@P.Url("backup/delete")" data-confirm="@P["common.confirmDelete"]"><input type="hidden" name="name" value="@b.Name" /><button class="icon-btn" type="submit"><svg class="i"><use href="#a-trash" /></svg></button></form>
+                </div>
+            </div>
+        }
+    </div>
+</div>

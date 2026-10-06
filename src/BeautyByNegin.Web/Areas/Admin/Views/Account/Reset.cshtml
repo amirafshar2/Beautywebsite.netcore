@@ -1,0 +1,16 @@
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["forgot.title"];
+}
+<div class="auth">
+    <div class="auth-card">
+        <h1>@P["account.newPassword"]</h1>
+        @if (ViewData["Error"] is string error) { <div class="toast toast-err">@error</div> }
+        <form asp-antiforgery="true" class="form" method="post">
+            <input type="hidden" name="user" value="@ViewData["User"]" />
+            <input type="hidden" name="token" value="@ViewData["Token"]" />
+            <div class="field"><label for="np">@P["account.newPassword"]</label><input id="np" name="newPassword" type="password" autocomplete="new-password" required dir="ltr" /><p class="help">@P["account.passwordRules"]</p></div>
+            <button class="btn btn-primary" type="submit">@P["common.save"]</button>
+        </form>
+    </div>
+</div>

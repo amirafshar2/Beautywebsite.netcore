@@ -1,0 +1,44 @@
+@model IReadOnlyList<GalleryCategory>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["gal.categories"];
+    ViewData["Nav"] = "gallery";
+}
+<p><a href="@P.Url("gallery")">← @P["nav.gallery"]</a></p>
+<partial name="_PageIntro" model='("intro.galleryCategories", (string?)null)' />
+<div class="list" data-sortable="@P.Url("gallery/sortcategories")">
+    @foreach (var c in Model)
+    {
+        <div class="item @(c.IsVisible ? "" : "is-hidden")" data-id="@c.Id" data-hide-when-off>
+            <span class="drag-handle"><svg class="i"><use href="#a-drag" /></svg></span>
+            <form asp-antiforgery="true" class="body form" method="post" action="@P.Url("gallery/savecategory")">
+                <input type="hidden" name="Id" value="@c.Id" />
+                <input type="hidden" name="IsVisible" value="@c.IsVisible.ToString().ToLowerInvariant()" />
+                <div class="lang-inline">
+                    @foreach (var l in P.ContentLanguages)
+                    {
+                        <label class="field"><span class="small soft">@l.ShortLabel</span><input name="Text[@l.Code]" value="@c.Translations.FirstOrDefault(t => t.LanguageCode == l.Code)?.Name" dir="@l.Dir" /></label>
+                    }
+                </div>
+                <div><button class="btn btn-sm" type="submit">@P["common.save"]</button></div>
+            </form>
+            <div class="actions">
+                <label class="switch"><input type="checkbox" checked="@c.IsVisible" data-toggle-url="@P.Url($"gallery/togglecategory/{c.Id}")" /><span class="track"></span></label>
+                <form asp-antiforgery="true" method="post" action="@P.Url($"gallery/deletecategory/{c.Id}")" data-confirm="@P["common.confirmTrash"]"><button class="icon-btn" type="submit"><svg class="i"><use href="#a-trash" /></svg></button></form>
+            </div>
+        </div>
+    }
+</div>
+<div class="card mt">
+    <h2>@P["gal.newCategory"]</h2>
+    <form asp-antiforgery="true" class="form" method="post" action="@P.Url("gallery/savecategory")">
+        <input type="hidden" name="IsVisible" value="true" />
+        <div class="lang-inline">
+            @foreach (var l in P.ContentLanguages)
+            {
+                <label class="field"><span class="small soft">@l.ShortLabel</span><input name="Text[@l.Code]" dir="@l.Dir" /></label>
+            }
+        </div>
+        <div><button class="btn btn-primary" type="submit"><svg class="i"><use href="#a-plus" /></svg>@P["common.add"]</button></div>
+    </form>
+</div>

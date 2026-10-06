@@ -1,0 +1,45 @@
+@model IReadOnlyList<SiteText>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.home"];
+    ViewData["Nav"] = "home";
+    var sections = (IReadOnlyList<HomeSection>)ViewData["Sections"]!;
+    ViewData["TextsGroup"] = "home";
+}
+<partial name="_PageIntro" model='("intro.home", "/" + P.DefaultLanguage.Code)' />
+
+<div class="card">
+    <h2>@P["home.sections"]</h2>
+    <p class="help">@P["home.sectionsHelp"]</p>
+    <div class="list" data-sortable="@P.Url("homepage/sortsections")">
+        @foreach (var s in sections)
+        {
+            <div class="item @(s.IsVisible ? "" : "is-hidden")" data-id="@s.Id" data-hide-when-off>
+                <span class="drag-handle"><svg class="i"><use href="#a-drag" /></svg></span>
+                <div class="body"><span class="title">@P["section." + s.Key]</span><span class="meta">@P["section." + s.Key + ".help"]</span></div>
+                <div class="actions">
+                    <span class="move-btns"><button type="button" class="icon-btn" data-move="up"><svg class="i"><use href="#a-up" /></svg></button><button type="button" class="icon-btn" data-move="down"><svg class="i"><use href="#a-down" /></svg></button></span>
+                    <label class="switch"><input type="checkbox" checked="@s.IsVisible" data-toggle-url="@P.Url($"homepage/togglesection/{s.Id}")" /><span class="track"></span><span class="small">@P["common.visible"]</span></label>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<form asp-antiforgery="true" method="post" data-dirty>
+    <div class="grid-side">
+        <div class="card form">
+            <h2>@P["home.texts"]</h2>
+            <partial name="_TextsEditor" model="Model" view-data="ViewData" />
+        </div>
+        <div>
+            <div class="card form">
+                <partial name="_ImageField" model='new ImageField("heroImageId", P.Settings.HeroImageId, ViewData["Hero"] as string, "home.heroImage", "home.heroImageHelp", 16.0 / 9)' />
+                <partial name="_ImageField" model='new ImageField("consultationImageId", P.Settings.ConsultationImageId, ViewData["Consult"] as string, "home.consultImage", "home.consultImageHelp", 0.8)' />
+                <p class="help">@P["home.aboutImageNote"] <a href="@P.Url("about")">@P["nav.about"]</a></p>
+            </div>
+            <partial name="_WhereOnSite" model='new WhereOnSite("hero")' />
+        </div>
+    </div>
+    <div class="card save-bar"><button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button></div>
+</form>

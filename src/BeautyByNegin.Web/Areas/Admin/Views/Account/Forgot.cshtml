@@ -1,0 +1,26 @@
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["forgot.title"];
+}
+<div class="auth">
+    <div class="auth-card">
+        <h1>@P["forgot.title"]</h1>
+        @if (ViewData["Sent"] is true)
+        {
+            <div class="toast toast-ok">@P["forgot.sent"]</div>
+        }
+        else if (!P.Settings.SmtpConfigured)
+        {
+            <p class="hint-note">@P["forgot.noEmail"]</p>
+        }
+        else
+        {
+            <form asp-antiforgery="true" class="form" method="post">
+                <p class="soft">@P["forgot.intro"]</p>
+                <div class="field"><label for="userName">@P["login.user"]</label><input id="userName" name="userName" required dir="ltr" /></div>
+                <button class="btn btn-primary" type="submit">@P["forgot.send"]</button>
+            </form>
+        }
+        <p><a href="@P.Url("login")">@P["forgot.back"]</a></p>
+    </div>
+</div>

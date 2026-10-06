@@ -198,6 +198,8 @@ internal static class TextSeedAr
         ["wa.service"] = "مرحباً، أودّ الاستفسار عن {service}.",
         ["wa.general"] = "مرحباً، أودّ الاستفسار عن خدمات Beauty by Negin.",
         ["wa.booking"] = "مرحباً، أرسلت للتو طلب موعد عبر الموقع.",
+        ["wa.reply"] = "مرحباً {name}، أكتب لك من Beauty by Negin بخصوص طلب موعدك.",
+        ["mail.subject.reply"] = "طلب موعدك لدى Beauty by Negin",
         ["mail.subject.service"] = "استفسار عن {service}",
         ["mail.subject.general"] = "استفسار إلى Beauty by Negin",
 

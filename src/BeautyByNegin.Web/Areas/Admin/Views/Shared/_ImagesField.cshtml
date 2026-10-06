@@ -1,0 +1,23 @@
+@model (string Name, IReadOnlyList<(int Id, string Url)> Images, string LabelKey, string HintKey)
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+}
+@* Several photos (no cropping): hidden input holds "id,id,id" in display order *@
+<div class="field" data-images-field>
+    <span class="label">@P[Model.LabelKey]</span>
+    <input type="hidden" name="@Model.Name" value="@string.Join(',', Model.Images.Select(i => i.Id))" data-value />
+    <div class="thumbs" data-thumbs>
+        @foreach (var img in Model.Images)
+        {
+            <div class="thumb-card" data-id="@img.Id">
+                <img src="@img.Url" alt="" loading="lazy" />
+                <div class="actions"><span></span><button type="button" class="icon-btn" data-remove-thumb aria-label="@P["image.remove"]"><svg class="i"><use href="#a-close" /></svg></button></div>
+            </div>
+        }
+    </div>
+    <div class="row-actions">
+        <label class="btn btn-sm"><svg class="i"><use href="#a-upload" /></svg>@P["image.addMany"]<input type="file" accept="image/*" multiple class="visually-hidden" data-files /></label>
+        <span class="small soft" data-status></span>
+    </div>
+    <p class="help">@P[Model.HintKey]</p>
+</div>

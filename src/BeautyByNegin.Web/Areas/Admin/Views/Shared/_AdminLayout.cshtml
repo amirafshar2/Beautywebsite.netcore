@@ -1,0 +1,132 @@
+@inject IAdminInboxService Inbox
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    var loggedIn = P.User.Id is not null && User.Identity?.IsAuthenticated == true;
+    var title = ViewData["Title"] as string ?? P["nav.dashboard"];
+    var active = ViewData["Nav"] as string ?? "";
+    var stats = loggedIn ? await Inbox.GetDashboardAsync() : null;
+    (string Key, string Icon, string Url, int Badge, bool AdminOnly)[] nav = loggedIn ?
+    [
+        ("dashboard", "a-dashboard", P.BasePath, 0, false),
+        ("appointments", "a-calendar", P.Url("appointments"), stats!.NewAppointments, false),
+        ("messages", "a-mail", P.Url("messages"), stats.UnreadMessages, false),
+        ("chats", "a-chat", P.Url("chats"), stats.UnreadChats, false),
+        ("services", "a-spa", P.Url("services"), 0, false),
+        ("gallery", "a-image", P.Url("gallery"), 0, false),
+        ("reviews", "a-star", P.Url("reviews"), stats.PendingReviews, false),
+        ("home", "a-home", P.Url("homepage"), 0, false),
+        ("about", "a-user", P.Url("about"), 0, false),
+        ("contact", "a-phone", P.Url("contact"), 0, false),
+        ("pages", "a-file", P.Url("pages"), 0, false),
+        ("newsletter", "a-news", P.Url("newsletter"), 0, false),
+        ("texts", "a-type", P.Url("texts"), 0, false),
+        ("languages", "a-globe", P.Url("languages"), 0, true),
+        ("settings", "a-gear", P.Url("settings"), 0, true),
+        ("backup", "a-database", P.Url("backup"), 0, true),
+        ("trash", "a-trash", P.Url("trash"), 0, false),
+        ("users", "a-users", P.Url("users"), 0, true),
+        ("help", "a-help", P.Url("help"), 0, false),
+    ] : [];
+}
+<!DOCTYPE html>
+<html lang="@P.Lang" dir="@P.Dir">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+    <title>@title · @P["panel.name"]</title>
+    <link rel="stylesheet" href="~/admin/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body class="@(loggedIn ? "with-nav" : "no-nav")" data-base="@P.BasePath"
+      data-confirm-leave="@P["common.unsavedWarning"]" data-saved="@P["toast.saved"]" data-error="@P["toast.error"]">
+    @await Html.PartialAsync("_AdminIcons")
+
+    @if (loggedIn)
+    {
+        <aside class="sidebar" id="sidebar" data-sidebar>
+            <div class="sidebar-brand">
+                <span class="brand-mark">@P.Settings.BrandName.ToUpperInvariant()</span>
+                <span class="brand-sub">@P["panel.name"]</span>
+            </div>
+            <nav aria-label="@P["panel.name"]">
+                @foreach (var item in nav.Where(n => !n.AdminOnly || P.IsAdmin))
+                {
+                    <a class="nav-item @(active == item.Key ? "is-active" : "")" href="@item.Url" aria-current="@(active == item.Key ? "page" : null)">
+                        <svg class="i" aria-hidden="true"><use href="#@item.Icon" /></svg>
+                        <span>@P["nav." + item.Key]</span>
+                        @if (item.Badge > 0) { <span class="badge">@item.Badge</span> }
+                    </a>
+                }
+            </nav>
+            <div class="sidebar-foot">
+                <a class="nav-item" href="/" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#a-external" /></svg><span>@P["nav.viewSite"]</span></a>
+                <a class="nav-item" href="@P.Url("account/password")"><svg class="i" aria-hidden="true"><use href="#a-user" /></svg><span>@P["nav.account"]</span></a>
+                <form asp-antiforgery="true" method="post" action="@P.Url("account/logout")">
+                    <button class="nav-item" type="submit"><svg class="i" aria-hidden="true"><use href="#a-logout" /></svg><span>@P["nav.logout"]</span></button>
+                </form>
+            </div>
+        </aside>
+        <div class="sidebar-backdrop" data-sidebar-close></div>
+    }
+
+    <div class="main">
+        @if (loggedIn)
+        {
+            <header class="topbar">
+                <button class="icon-btn menu-btn" type="button" data-sidebar-open aria-label="@P["nav.menu"]"><svg class="i"><use href="#a-menu" /></svg></button>
+                <h1 class="topbar-title">@title</h1>
+                <form asp-antiforgery="true" class="lang-form" method="post" action="@P.Url("account/language")">
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <label class="visually-hidden" for="panel-lang">@P["account.panelLanguage"]</label>
+                    <select id="panel-lang" name="lang" data-autosubmit>
+                        @foreach (var l in PanelContext.PanelLanguages)
+                        {
+                            <option value="@l" selected="@(l == P.Lang)">@l.ToUpperInvariant()</option>
+                        }
+                    </select>
+                </form>
+            </header>
+        }
+
+        <main class="content" id="content">
+            @if (TempData["Toast"] is string toast)
+            {
+                <div class="toast toast-ok" role="status" data-toast><svg class="i"><use href="#a-check" /></svg>@toast</div>
+            }
+            @if (TempData["ToastError"] is string toastError)
+            {
+                <div class="toast toast-err" role="alert" data-toast>@toastError</div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    @if (loggedIn)
+    {
+        <nav class="bottom-nav" aria-label="@P["panel.name"]">
+            <a href="@P.BasePath" class="@(active == "dashboard" ? "is-active" : "")"><svg class="i"><use href="#a-dashboard" /></svg><span>@P["nav.dashboard"]</span></a>
+            <a href="@P.Url("appointments")" class="@(active == "appointments" ? "is-active" : "")"><svg class="i"><use href="#a-calendar" /></svg><span>@P["nav.appointmentsShort"]</span>@if (stats!.NewAppointments > 0) { <b class="badge">@stats.NewAppointments</b> }</a>
+            <a href="@P.Url("chats")" class="@(active == "chats" ? "is-active" : "")"><svg class="i"><use href="#a-chat" /></svg><span>@P["nav.chats"]</span>@if (stats.UnreadChats > 0) { <b class="badge">@stats.UnreadChats</b> }</a>
+            <a href="@P.Url("services")" class="@(active == "services" ? "is-active" : "")"><svg class="i"><use href="#a-spa" /></svg><span>@P["nav.services"]</span></a>
+            <button type="button" data-sidebar-open><svg class="i"><use href="#a-menu" /></svg><span>@P["nav.more"]</span></button>
+        </nav>
+    }
+
+    <dialog class="confirm" id="confirm-dialog">
+        <form method="dialog">
+            <p data-confirm-text></p>
+            <div class="row-actions">
+                <button class="btn" value="cancel">@P["common.cancel"]</button>
+                <button class="btn btn-danger" value="ok" data-confirm-ok>@P["common.yesDelete"]</button>
+            </div>
+        </form>
+    </dialog>
+    <div class="toast-host" aria-live="polite" data-toast-host></div>
+
+    <script src="~/admin/admin.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

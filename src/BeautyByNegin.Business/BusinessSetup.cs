@@ -1,4 +1,6 @@
+using BeautyByNegin.Business.Admin;
 using BeautyByNegin.Business.Chat;
+using BeautyByNegin.Business.Media;
 using BeautyByNegin.Business.Content;
 using BeautyByNegin.Business.Inbox;
 using BeautyByNegin.Business.Notifications;
@@ -36,6 +38,16 @@ public static class BusinessSetup
         // Visitor submissions and chat
         services.AddScoped<IInboxService, InboxService>();
         services.AddScoped<IChatService, ChatService>();
+
+        // Admin panel
+        services.AddScoped<IMediaService, MediaService>();
+        services.AddScoped<IAdminData, AdminData>();
+        services.AddScoped<ITrashService, TrashService>();
+        services.AddScoped<IBackupService, BackupService>();
+        services.AddScoped<IAdminInboxService, AdminInboxService>();
+        services.AddScoped<IAdminCatalogService, AdminCatalogService>();
+        services.AddScoped<IAdminTextService, AdminTextService>();
+        services.AddHostedService<MaintenanceWorker>();
         return services;
     }
 }

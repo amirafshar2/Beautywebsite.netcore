@@ -1,0 +1,46 @@
+@model GalleryItem
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["gal.editPhoto"];
+    ViewData["Nav"] = "gallery";
+    var cats = (IReadOnlyList<GalleryCategory>)ViewData["Categories"]!;
+    var lang = P.DefaultLanguage.Code;
+    var langs = P.ContentLanguages;
+    string? Url(MediaImage? m) => m is null ? null : MediaUrls.Url(m, m.WidthList.First(w => w >= Math.Min(480, m.WidthList.Max())));
+}
+<p><a href="@P.Url("gallery")">← @P["common.backToList"]</a></p>
+<partial name="_PageIntro" model='("intro.galleryEdit", $"/{lang}/gallery")' />
+<form asp-antiforgery="true" class="form" method="post" data-dirty>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <div class="grid-2">
+        <div class="card form">
+            <partial name="_ImageField" model='new ImageField("ImageId", Model.ImageId, Url(Model.Image), "gal.photo", "gal.photoHelp", 0)' />
+            <partial name="_ImageField" model='new ImageField("AfterImageId", Model.AfterImageId, Url(Model.AfterImage), "gal.afterPhoto", "gal.afterPhotoHelp", 0)' />
+        </div>
+        <div class="card form">
+            <div class="field">
+                <label for="CategoryId">@P["gal.category"]</label>
+                <select id="CategoryId" name="CategoryId">
+                    <option value="">@P["gal.noCategory"]</option>
+                    @foreach (var c in cats) { <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@((c.Translations.FirstOrDefault(t => t.LanguageCode == lang) ?? c.Translations.FirstOrDefault())?.Name)</option> }
+                </select>
+            </div>
+            <label class="switch"><input type="checkbox" name="IsVisible" value="true" checked="@Model.IsVisible" /><span class="track"></span>@P["common.showOnSite"]</label>
+            <label class="switch"><input type="checkbox" name="ShowOnHome" value="true" checked="@Model.ShowOnHome" /><span class="track"></span>@P["gal.onHome"]</label>
+            <h3>@P["gal.caption"]</h3>
+            <p class="help">@P["gal.captionHelp"]</p>
+            <partial name="_LangTabs" model='new LangTabs("Caption", langs, new HashSet<string>())' />
+            @foreach (var l in langs)
+            {
+                <div class="tab-pane @(l == langs[0] ? "is-active" : "")" data-lang="@l.Code" dir="@l.Dir">
+                    <div class="field"><input name="Caption[@l.Code]" value="@Model.Translations.FirstOrDefault(t => t.LanguageCode == l.Code)?.Caption" maxlength="300" /></div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="card save-bar">
+        <button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button>
+        <span class="spacer"></span>
+        <button class="btn btn-danger" type="submit" formaction="@P.Url($"gallery/delete/{Model.Id}")" data-confirm-btn="@P["common.confirmTrash"]"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
+    </div>
+</form>

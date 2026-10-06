@@ -1,0 +1,32 @@
+@model IReadOnlyList<Language>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.languages"];
+    ViewData["Nav"] = "languages";
+}
+<partial name="_PageIntro" model='("intro.languages", (string?)null)' />
+<form asp-antiforgery="true" class="card form" method="post" data-dirty>
+    <p class="help">@P["lang.orderHelp"]</p>
+    <div class="list" data-sortable-local>
+        @foreach (var l in Model)
+        {
+            <div class="item" data-id="@l.Code">
+                <span class="drag-handle"><svg class="i"><use href="#a-drag" /></svg></span>
+                <input type="hidden" name="order" value="@l.Code" />
+                <div class="body"><span class="title">@l.NativeName <span class="soft">(@l.ShortLabel)</span></span>
+                    <span class="meta">@(l.IsRtl ? P["lang.rtl"] : P["lang.ltr"])</span></div>
+                <div class="actions">
+                    <label class="switch"><input type="checkbox" name="enabled" value="@l.Code" checked="@l.IsEnabled" /><span class="track"></span><span class="small">@P["lang.active"]</span></label>
+                    <label class="check small"><input type="radio" name="defaultCode" value="@l.Code" checked="@l.IsDefault" /> @P["lang.default"]</label>
+                    @if (l.Code is "fa" or "ar")
+                    {
+                        <label class="check small"><input type="checkbox" name="nativeDigits" value="@l.Code" checked="@l.UseNativeDigits" /> @P["lang.nativeDigits"]</label>
+                    }
+                    <span class="move-btns"><button type="button" class="icon-btn" data-move-local="up"><svg class="i"><use href="#a-up" /></svg></button><button type="button" class="icon-btn" data-move-local="down"><svg class="i"><use href="#a-down" /></svg></button></span>
+                </div>
+            </div>
+        }
+    </div>
+    <p class="hint-note">@P["lang.disabledNote"]</p>
+    <div class="save-bar"><button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button></div>
+</form>

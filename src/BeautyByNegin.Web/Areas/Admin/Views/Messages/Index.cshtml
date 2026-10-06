@@ -1,0 +1,30 @@
+@model PagedResult<ContactMessage>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.messages"];
+    ViewData["Nav"] = "messages";
+}
+<partial name="_PageIntro" model='("intro.messages", (string?)null)' />
+@if (Model.Items.Count == 0)
+{
+    <div class="card empty">@P["msg.empty"]</div>
+}
+else
+{
+    <div class="list">
+        @foreach (var m in Model.Items)
+        {
+            <a class="item" href="@P.Url($"messages/details/{m.Id}")">
+                <div class="body">
+                    <span class="title">@m.Name</span>
+                    <span class="meta"><span>@P.Date(m.CreatedAtUtc)</span><span class="ltr">@m.ContactInfo</span></span>
+                </div>
+                @if (!m.IsRead) { <span class="chip s-new">@P["msg.new"]</span> }
+            </a>
+        }
+    </div>
+    @if (Model.Pages > 1)
+    {
+        <div class="pager">@for (var i = 1; i <= Model.Pages; i++) { <a class="btn btn-sm @(i == Model.Page ? "btn-primary" : "")" href="@P.Url($"messages?page={i}")">@i</a> }</div>
+    }
+}

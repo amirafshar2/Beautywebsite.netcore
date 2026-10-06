@@ -1,0 +1,65 @@
+@model AppointmentRequest
+@inject BeautyByNegin.Business.Content.ITextService Texts
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["appt.details"];
+    ViewData["Nav"] = "appointments";
+    var T = await Texts.GetAsync(Model.LanguageCode);
+    var tel = BeautyByNegin.Business.Content.ContactLinks.Tel(Model.Phone);
+    var wa = BeautyByNegin.Business.Content.ContactLinks.WhatsApp(Model.Phone, T.Format("wa.reply", ("name", Model.FullName)));
+    var mail = BeautyByNegin.Business.Content.ContactLinks.Mail(Model.Email, T["mail.subject.reply"]);
+}
+<p><a href="@P.Url("appointments")">← @P["common.backToList"]</a></p>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-head">
+            <h2>@Model.FullName</h2>
+            <span class="chip s-@Model.Status.ToString().ToLowerInvariant()">@P["status." + Model.Status.ToString().ToLowerInvariant()]</span>
+        </div>
+        <div class="row-actions">
+            @if (tel is not null) { <a class="btn btn-primary btn-lg" href="@tel"><svg class="i"><use href="#a-phone" /></svg>@P["appt.call"]</a> }
+            @if (wa is not null) { <a class="btn btn-lg" href="@wa" target="_blank" rel="noopener"><svg class="i"><use href="#a-whatsapp" /></svg>@P["appt.whatsapp"]</a> }
+            @if (mail is not null) { <a class="btn btn-lg" href="@mail"><svg class="i"><use href="#a-mail" /></svg>@P["appt.email"]</a> }
+        </div>
+        <table class="table">
+            <tr><th>@P["appt.phone"]</th><td><span class="ltr">@Model.Phone</span></td></tr>
+            @if (Model.Email is not null) { <tr><th>@P["appt.emailAddress"]</th><td><span class="ltr">@Model.Email</span></td></tr> }
+            <tr><th>@P["appt.service"]</th><td>@(Model.WantsConsultation ? P["appt.consultation"] : Model.ServiceNameSnapshot ?? "—")</td></tr>
+            <tr><th>@P["appt.preferred"]</th><td>@(Model.PreferredDate is DateOnly d ? P.Day(d) : "—") @Model.TimeSlotSnapshot</td></tr>
+            <tr><th>@P["appt.received"]</th><td>@P.Date(Model.CreatedAtUtc)</td></tr>
+            <tr><th>@P["appt.language"]</th><td>@Model.LanguageCode.ToUpperInvariant()</td></tr>
+        </table>
+        @if (!string.IsNullOrWhiteSpace(Model.Message))
+        {
+            <h3>@P["appt.message"]</h3>
+            <p class="pre-wrap">@Model.Message</p>
+        }
+    </div>
+
+    <div class="card">
+        <h2>@P["appt.manage"]</h2>
+        <form asp-antiforgery="true" class="form" method="post" data-dirty>
+            <div class="field">
+                <label for="status">@P["appt.status"]</label>
+                <select id="status" name="status">
+                    @foreach (var s in Enum.GetValues<AppointmentStatus>())
+                    {
+                        <option value="@s" selected="@(Model.Status == s)">@P["status." + s.ToString().ToLowerInvariant()]</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label for="adminNotes">@P["appt.notes"]</label>
+                <textarea id="adminNotes" name="adminNotes">@Model.AdminNotes</textarea>
+                <p class="help">@P["appt.notesHelp"]</p>
+            </div>
+            <div class="save-bar">
+                <button class="btn btn-primary" type="submit">@P["common.save"]</button>
+            </div>
+        </form>
+        <form asp-antiforgery="true" method="post" action="@P.Url($"appointments/delete/{Model.Id}")" data-confirm="@P["common.confirmTrash"]">
+            <button class="btn btn-danger" type="submit"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
+        </form>
+    </div>
+</div>

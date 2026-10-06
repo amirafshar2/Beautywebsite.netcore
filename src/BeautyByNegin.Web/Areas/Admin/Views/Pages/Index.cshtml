@@ -1,0 +1,34 @@
+@model IReadOnlyList<Page>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.pages"];
+    ViewData["Nav"] = "pages";
+    var lang = P.DefaultLanguage.Code;
+}
+<partial name="_PageIntro" model='("intro.pages", (string?)null)' />
+<div class="card-head">
+    <h2></h2>
+    <a class="btn btn-primary" href="@P.Url("pages/create")"><svg class="i"><use href="#a-plus" /></svg>@P["page.add"]</a>
+</div>
+<div class="list" data-sortable="@P.Url("pages/sort")">
+    @foreach (var p in Model)
+    {
+        var t = p.Translations.FirstOrDefault(x => x.LanguageCode == lang) ?? p.Translations.FirstOrDefault();
+        <div class="item @(p.IsVisible ? "" : "is-hidden")" data-id="@p.Id" data-hide-when-off>
+            <span class="drag-handle"><svg class="i"><use href="#a-drag" /></svg></span>
+            <div class="body">
+                <a class="title" href="@P.Url($"pages/edit/{p.Id}")">@(t?.Title ?? "—")</a>
+                <span class="meta">
+                    @if (p.SystemKey is not null) { <span class="chip">@P["page.system"]</span> }
+                    @if (p.ShowInFooter) { <span>@P["page.inFooter"]</span> }
+                    @if (p.ShowInMenu) { <span>@P["page.inMenu"]</span> }
+                    @if (t is not null) { <a href="/@lang/@t.Slug" target="_blank" rel="noopener" class="ltr">/@lang/@t.Slug</a> }
+                </span>
+            </div>
+            <div class="actions">
+                <label class="switch"><input type="checkbox" checked="@p.IsVisible" data-toggle-url="@P.Url($"pages/toggle/{p.Id}")" /><span class="track"></span><span class="small">@P["common.visible"]</span></label>
+                <a class="icon-btn" href="@P.Url($"pages/edit/{p.Id}")"><svg class="i"><use href="#a-edit" /></svg></a>
+            </div>
+        </div>
+    }
+</div>

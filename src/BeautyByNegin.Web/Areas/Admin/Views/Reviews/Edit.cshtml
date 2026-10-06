@@ -1,0 +1,65 @@
+@model ReviewInputModel
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = Model.Id == 0 ? P["rev.add"] : P["rev.edit"];
+    ViewData["Nav"] = "reviews";
+    var services = (IReadOnlyList<Service>)ViewData["Services"]!;
+    var errors = ViewData["Errors"] as Dictionary<string, string> ?? [];
+    var lang = P.DefaultLanguage.Code;
+}
+<p><a href="@P.Url("reviews")">← @P["common.backToList"]</a></p>
+@if (ViewData["Pending"] is true)
+{
+    <div class="hint-note">@P["rev.pendingNote"]
+        <form asp-antiforgery="true" method="post" action="@P.Url($"reviews/approve/{Model.Id}")"><button class="btn btn-sm btn-primary" type="submit">@P["rev.approve"]</button></form>
+    </div>
+}
+<form asp-antiforgery="true" class="card form" method="post" action="@P.Url("reviews/save")" data-dirty>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <div class="grid-2">
+        <div class="field @(errors.ContainsKey("AuthorName") ? "has-error" : "")">
+            <label for="AuthorName">@P["rev.name"] *</label>
+            <input id="AuthorName" name="AuthorName" value="@Model.AuthorName" maxlength="100" />
+            @if (errors.TryGetValue("AuthorName", out var e1)) { <p class="err">@e1</p> }
+            <label class="check"><input type="checkbox" name="ShowInitialsOnly" value="true" checked="@Model.ShowInitialsOnly" /> @P["rev.initials"]</label>
+        </div>
+        <div class="field">
+            <label for="Rating">@P["rev.rating"]</label>
+            <select id="Rating" name="Rating">
+                <option value="">@P["rev.noRating"]</option>
+                @for (var i = 5; i >= 1; i--) { <option value="@i" selected="@(Model.Rating == i)">@(new string('★', i))</option> }
+            </select>
+        </div>
+    </div>
+    <div class="field @(errors.ContainsKey("Text") ? "has-error" : "")">
+        <label for="Text">@P["rev.text"] *</label>
+        <textarea id="Text" name="Text" maxlength="3000">@Model.Text</textarea>
+        @if (errors.TryGetValue("Text", out var e2)) { <p class="err">@e2</p> }
+        <p class="help">@P["rev.textHelp"]</p>
+    </div>
+    <div class="grid-2">
+        <div class="field">
+            <label for="LanguageCode">@P["rev.language"]</label>
+            <select id="LanguageCode" name="LanguageCode">
+                @foreach (var l in P.ContentLanguages) { <option value="@l.Code" selected="@(Model.LanguageCode == l.Code)">@l.NativeName</option> }
+            </select>
+            <p class="help">@P["rev.languageHelp"]</p>
+        </div>
+        <div class="field"><label for="ReviewDate">@P["rev.date"]</label><input id="ReviewDate" name="ReviewDate" type="date" value="@Model.ReviewDate?.ToString("yyyy-MM-dd")" /></div>
+        <div class="field">
+            <label for="ServiceId">@P["rev.service"]</label>
+            <select id="ServiceId" name="ServiceId">
+                <option value="">—</option>
+                @foreach (var s in services) { <option value="@s.Id" selected="@(Model.ServiceId == s.Id)">@((s.Translations.FirstOrDefault(t => t.LanguageCode == lang) ?? s.Translations.FirstOrDefault())?.Name)</option> }
+            </select>
+        </div>
+        <div class="field">
+            <label for="Source">@P["rev.source"]</label>
+            <select id="Source" name="Source">
+                @foreach (var s in Enum.GetValues<ReviewSource>()) { <option value="@s" selected="@(Model.Source == s)">@P["source." + s.ToString().ToLowerInvariant()]</option> }
+            </select>
+        </div>
+    </div>
+    <label class="switch"><input type="checkbox" name="IsVisible" value="true" checked="@Model.IsVisible" /><span class="track"></span>@P["common.showOnSite"]</label>
+    <div class="save-bar"><button class="btn btn-primary btn-lg" type="submit">@P["common.save"]</button></div>
+</form>

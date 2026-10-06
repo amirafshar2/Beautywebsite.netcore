@@ -26,6 +26,7 @@ builder.Host.UseSerilog((ctx, cfg) => cfg
 
 // ---------- Services
 builder.Services.AddDataAccess(builder.Configuration, contentRoot);
+builder.Services.AddSingleton<BeautyByNegin.Business.Media.IMediaPaths, MediaPaths>();
 builder.Services.AddBusiness();
 builder.Services.AddAppIdentity(builder.Configuration);
 
@@ -67,6 +68,10 @@ var app = builder.Build();
 // ---------- Database (auto-create + seed on first run)
 await app.Services.InitializeDatabaseAsync();
 
+// Command line: dotnet BeautyByNegin.Web.dll admin reset-password <user> <password>
+if (AdminCli.IsCliCall(args))
+    return await AdminCli.RunAsync(app.Services, args);
+
 // ---------- Pipeline
 if (!app.Environment.IsDevelopment())
 {
@@ -88,6 +93,8 @@ app.UseAuthorization();
 
 // Admin panel (MVC Area "Admin"), e.g. /admin, /admin/services/edit/3
 var adminPath = IdentitySetup.AdminPath(app.Configuration).Trim('/');
+app.MapAreaControllerRoute("admin-login", "Admin", adminPath + "/login", new { controller = "Account", action = "Login" });
+app.MapAreaControllerRoute("admin-setup", "Admin", adminPath + "/setup", new { controller = "Setup", action = "Index" });
 app.MapAreaControllerRoute(
     name: "admin",
     areaName: "Admin",
@@ -107,4 +114,5 @@ app.MapControllerRoute(
     pattern: "error/{code:int?}",
     defaults: new { controller = "Error", action = "Index" });
 
-app.Run();
+await app.RunAsync();
+return 0;
