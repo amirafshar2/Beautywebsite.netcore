@@ -67,7 +67,9 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStatusCodePagesWithReExecute("/error/{0}");
 
-app.UseResponseCompression();
+// Compression only in production: in Development it blocks Visual Studio's browser-refresh script.
+if (!app.Environment.IsDevelopment())
+    app.UseResponseCompression();
 app.UseStaticFiles();
 app.UseSerilogRequestLogging();
 
