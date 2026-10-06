@@ -22,6 +22,13 @@ public class BookingController(IInboxService inbox) : PublicController
         }
 
         var model = new BookingForm { ServiceId = service, FormStartedTicks = DateTime.UtcNow.Ticks };
+        if (Ctx.Customer.Customer is { } me)
+        {
+            // Logged-in customer: fill in what we already know.
+            model.FullName = me.Name;
+            model.Email = me.Email;
+            model.Phone = me.Phone;
+        }
         var page = await BuildPage(model);
         if (Request.Query["rl"] == "1") page = page with { Errors = new() { [""] = Ctx.T["form.error.rateLimit"] } };
         return View(page);
@@ -41,7 +48,7 @@ public class BookingController(IInboxService inbox) : PublicController
         var (date, dateInvalid) = ParseDate(form);
         var result = await inbox.SubmitBookingAsync(new BookingInput(
             form.FullName, form.Phone, form.Email, form.ServiceId, date, dateInvalid,
-            form.TimeSlotId, form.Message, form.PrivacyAccepted), Ctx.Lang, PanelBaseUrl, HttpContext.RequestAborted);
+            form.TimeSlotId, form.Message, form.PrivacyAccepted, Ctx.Customer.Customer?.Id), Ctx.Lang, PanelBaseUrl, HttpContext.RequestAborted);
 
         if (result.Ok)
         {

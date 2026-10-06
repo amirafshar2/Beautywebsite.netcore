@@ -8,6 +8,7 @@
         ("appointments", "a-calendar", "appointments", Model.NewAppointments, false),
         ("messages", "a-mail", "messages", Model.UnreadMessages, false),
         ("chats", "a-chat", "chats", Model.UnreadChats, false),
+        ("customers", "a-users", "customers", 0, false),
         ("services", "a-spa", "services", 0, false),
         ("gallery", "a-image", "gallery", 0, false),
         ("reviews", "a-star", "reviews", Model.PendingReviews, false),
@@ -25,6 +26,7 @@
         ("help", "a-help", "help", 0, false),
     ];
 }
+<partial name="_VisitorView" model='"dashboard"' />
 <div class="stat-row">
     <div class="stat"><b>@Model.AppointmentsLast7Days</b>@P["dash.last7"]</div>
     <div class="stat"><b>@Model.NewAppointments</b>@P["dash.newRequests"]</div>

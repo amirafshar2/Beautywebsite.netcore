@@ -5,6 +5,7 @@
     ViewData["Nav"] = "languages";
 }
 <partial name="_PageIntro" model='("intro.languages", (string?)null)' />
+<partial name="_VisitorView" model='"languages"' />
 <form asp-antiforgery="true" class="card form" method="post" data-dirty>
     <p class="help">@P["lang.orderHelp"]</p>
     <div class="list" data-sortable-local>

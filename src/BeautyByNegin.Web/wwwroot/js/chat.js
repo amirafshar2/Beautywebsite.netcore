@@ -17,6 +17,8 @@
   var compose = panel.querySelector("[data-chat-compose]");
   var badge = document.querySelector("[data-chat-badge]");
   var lastId = 0, step = null, timer = null, busy = false;
+  // "loggedout" | "verify" | "loggedin" (rendered by the server). Anonymous visitors cause no requests until they open the chat.
+  var session = panel.getAttribute("data-session") || "loggedout";
 
   function isOpen() { return panel.classList.contains("is-open"); }
 
@@ -78,6 +80,7 @@
 
   function schedule() {
     clearTimeout(timer);
+    if (session === "loggedout" && !isOpen() && step !== "conversation") return;
     var delay = isOpen() && step === "conversation" ? 6000 : 60000;
     timer = setTimeout(function () { refresh().then(schedule); }, delay);
   }
@@ -111,7 +114,7 @@
     lock(f, true); showError(f, "");
     post("verify", { code: f.code.value })
       .then(function (d) {
-        if (d.ok) { f.reset(); refresh().then(function () { setStep("conversation"); focusStep(); schedule(); }); }
+        if (d.ok) { f.reset(); session = "loggedin"; refresh().then(function () { setStep("conversation"); focusStep(); schedule(); }); }
         else showError(f, d.message);
       })
       .finally(function () { lock(f, false); });
@@ -153,6 +156,6 @@
     refresh().then(function () { focusStep(); scrollDown(); schedule(); });
   });
 
-  setStep("register");
-  refresh().then(schedule);
+  setStep(session === "verify" ? "verify" : "register");
+  if (session !== "loggedout") refresh().then(schedule);
 })();

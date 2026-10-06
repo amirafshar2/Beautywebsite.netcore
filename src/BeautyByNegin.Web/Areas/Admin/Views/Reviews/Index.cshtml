@@ -8,6 +8,7 @@
     var lang = P.DefaultLanguage.Code;
 }
 <partial name="_PageIntro" model='("intro.reviews", $"/{lang}/reviews")' />
+<partial name="_VisitorView" model='"reviews"' />
 <div class="card-head">
     <div class="tabs-line">
         <a href="@P.Url("reviews")" class="@(!pending ? "is-active" : "")">@P["rev.published"]</a>

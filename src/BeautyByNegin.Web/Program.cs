@@ -56,6 +56,7 @@ builder.Services.AddAntiforgery(o =>
     o.HeaderName = "X-CSRF-TOKEN";   // used by the chat and newsletter fetch() calls
 });
 builder.Services.AddScoped<SiteContext>();
+builder.Services.AddScoped<BeautyByNegin.Web.Infrastructure.Customers.CustomerContext>();
 builder.Services.AddSingleton<AssetUrls>();
 builder.Services.AddReverseProxySupport(builder.Configuration);
 builder.Services.AddControllersWithViews();
@@ -75,6 +76,14 @@ var app = builder.Build();
 
 // ---------- Database (auto-create + seed on first run)
 await app.Services.InitializeDatabaseAsync();
+
+// Starter images (brand artwork) + sample gallery/Instagram/aftercare page, added once per database.
+if (!AdminCli.IsCliCall(args))
+{
+    using var seedScope = app.Services.CreateScope();
+    await seedScope.ServiceProvider.GetRequiredService<BeautyByNegin.Business.Content.SampleContentSeeder>()
+        .SeedAsync(Path.Combine(app.Environment.ContentRootPath, "SampleContent"));
+}
 
 // Command line: dotnet BeautyByNegin.Web.dll admin reset-password <user> <password>
 if (AdminCli.IsCliCall(args))

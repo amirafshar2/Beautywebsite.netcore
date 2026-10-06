@@ -1,0 +1,13 @@
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">@T["account.title"]</p>
+        <h1>@T["account.login.title"]</h1>
+        @Html.Paragraphs(T["account.unavailable"], "lead")
+        <partial name="_ContactButtons" model="@("")" />
+    </div>
+</section>

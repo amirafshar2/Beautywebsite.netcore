@@ -1,0 +1,17 @@
+@model PageContext
+@{
+    var T = Model.T;
+    var s = Model.Settings;
+}
+@* What a customer account allows – generated from the panel settings, so it always matches reality. *@
+<div class="panel account-can">
+    <h2 class="h4">@T["account.can.title"]</h2>
+    <ul class="check-list">
+        @if (s.ChatAvailable) { <li>@T["account.can.chat"]</li> }
+        @if (s.AccountsShowBookings) { <li>@T["account.can.bookings"]</li> }
+        @if (s.AllowVisitorReviews) { <li>@T["account.can.reviews"]</li> }
+        <li>@T["account.can.profile"]</li>
+        <li>@T["account.can.delete"]</li>
+    </ul>
+    @Html.Paragraphs(T["account.privacyNote"], "muted small")
+</div>

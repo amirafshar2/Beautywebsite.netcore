@@ -6,6 +6,7 @@
     var lang = P.DefaultLanguage.Code;
 }
 <partial name="_PageIntro" model='("intro.pages", (string?)null)' />
+<partial name="_VisitorView" model='"pages"' />
 <div class="card-head">
     <h2></h2>
     <a class="btn btn-primary" href="@P.Url("pages/create")"><svg class="i"><use href="#a-plus" /></svg>@P["page.add"]</a>

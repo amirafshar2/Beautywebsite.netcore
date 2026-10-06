@@ -25,8 +25,15 @@ public sealed class SiteSettings(IReadOnlyDictionary<string, string?> values)
     public bool ChatEnabled => Bool(SettingKeys.ChatEnabled);
     public bool SmtpConfigured => Bool(SettingKeys.SmtpEnabled) && !string.IsNullOrWhiteSpace(Get(SettingKeys.SmtpHost));
 
-    /// <summary>The chat needs e-mail verification, so it is only offered when e-mail sending works.</summary>
-    public bool ChatAvailable => ChatEnabled && SmtpConfigured;
+    /// <summary>The chat is for logged-in customers, so it needs customer accounts (and therefore e-mail).</summary>
+    public bool ChatAvailable => ChatEnabled && AccountsAvailable;
+
+    /// <summary>Customer accounts: login with an e-mail code, so they only work when e-mail sending works.</summary>
+    public bool AccountsEnabled => Bool(SettingKeys.AccountsEnabled);
+    public bool AccountsAvailable => AccountsEnabled && SmtpConfigured;
+    public bool AccountsShowBookings => Bool(SettingKeys.AccountsShowBookings);
+    /// <summary>Visitor reviews only from logged-in customers (only applies when accounts are available).</summary>
+    public bool ReviewsRequireLogin => Bool(SettingKeys.ReviewsRequireLogin) && AccountsAvailable;
 
     public string Phone => Text(SettingKeys.Phone);
     public string WhatsApp => Text(SettingKeys.WhatsApp);

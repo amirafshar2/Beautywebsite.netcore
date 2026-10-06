@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using BeautyByNegin.Business.Content;
+using BeautyByNegin.Business.Customers;
 using BeautyByNegin.Business.Inbox;
 using BeautyByNegin.Business.Localization;
 using BeautyByNegin.Business.Notifications;
@@ -41,33 +42,22 @@ public interface IChatService
 /// </summary>
 public sealed class ChatService(
     AppDbContext db,
-    ISettingsService settingsService,
-    ITextService texts,
-    IEmailSender email,
-    INotificationQueue notifications,
-    ILogger<ChatService> logger) : IChatService
+    ICustomerAccountService accounts,
+    INotificationQueue notifications) : IChatService
 {
-    private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(15);
-    private static readonly TimeSpan ResendDelay = TimeSpan.FromSeconds(60);
-    private const int MaxCodeAttempts = 5;
     private const int MaxMessagesPerHour = 40;
 
-    public static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
-    private static string NewToken() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-    private static string NewCode() => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("000000");
+    private static ChatResult Map(AccountResult r) =>
+        r.NeedName ? new ChatResult(false, "account.needName") : new ChatResult(r.Ok, r.ErrorKey, r.NewSessionToken);
 
-    private async Task<ChatVisitor?> FindAsync(string? token, CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(token) || token.Length > 100) return null;
-        var hash = Hash(token);
-        return await db.ChatVisitors.FirstOrDefaultAsync(v => v.SessionTokenHash == hash, ct);
-    }
+    private Task<ChatVisitor?> FindAsync(string? token, CancellationToken ct) => accounts.FindLoggedInAsync(token, ct);
 
     public async Task<ChatState> GetStateAsync(string? sessionToken, int afterId, CancellationToken ct = default)
     {
-        var v = await FindAsync(sessionToken, ct);
-        if (v is null) return new ChatState(ChatStep.Register, null, null, [], 0);
-        if (!v.IsEmailVerified) return new ChatState(ChatStep.Verify, v.Name, v.Email, [], 0);
+        var current = await accounts.GetCurrentAsync(sessionToken, ct);
+        if (current.Step == LoginStep.LoggedOut) return new ChatState(ChatStep.Register, null, null, [], 0);
+        if (current.Step == LoginStep.Verify) return new ChatState(ChatStep.Verify, null, current.PendingEmail, [], 0);
+        var v = current.Customer!;
 
         var messages = await db.ChatMessages.AsNoTracking()
             .Where(m => m.VisitorId == v.Id && m.Id > afterId)
@@ -78,95 +68,20 @@ public sealed class ChatService(
         return new ChatState(ChatStep.Conversation, v.Name, v.Email, messages, unread);
     }
 
+    /// <summary>Chat "register" = start the customer login (name + e-mail, code by e-mail).</summary>
     public async Task<ChatResult> RegisterAsync(string? sessionToken, string? name, string? emailAddress, SiteLanguage lang, CancellationToken ct = default)
-    {
-        var settings = await settingsService.GetAsync(ct);
-        if (!settings.ChatAvailable) return new ChatResult(false, "form.error.generic");
-        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(emailAddress)) return new ChatResult(false, "form.error.required");
-        if (!InboxService.IsValidEmail(emailAddress)) return new ChatResult(false, "form.error.email");
-
-        var normalized = emailAddress.Trim().ToLowerInvariant();
-        var visitor = await FindAsync(sessionToken, ct);
-        if (visitor is not null && visitor.Email != normalized)
-            visitor = null; // e-mail changed -> new identity
-
-        // Same e-mail registered before (e.g. new device): reuse the conversation after verification.
-        visitor ??= await db.ChatVisitors.FirstOrDefaultAsync(v => v.Email == normalized, ct);
-        if (visitor?.IsBlocked == true) return new ChatResult(false, "form.error.generic");
-
-        var token = NewToken();
-        if (visitor is null)
-        {
-            visitor = new ChatVisitor { Email = normalized };
-            db.ChatVisitors.Add(visitor);
-        }
-        else if (visitor.LastCodeSentAtUtc is DateTime last && DateTime.UtcNow - last < ResendDelay)
-        {
-            return new ChatResult(false, "form.error.rateLimit");
-        }
-
-        visitor.Name = name.Trim().Length > 150 ? name.Trim()[..150] : name.Trim();
-        visitor.LanguageCode = lang.Code;
-        visitor.SessionTokenHash = Hash(token);
-        visitor.IsEmailVerified = false; // every new device/session proves ownership of the e-mail again
-        var sent = await SendCodeAsync(visitor, lang, ct);
-        await db.SaveChangesAsync(ct);
-        return sent ? new ChatResult(true, null, token) : new ChatResult(false, "form.error.generic");
-    }
+        => Map(await accounts.StartLoginAsync(sessionToken, emailAddress, string.IsNullOrWhiteSpace(name) ? null : name, lang, ct));
 
     public async Task<ChatResult> ResendCodeAsync(string? sessionToken, SiteLanguage lang, CancellationToken ct = default)
-    {
-        var v = await FindAsync(sessionToken, ct);
-        if (v is null) return new ChatResult(false, "chat.codeExpired");
-        if (v.LastCodeSentAtUtc is DateTime last && DateTime.UtcNow - last < ResendDelay)
-            return new ChatResult(false, "form.error.rateLimit");
-        var sent = await SendCodeAsync(v, lang, ct);
-        await db.SaveChangesAsync(ct);
-        return sent ? new ChatResult(true) : new ChatResult(false, "form.error.generic");
-    }
-
-    private async Task<bool> SendCodeAsync(ChatVisitor v, SiteLanguage lang, CancellationToken ct)
-    {
-        var code = NewCode();
-        v.VerificationCodeHash = Hash(v.Email + ":" + code);
-        v.VerificationCodeExpiresAtUtc = DateTime.UtcNow.Add(CodeLifetime);
-        v.VerificationAttempts = 0;
-        v.LastCodeSentAtUtc = DateTime.UtcNow;
-
-        var t = await texts.GetAsync(lang.Code, ct);
-        var result = await email.SendAsync(v.Email, t["chat.email.subject"],
-            t.Format("chat.email.body", ("name", v.Name), ("code", code)), null, ct);
-        if (!result.Ok) logger.LogWarning("Chat code e-mail to {Email} failed: {Error}", v.Email, result.Error);
-        return result.Ok;
-    }
+        => Map(await accounts.ResendCodeAsync(sessionToken, lang, ct));
 
     public async Task<ChatResult> VerifyAsync(string? sessionToken, string? code, CancellationToken ct = default)
-    {
-        var v = await FindAsync(sessionToken, ct);
-        if (v is null || v.VerificationCodeHash is null) return new ChatResult(false, "chat.codeExpired");
-        if (v.IsEmailVerified) return new ChatResult(true);
-        if (v.VerificationCodeExpiresAtUtc < DateTime.UtcNow || v.VerificationAttempts >= MaxCodeAttempts)
-            return new ChatResult(false, "chat.codeExpired");
-
-        var clean = Digits.ToLatin(code ?? "").Trim();
-        v.VerificationAttempts++;
-        var ok = clean.Length == 6 && CryptographicOperations.FixedTimeEquals(
-            Encoding.ASCII.GetBytes(Hash(v.Email + ":" + clean)), Encoding.ASCII.GetBytes(v.VerificationCodeHash));
-        if (ok)
-        {
-            v.IsEmailVerified = true;
-            v.EmailVerifiedAtUtc = DateTime.UtcNow;
-            v.VerificationCodeHash = null;
-        }
-        await db.SaveChangesAsync(ct);
-        return ok ? new ChatResult(true) : new ChatResult(false, v.VerificationAttempts >= MaxCodeAttempts ? "chat.codeExpired" : "chat.codeInvalid");
-    }
+        => Map(await accounts.VerifyAsync(sessionToken, code, ct));
 
     public async Task<ChatResult> SendAsync(string? sessionToken, string? text, string? pageUrl, string panelBaseUrl, CancellationToken ct = default)
     {
         var v = await FindAsync(sessionToken, ct);
-        if (v is null || !v.IsEmailVerified) return new ChatResult(false, "chat.codeExpired");
-        if (v.IsBlocked) return new ChatResult(false, "form.error.generic");
+        if (v is null) return new ChatResult(false, "chat.codeExpired");
         var clean = (text ?? "").Trim();
         if (clean.Length == 0) return new ChatResult(false, "form.error.required");
         if (clean.Length > 2000) clean = clean[..2000];

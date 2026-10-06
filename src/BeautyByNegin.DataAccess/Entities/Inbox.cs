@@ -18,6 +18,8 @@ public class AppointmentRequest : ISoftDelete
     public int Id { get; set; }
     public string FullName { get; set; } = "";
     public string Phone { get; set; } = "";
+    /// <summary>Customer account that sent the request (null = sent without logging in).</summary>
+    public int? CustomerId { get; set; }
     public string? Email { get; set; }
 
     public int? ServiceId { get; set; }

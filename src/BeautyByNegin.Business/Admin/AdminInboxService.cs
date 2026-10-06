@@ -19,6 +19,12 @@ public sealed record PagedResult<T>(IReadOnlyList<T> Items, int Total, int Page,
 
 public sealed record ChatThread(ChatVisitor Visitor, string? LastText, int Unread);
 
+/// <summary>One row of the "Customers" screen.</summary>
+public sealed record CustomerRow(ChatVisitor Customer, int Bookings, int Messages, int Unread, int Devices);
+
+/// <summary>Customer details: profile, own booking requests and chat statistics.</summary>
+public sealed record CustomerDetails(ChatVisitor Customer, IReadOnlyList<AppointmentRequest> Bookings, int Messages, int Unread, int Devices);
+
 public interface IAdminInboxService
 {
     Task<DashboardStats> GetDashboardAsync(CancellationToken ct = default);
@@ -35,6 +41,10 @@ public interface IAdminInboxService
     Task<IReadOnlyList<ChatThread>> GetChatsAsync(CancellationToken ct = default);
     Task<(ChatVisitor? Visitor, IReadOnlyList<ChatMessage> Messages)> GetConversationAsync(int visitorId, CancellationToken ct = default);
     Task<bool> SetChatBlockedAsync(int visitorId, bool blocked, CancellationToken ct = default);
+
+    Task<IReadOnlyList<CustomerRow>> GetCustomersAsync(string? search, CancellationToken ct = default);
+    Task<CustomerDetails?> GetCustomerAsync(int id, CancellationToken ct = default);
+    Task<bool> UpdateCustomerNotesAsync(int id, string? notes, CancellationToken ct = default);
 
     Task<IReadOnlyList<NewsletterSubscriber>> GetSubscribersAsync(CancellationToken ct = default);
     Task<byte[]> ExportSubscribersCsvAsync(CancellationToken ct = default);
@@ -176,6 +186,49 @@ public sealed class AdminInboxService(AppDbContext db) : IAdminInboxService
 
     public async Task<bool> SetChatBlockedAsync(int visitorId, bool blocked, CancellationToken ct = default)
         => await db.ChatVisitors.Where(v => v.Id == visitorId).ExecuteUpdateAsync(s => s.SetProperty(v => v.IsBlocked, blocked), ct) > 0;
+
+    public async Task<IReadOnlyList<CustomerRow>> GetCustomersAsync(string? search, CancellationToken ct = default)
+    {
+        var q = db.ChatVisitors.AsNoTracking().Where(v => v.IsEmailVerified);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            q = q.Where(v => v.Name.ToLower().Contains(term) || v.Email.Contains(term) || (v.Phone != null && v.Phone.Contains(term)));
+        }
+        var customers = await q.OrderByDescending(v => v.LastLoginAtUtc ?? v.CreatedAtUtc).Take(300).ToListAsync(ct);
+        var ids = customers.Select(v => v.Id).ToList();
+        var emails = customers.Select(v => v.Email).ToList();
+        var bookings = await db.AppointmentRequests.AsNoTracking()
+            .Where(a => (a.CustomerId != null && ids.Contains(a.CustomerId.Value)) || (a.Email != null && emails.Contains(a.Email.ToLower())))
+            .Select(a => new { a.CustomerId, Email = a.Email == null ? null : a.Email.ToLower() }).ToListAsync(ct);
+        var messages = await db.ChatMessages.Where(m => ids.Contains(m.VisitorId) && !m.FromAdmin)
+            .GroupBy(m => m.VisitorId).Select(g => new { g.Key, Count = g.Count(), Unread = g.Count(m => !m.ReadByAdmin) })
+            .ToDictionaryAsync(x => x.Key, ct);
+        var devices = await db.CustomerSessions.Where(x => ids.Contains(x.VisitorId) && x.IsVerified && x.ExpiresAtUtc > DateTime.UtcNow)
+            .GroupBy(x => x.VisitorId).Select(g => new { g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.Key, x => x.Count, ct);
+        return customers.Select(v => new CustomerRow(v,
+            bookings.Count(b => b.CustomerId == v.Id || b.Email == v.Email),
+            messages.TryGetValue(v.Id, out var m) ? m.Count : 0,
+            messages.TryGetValue(v.Id, out var m2) ? m2.Unread : 0,
+            devices.GetValueOrDefault(v.Id))).ToList();
+    }
+
+    public async Task<CustomerDetails?> GetCustomerAsync(int id, CancellationToken ct = default)
+    {
+        var v = await db.ChatVisitors.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (v is null) return null;
+        var bookings = await db.AppointmentRequests.AsNoTracking()
+            .Where(a => a.CustomerId == id || (a.Email != null && a.Email.ToLower() == v.Email))
+            .OrderByDescending(a => a.CreatedAtUtc).Take(100).ToListAsync(ct);
+        var messages = await db.ChatMessages.CountAsync(m => m.VisitorId == id && !m.FromAdmin, ct);
+        var unread = await db.ChatMessages.CountAsync(m => m.VisitorId == id && !m.FromAdmin && !m.ReadByAdmin, ct);
+        var devices = await db.CustomerSessions.CountAsync(x => x.VisitorId == id && x.IsVerified && x.ExpiresAtUtc > DateTime.UtcNow, ct);
+        return new CustomerDetails(v, bookings, messages, unread, devices);
+    }
+
+    public async Task<bool> UpdateCustomerNotesAsync(int id, string? notes, CancellationToken ct = default)
+        => await db.ChatVisitors.Where(v => v.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(v => v.AdminNotes, string.IsNullOrWhiteSpace(notes) ? null : notes.Trim()), ct) > 0;
 
     public async Task<IReadOnlyList<NewsletterSubscriber>> GetSubscribersAsync(CancellationToken ct = default)
         => await db.NewsletterSubscribers.AsNoTracking().OrderByDescending(s => s.CreatedAtUtc).ToListAsync(ct);

@@ -8,6 +8,7 @@
     var certificates = (IReadOnlyList<ListItem>)ViewData["Certificates"]!;
 }
 <partial name="_PageIntro" model='("intro.about", $"/{P.DefaultLanguage.Code}/about")' />
+<partial name="_VisitorView" model='"about"' />
 <form asp-antiforgery="true" method="post" data-dirty>
     <div class="grid-side">
         <div class="card form">

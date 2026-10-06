@@ -12,11 +12,11 @@ namespace BeautyByNegin.Business.Inbox;
 
 public sealed record BookingInput(
     string? FullName, string? Phone, string? Email, int? ServiceId, DateOnly? PreferredDate, bool DateInvalid,
-    int? TimeSlotId, string? Message, bool PrivacyAccepted);
+    int? TimeSlotId, string? Message, bool PrivacyAccepted, int? CustomerId = null);
 
 public sealed record ContactInput(string? Name, string? ContactInfo, string? Message, bool PrivacyAccepted);
 
-public sealed record ReviewInput(string? Name, bool InitialsOnly, int? Rating, string? Text, int? ServiceId, bool PrivacyAccepted);
+public sealed record ReviewInput(string? Name, bool InitialsOnly, int? Rating, string? Text, int? ServiceId, bool PrivacyAccepted, int? CustomerId = null);
 
 /// <summary>Validation result: field name -> text key of the error message (translated by the web layer).</summary>
 public sealed record SubmitResult(bool Ok, IReadOnlyDictionary<string, string> Errors, int? Id = null)
@@ -91,7 +91,8 @@ public sealed class InboxService(
             TimeSlotSnapshot = slot?.Label,
             Message = string.IsNullOrWhiteSpace(input.Message) ? null : Clean(input.Message, 3000),
             LanguageCode = lang.Code,
-            PrivacyAccepted = input.PrivacyAccepted
+            PrivacyAccepted = input.PrivacyAccepted,
+            CustomerId = input.CustomerId
         };
         db.AppointmentRequests.Add(request);
         await db.SaveChangesAsync(ct);
@@ -152,6 +153,7 @@ public sealed class InboxService(
         var settings = await settingsService.GetAsync(ct);
         var errors = new Dictionary<string, string>();
         if (!settings.AllowVisitorReviews) errors[""] = "form.error.generic";
+        else if (settings.ReviewsRequireLogin && input.CustomerId is null) errors[""] = "account.loginRequired";
         if (string.IsNullOrWhiteSpace(input.Name)) errors["Name"] = "form.error.required";
         if (string.IsNullOrWhiteSpace(input.Text)) errors["Text"] = "form.error.required";
         if (settings.PrivacyConsentRequired && !input.PrivacyAccepted) errors["PrivacyAccepted"] = "form.error.privacy";
@@ -169,6 +171,7 @@ public sealed class InboxService(
             ServiceId = services.Any(s => s.Id == input.ServiceId) ? input.ServiceId : null,
             Source = ReviewSource.Website,
             Status = ReviewStatus.Pending,
+            CustomerId = input.CustomerId,
             IsVisible = true,
             SortOrder = 0
         };

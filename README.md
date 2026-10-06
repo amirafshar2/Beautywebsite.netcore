@@ -50,6 +50,8 @@ BeautyByNegin.sln
 - **URL'ler:** `/fa/...`, `/tr/...`, `/de/...`, `/en/...`, `/ar/...`. Sayfa adları dile göre çevrilir (ör. `/de/behandlungen`, `/tr/hizmetler`, `/en/treatments`). Kapalı bir dilin adresleri varsayılan dile yönlendirilir (404 değil).
 - **Yönetim paneli:** `Areas/Admin` altında, varsayılan adres `/admin`. Panel dili kullanıcı başına seçilir (FA/TR/DE/EN).
 - **Silme işlemi:** İçerikler önce çöp kutusuna gider (soft delete) ve 30 gün sonra otomatik silinir.
+- **Müşteri hesapları:** Ziyaretçiler sitedeki "Giriş" butonuyla yalnızca e-postalarıyla kaydolur ve giriş yapar (şifre yok; e-postaya 6 haneli kod gelir, cihaz başına oturum, çerezde yalnızca rastgele token, veritabanında SHA-256 özeti). Giriş yapan müşteri sohbet edebilir, kendi randevu taleplerini ve durumlarını görebilir, (açıksa) yorum yazabilir, adını/telefonunu düzenleyebilir ve hesabını silebilir. Panele erişimleri yoktur. Sohbet yalnızca giriş yapmış müşterilere açıktır. Yetkiler panelde **Genel Ayarlar → Müşteri hesapları** bölümünden açılıp kapatılır; hesaplar **Müşteriler** ekranından yönetilir (engelleme, tüm cihazlardan çıkış, not, silme). E-posta (SMTP) ayarlanmadan hesaplar ve sohbet görünmez.
+- **Örnek görseller:** İlk çalıştırmada `SampleContent/` klasöründeki marka renklerinde hazırlanmış görseller (hero, hakkımızda, danışmanlık, 10 hizmet, galeri, Instagram) ve örnek bir "bakım sonrası öneriler" sayfası **bir kez** eklenir. Admin sonradan silerse tekrar eklenmez. Gerçek fotoğraflar panelden yüklenip bunların yerine konur. İlk başlangıç bu yüzden 20–30 saniye sürebilir.
 
 ## 2. Lokal geliştirme ve çalıştırma
 

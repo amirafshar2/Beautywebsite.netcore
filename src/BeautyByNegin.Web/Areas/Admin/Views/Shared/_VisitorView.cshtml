@@ -1,0 +1,10 @@
+@model string
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+}
+@* "What does the customer do with this part of the site – and why does it matter?" (plain words, every screen) *@
+<section class="visitor-view" aria-label="@P["vv.title"]">
+    <h2><svg class="i" aria-hidden="true"><use href="#a-user" /></svg>@P["vv.title"]</h2>
+    <p>@P["vv." + Model + ".does"]</p>
+    <p class="why"><strong>@P["vv.why"]</strong> @P["vv." + Model + ".why"]</p>
+</section>

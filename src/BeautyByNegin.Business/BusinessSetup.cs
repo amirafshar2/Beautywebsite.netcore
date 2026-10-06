@@ -37,10 +37,12 @@ public static class BusinessSetup
 
         // Visitor submissions and chat
         services.AddScoped<IInboxService, InboxService>();
+        services.AddScoped<Customers.ICustomerAccountService, Customers.CustomerAccountService>();
         services.AddScoped<IChatService, ChatService>();
 
         // Admin panel
         services.AddScoped<IMediaService, MediaService>();
+        services.AddScoped<Content.SampleContentSeeder>();
         services.AddScoped<IAdminData, AdminData>();
         services.AddScoped<ITrashService, TrashService>();
         services.AddScoped<IBackupService, BackupService>();

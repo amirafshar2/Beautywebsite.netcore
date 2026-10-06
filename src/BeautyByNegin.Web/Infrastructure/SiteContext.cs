@@ -21,6 +21,9 @@ public sealed class PageContext
     /// <summary>Menu item to highlight, e.g. "services".</summary>
     public string? ActiveNav { get; set; }
 
+    /// <summary>The visiting customer (logged in / waiting for the code / anonymous).</summary>
+    public Business.Customers.CurrentCustomer Customer { get; set; } = Business.Customers.CurrentCustomer.Anonymous;
+
     public string Code => Lang.Code;
 
     /// <summary>Formats a number with Persian digits when the language uses them.</summary>

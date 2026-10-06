@@ -7,6 +7,7 @@
     var qs = $"status={f.Status}&from={f.From:yyyy-MM-dd}&to={f.To:yyyy-MM-dd}&q={Uri.EscapeDataString(f.Search ?? "")}";
 }
 <partial name="_PageIntro" model='("intro.appointments", (string?)null)' />
+<partial name="_VisitorView" model='"appointments"' />
 
 <div class="tabs-line">
     <a href="@P.Url("appointments")" class="@(f.Status is null ? "is-active" : "")">@P["common.all"]</a>

@@ -5,6 +5,7 @@
     ViewData["Nav"] = "trash";
 }
 <partial name="_PageIntro" model='("intro.trash", (string?)null)' />
+<partial name="_VisitorView" model='"trash"' />
 @if (Model.Count == 0)
 {
     <div class="card empty">@P["trash.empty"]</div>

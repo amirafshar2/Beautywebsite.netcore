@@ -16,6 +16,7 @@
 }
 <p><a href="@P.Url("services")">← @P["common.backToList"]</a></p>
 <partial name="_PageIntro" model='("intro.serviceEdit", isNew || defaultSlug is null ? null : $"/{P.DefaultLanguage.Code}/services/{defaultSlug}")' />
+<partial name="_VisitorView" model='"services"' />
 
 <form asp-antiforgery="true" class="form" method="post" action="@P.Url("services/save")" data-dirty>
     <input type="hidden" name="Id" value="@Model.Id" />

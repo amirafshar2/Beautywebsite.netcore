@@ -18,6 +18,8 @@ public abstract class PublicController : Controller
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         Ctx = await HttpContext.RequestServices.GetRequiredService<SiteContext>().GetAsync();
+        if (Ctx.Settings.AccountsAvailable)
+            Ctx.Customer = await HttpContext.RequestServices.GetRequiredService<Infrastructure.Customers.CustomerContext>().GetAsync();
 
         if (Ctx.Settings.MaintenanceMode && User.Identity?.IsAuthenticated != true)
         {

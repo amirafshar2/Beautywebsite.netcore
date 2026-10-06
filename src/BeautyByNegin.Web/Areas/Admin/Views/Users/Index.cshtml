@@ -5,6 +5,7 @@
     ViewData["Nav"] = "users";
 }
 <partial name="_PageIntro" model='("intro.users", (string?)null)' />
+<partial name="_VisitorView" model='"users"' />
 <div class="list">
     @foreach (var (u, isAdmin) in Model)
     {

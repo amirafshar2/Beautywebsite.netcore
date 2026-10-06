@@ -9,6 +9,7 @@
     string CatName(GalleryCategory c) => (c.Translations.FirstOrDefault(t => t.LanguageCode == lang) ?? c.Translations.FirstOrDefault())?.Name ?? "—";
 }
 <partial name="_PageIntro" model='("intro.gallery", $"/{lang}/gallery")' />
+<partial name="_VisitorView" model='"gallery"' />
 
 <div class="card">
     <div class="card-head">

@@ -1,0 +1,191 @@
+@model BeautyByNegin.Web.Controllers.AccountPage
+@using BeautyByNegin.Business.Customers
+@using BeautyByNegin.DataAccess.Entities
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var lang = ctx.Code;
+    var api = $"/{lang}/api/account";
+    var current = Model.Current;
+    var tz = ctx.Settings.TimeZone;
+    string Status(AppointmentStatus s) => T["account.status." + s.ToString().ToLowerInvariant()];
+}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">@T["account.title"]</p>
+        @if (current.IsLoggedIn)
+        {
+            <h1>@T["account.hello"].Replace("{name}", current.Customer!.Name)</h1>
+        }
+        else
+        {
+            <h1>@T["account.login.title"]</h1>
+        }
+    </div>
+</section>
+
+<section class="section pt-0">
+    <div class="container account">
+        @if (Model.Notice is not null) { <p class="alert alert-success" role="status">@Model.Notice</p> }
+        @if (Model.Error is not null) { <p class="alert alert-error" role="alert">@Model.Error</p> }
+
+        @if (current.Step == LoginStep.LoggedOut)
+        {
+            <div class="account-grid">
+                <div class="panel">
+                    @Html.Paragraphs(T["account.login.intro"], "muted")
+                    <form class="form" method="post" action="@api/start" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input class="hp-field" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                        <div class="field">
+                            <label for="acc-email">@T["account.email"] <span class="req">*</span></label>
+                            <input id="acc-email" name="email" type="email" required maxlength="200" autocomplete="email" dir="ltr" value="@Model.NeedNameEmail" />
+                        </div>
+                        @if (Model.NeedNameEmail is not null)
+                        {
+                            <p class="alert alert-info">@T["account.needName"]</p>
+                            <div class="field">
+                                <label for="acc-name">@T["account.name"] <span class="req">*</span></label>
+                                <input id="acc-name" name="name" required maxlength="150" autocomplete="name" autofocus />
+                            </div>
+                        }
+                        <button class="btn btn-primary btn-block" type="submit">@T["account.sendCode"]</button>
+                    </form>
+                </div>
+                <partial name="_AccountCan" model="ctx" />
+            </div>
+        }
+        else if (current.Step == LoginStep.Verify)
+        {
+            <div class="account-grid">
+                <div class="panel">
+                    <h2 class="h3">@T["account.code.title"]</h2>
+                    <p class="muted">@T["account.code.intro"].Replace("{email}", current.PendingEmail ?? "")</p>
+                    <form class="form" method="post" action="@api/verify" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                        <div class="field">
+                            <label for="acc-code">@T["chat.code"]</label>
+                            <input id="acc-code" class="code-input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required dir="ltr" autofocus />
+                        </div>
+                        <button class="btn btn-primary btn-block" type="submit">@T["account.verify"]</button>
+                    </form>
+                    <div class="account-links">
+                        <form method="post" action="@api/resend">@Html.AntiForgeryToken()<input type="hidden" name="returnUrl" value="@Model.ReturnUrl" /><button class="link-btn" type="submit">@T["chat.resend"]</button></form>
+                        <form method="post" action="@api/logout">@Html.AntiForgeryToken()<button class="link-btn" type="submit">@T["account.otherEmail"]</button></form>
+                    </div>
+                </div>
+                <partial name="_AccountCan" model="ctx" />
+            </div>
+        }
+        else
+        {
+            var me = current.Customer!;
+            <nav class="account-nav" aria-label="@T["account.title"]">
+                @if (ctx.Settings.AccountsShowBookings) { <a href="#bookings">@T["account.bookings.title"]</a> }
+                @if (ctx.Settings.ChatAvailable) { <a href="#messages">@T["account.messages.title"]</a> }
+                <a href="#profile">@T["account.profile.title"]</a>
+            </nav>
+
+            <div class="account-grid">
+                <div class="account-main">
+                    @if (ctx.Settings.AccountsShowBookings)
+                    {
+                        <section class="panel" id="bookings">
+                            <div class="panel-head">
+                                <h2 class="h3">@T["account.bookings.title"]</h2>
+                                <a class="btn btn-sm" href="@SiteUrls.Booking(lang)">@T["account.bookings.new"]</a>
+                            </div>
+                            @if (Model.Bookings.Count == 0)
+                            {
+                                <p class="muted">@T["account.bookings.empty"]</p>
+                            }
+                            else
+                            {
+                                <ul class="booking-list">
+                                    @foreach (var b in Model.Bookings)
+                                    {
+                                        <li>
+                                            <div>
+                                                <strong>@(b.WantsConsultation ? T["account.bookings.consultation"] : b.ServiceName ?? "—")</strong>
+                                                <span class="muted small">
+                                                    @if (b.PreferredDate is DateOnly d) { <span>@DateDisplay.FormatDate(d.ToDateTime(TimeOnly.MinValue), ctx.Lang)</span> }
+                                                    @if (b.TimeSlot is not null) { <span>· @b.TimeSlot</span> }
+                                                </span>
+                                                <span class="muted small">@T["account.bookings.sent"] @DateDisplay.FormatDate(DateDisplay.ToLocal(b.CreatedAtUtc, tz), ctx.Lang)</span>
+                                            </div>
+                                            <span class="status-chip s-@b.Status.ToString().ToLowerInvariant()">@Status(b.Status)</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </section>
+                    }
+
+                    @if (ctx.Settings.ChatAvailable)
+                    {
+                        <section class="panel" id="messages">
+                            <h2 class="h3">@T["account.messages.title"]</h2>
+                            <div class="account-chat">
+                                @if (Model.Messages.Count == 0)
+                                {
+                                    @Html.Paragraphs(T["account.messages.empty"], "muted")
+                                }
+                                @foreach (var m in Model.Messages)
+                                {
+                                    <div class="chat-msg @(m.FromAdmin ? "from-admin" : "from-visitor")">@m.Text<time>@Digits.Native(DateDisplay.ToLocal(m.CreatedAtUtc, tz).ToString("HH:mm"), ctx.Lang)</time></div>
+                                }
+                            </div>
+                            <form class="form account-compose" method="post" action="@api/message">
+                                @Html.AntiForgeryToken()
+                                <label class="visually-hidden" for="acc-msg">@T["chat.placeholder"]</label>
+                                <textarea id="acc-msg" name="text" rows="2" maxlength="2000" required placeholder="@T["chat.placeholder"]"></textarea>
+                                <button class="btn btn-primary" type="submit">@T["chat.send"]</button>
+                            </form>
+                        </section>
+                    }
+
+                    <section class="panel" id="profile">
+                        <h2 class="h3">@T["account.profile.title"]</h2>
+                        <form class="form" method="post" action="@api/profile">
+                            @Html.AntiForgeryToken()
+                            <div class="field">
+                                <label for="acc-p-name">@T["account.name"] <span class="req">*</span></label>
+                                <input id="acc-p-name" name="name" value="@me.Name" required maxlength="150" autocomplete="name" />
+                            </div>
+                            <div class="field">
+                                <label for="acc-p-email">@T["account.email"]</label>
+                                <input id="acc-p-email" value="@me.Email" readonly dir="ltr" />
+                            </div>
+                            <div class="field">
+                                <label for="acc-p-phone">@T["account.phone"]</label>
+                                <input id="acc-p-phone" name="phone" type="tel" value="@me.Phone" maxlength="40" autocomplete="tel" dir="ltr" />
+                                <span class="hint">@T["account.phoneHelp"]</span>
+                            </div>
+                            <button class="btn btn-primary" type="submit">@T["account.save"]</button>
+                        </form>
+                    </section>
+                </div>
+
+                <aside class="account-side">
+                    <partial name="_AccountCan" model="ctx" />
+                    <form method="post" action="@api/logout">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-block" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>@T["account.logout"]</button>
+                    </form>
+                    <details class="panel danger-zone">
+                        <summary>@T["account.delete.title"]</summary>
+                        @Html.Paragraphs(T["account.delete.text"], "muted small")
+                        <form method="post" action="@api/delete">
+                            @Html.AntiForgeryToken()
+                            <label class="check"><input type="checkbox" name="confirm" value="true" required /> <span>@T["account.delete.confirm"]</span></label>
+                            <button class="btn btn-danger btn-sm" type="submit">@T["account.delete.button"]</button>
+                        </form>
+                    </details>
+                </aside>
+            </div>
+        }
+    </div>
+</section>

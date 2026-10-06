@@ -35,6 +35,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<NewsletterSubscriber> NewsletterSubscribers => Set<NewsletterSubscriber>();
     public DbSet<ChatVisitor> ChatVisitors => Set<ChatVisitor>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<CustomerSession> CustomerSessions => Set<CustomerSession>();
 
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<PageTranslation> PageTranslations => Set<PageTranslation>();
@@ -138,6 +139,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             e.Property(x => x.FullName).HasMaxLength(150).IsRequired();
             e.Property(x => x.Phone).HasMaxLength(40).IsRequired();
+            e.HasIndex(x => x.CustomerId);
             e.Property(x => x.Email).HasMaxLength(200);
             e.Property(x => x.ServiceNameSnapshot).HasMaxLength(150);
             e.Property(x => x.TimeSlotSnapshot).HasMaxLength(100);
@@ -175,12 +177,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.Name).HasMaxLength(150).IsRequired();
             e.Property(x => x.LanguageCode).HasMaxLength(5);
             e.Property(x => x.VerificationCodeHash).HasMaxLength(100);
-            e.Property(x => x.SessionTokenHash).HasMaxLength(100);
+            e.Property(x => x.Phone).HasMaxLength(40);
             e.Property(x => x.AdminNotes).HasMaxLength(3000);
             e.HasIndex(x => x.Email);
-            e.HasIndex(x => x.SessionTokenHash);
             e.HasIndex(x => x.LastMessageAtUtc);
             e.HasMany(x => x.Messages).WithOne(m => m.Visitor).HasForeignKey(m => m.VisitorId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(x => x.Sessions).WithOne(m => m.Visitor).HasForeignKey(m => m.VisitorId).OnDelete(DeleteBehavior.Cascade);
+        });
+        b.Entity<CustomerSession>(e =>
+        {
+            e.Property(x => x.TokenHash).HasMaxLength(100).IsRequired();
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasQueryFilter(x => x.Visitor!.DeletedAtUtc == null);
         });
         b.Entity<ChatMessage>(e =>
         {

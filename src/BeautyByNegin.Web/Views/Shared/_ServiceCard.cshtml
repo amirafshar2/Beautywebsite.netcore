@@ -4,12 +4,23 @@
     var ctx = await Site.GetAsync();
     var T = ctx.T;
     var url = SiteUrls.Service(ctx.Code, Model.Slug);
+    // On the treatments page the cards come right after the h1 (h2); on the home page they sit under a section h2 (h3).
+    var asH2 = ViewData["CardHeading"] as string == "h2";
+    // The first cards are visible without scrolling: load them right away (largest image of the page).
+    var priority = ViewData["CardPriority"] is true;
 }
 <article class="card service-card reveal">
-    <a href="@url" class="media ratio-4x5" tabindex="-1" aria-hidden="true">@Html.Img(Model.Image, "(min-width: 1000px) 380px, (min-width: 640px) 45vw, 92vw", Model.Name)</a>
+    <a href="@url" class="media ratio-4x5" tabindex="-1" aria-hidden="true">@Html.Img(Model.Image, "(min-width: 1000px) 380px, (min-width: 640px) 45vw, 92vw", Model.Name, priority)</a>
     <div class="card-body">
         <p class="numbered"><span class="num">@Model.NumberLabel</span><span>—</span><span>@Model.Name.ToUpperInvariant()</span></p>
-        <h3><a class="stretched" href="@url">@Model.Name</a></h3>
+        @if (asH2)
+        {
+            <h2 class="h3"><a class="stretched" href="@url">@Model.Name</a></h2>
+        }
+        else
+        {
+            <h3><a class="stretched" href="@url">@Model.Name</a></h3>
+        }
         @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
         {
             <p class="subtitle">@Model.Subtitle</p>

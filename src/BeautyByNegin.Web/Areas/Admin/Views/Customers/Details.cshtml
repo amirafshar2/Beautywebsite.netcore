@@ -1,0 +1,83 @@
+@model CustomerDetails
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    var c = Model.Customer;
+    ViewData["Title"] = c.Name;
+    ViewData["Nav"] = "customers";
+}
+<p><a href="@P.Url("customers")">← @P["common.backToList"]</a></p>
+<div class="grid-2">
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <h2>@c.Name @if (c.IsBlocked) { <span class="chip">@P["chat.blocked"]</span> }</h2>
+                <span class="soft ltr">@c.Email</span>@if (c.Phone is not null) { <span> · <span class="soft ltr">@c.Phone</span></span> } · <span class="soft">@c.LanguageCode.ToUpperInvariant()</span>
+            </div>
+        </div>
+        <dl class="facts">
+            <dt>@P["cust.registered"]</dt><dd>@P.Date(c.CreatedAtUtc)</dd>
+            <dt>@P["cust.lastLogin"]</dt><dd>@(c.LastLoginAtUtc is DateTime ll ? P.Date(ll) : "—")</dd>
+            <dt>@P["cust.devices"]</dt><dd>@P.F("cust.devicesCount", Model.Devices)</dd>
+            <dt>@P["cust.messages"]</dt><dd>@P.F("cust.messagesCount", Model.Messages)</dd>
+        </dl>
+        <div class="row-actions">
+            <a class="btn btn-sm btn-primary" href="@P.Url($"chats/conversation/{c.Id}")"><svg class="i"><use href="#a-chat" /></svg>@P["cust.openChat"]@if (Model.Unread > 0) { <b class="badge">@Model.Unread</b> }</a>
+            <a class="btn btn-sm" href="mailto:@c.Email"><svg class="i"><use href="#a-mail" /></svg>@P["appt.email"]</a>
+            @if (c.Phone is not null)
+            {
+                <a class="btn btn-sm" href="tel:@c.Phone"><svg class="i"><use href="#a-phone" /></svg>@P["appt.call"]</a>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>@P["cust.manage"]</h2>
+        <p class="help">@P["cust.blockHelp"]</p>
+        <div class="row-actions">
+            <form asp-antiforgery="true" method="post" action="@P.Url($"customers/block/{c.Id}")">
+                <input type="hidden" name="blocked" value="@((!c.IsBlocked).ToString().ToLowerInvariant())" />
+                <button class="btn btn-sm" type="submit">@(c.IsBlocked ? P["chat.unblock"] : P["cust.block"])</button>
+            </form>
+            @if (Model.Devices > 0)
+            {
+                <form asp-antiforgery="true" method="post" action="@P.Url($"customers/logout/{c.Id}")">
+                    <button class="btn btn-sm" type="submit">@P["cust.logoutAll"]</button>
+                </form>
+            }
+            <form asp-antiforgery="true" method="post" action="@P.Url($"customers/delete/{c.Id}")" data-confirm="@P["cust.confirmDelete"]">
+                <button class="btn btn-sm btn-danger" type="submit"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
+            </form>
+        </div>
+        <form asp-antiforgery="true" class="form mt" method="post" action="@P.Url($"customers/notes/{c.Id}")">
+            <div class="field">
+                <label for="notes">@P["appt.notes"]</label>
+                <textarea id="notes" name="notes" maxlength="3000">@c.AdminNotes</textarea>
+                <p class="help">@P["cust.notesHelp"]</p>
+            </div>
+            <div><button class="btn btn-primary" type="submit">@P["common.save"]</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <h2>@P["cust.bookings"]</h2>
+    @if (Model.Bookings.Count == 0)
+    {
+        <p class="soft">@P["cust.noBookings"]</p>
+    }
+    else
+    {
+        <div class="list">
+            @foreach (var b in Model.Bookings)
+            {
+                <a class="item" href="@P.Url($"appointments/details/{b.Id}")">
+                    <div class="body">
+                        <span class="title">@(b.WantsConsultation ? P["appt.consultation"] : b.ServiceNameSnapshot ?? "—")</span>
+                        <span class="meta"><span>@P.Date(b.CreatedAtUtc)</span>@if (b.PreferredDate is DateOnly d) { <span>@P["appt.preferred"]: @P.Day(d)</span> }</span>
+                    </div>
+                    <span class="chip s-@b.Status.ToString().ToLowerInvariant()">@P["status." + b.Status.ToString().ToLowerInvariant()]</span>
+                </a>
+            }
+        </div>
+    }
+</div>

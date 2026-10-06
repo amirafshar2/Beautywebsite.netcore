@@ -36,6 +36,11 @@
     <Content Remove="wwwroot\uploads\**" />
   </ItemGroup>
 
+  <!-- Starter artwork, imported once into the database on first start (then managed in the panel) -->
+  <ItemGroup>
+    <None Include="SampleContent\*.jpg" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- The Persian panel guide (docs/panel-rehberi-fa.md) is shown under "Help" in the panel, so it ships with the app -->
   <ItemGroup>
     <None Include="..\..\docs\**\*.md" Link="docs\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

@@ -17,6 +17,10 @@
             <h2>@Model.FullName</h2>
             <span class="chip s-@Model.Status.ToString().ToLowerInvariant()">@P["status." + Model.Status.ToString().ToLowerInvariant()]</span>
         </div>
+        @if (Model.CustomerId is int cid)
+        {
+            <p><a href="@P.Url($"customers/details/{cid}")"><svg class="i"><use href="#a-users" /></svg> @P["appt.fromAccount"]</a></p>
+        }
         <div class="row-actions">
             @if (tel is not null) { <a class="btn btn-primary btn-lg" href="@tel"><svg class="i"><use href="#a-phone" /></svg>@P["appt.call"]</a> }
             @if (wa is not null) { <a class="btn btn-lg" href="@wa" target="_blank" rel="noopener"><svg class="i"><use href="#a-whatsapp" /></svg>@P["appt.whatsapp"]</a> }

@@ -5,6 +5,7 @@
     ViewData["Nav"] = "chats";
 }
 <partial name="_PageIntro" model='("intro.chats", (string?)null)' />
+<partial name="_VisitorView" model='"chats"' />
 @if (!P.Settings.ChatAvailable)
 {
     <p class="hint-note">@P["chat.notActive"] <a href="@P.Url("settings#email")">@P["nav.settings"]</a></p>

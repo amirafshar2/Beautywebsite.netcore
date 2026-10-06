@@ -15,6 +15,7 @@ public static class SiteRoutes
     public const string Reviews = "reviews";
     public const string Contact = "contact";
     public const string Booking = "booking";
+    public const string Account = "account";
 
     /// <summary>Persian and Arabic use the English segments (Latin URLs are easier to share and type).</summary>
     private static Dictionary<string, string> Seg(string fa, string tr, string de, string en)
@@ -31,6 +32,7 @@ public static class SiteRoutes
         new(Reviews, "Reviews", "Index", false, Seg("reviews", "yorumlar", "bewertungen", "reviews")),
         new(Contact, "Contact", "Index", false, Seg("contact", "iletisim", "kontakt", "contact")),
         new(Booking, "Booking", "Index", false, Seg("booking", "randevu", "termin", "booking")),
+        new(Account, "Account", "Index", false, Seg("account", "hesabim", "konto", "account")),
     ];
 
     /// <summary>Registers all localized routes. Must be called before the generic "{culture}/{slug}" page route.</summary>

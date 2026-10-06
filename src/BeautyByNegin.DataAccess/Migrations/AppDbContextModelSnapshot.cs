@@ -110,6 +110,9 @@ namespace BeautyByNegin.DataAccess.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -168,6 +171,8 @@ namespace BeautyByNegin.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("CustomerId");
 
                     b.HasIndex("ServiceId");
 
@@ -256,6 +261,9 @@ namespace BeautyByNegin.DataAccess.Migrations
                     b.Property<DateTime?>("LastCodeSentAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("LastLoginAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("LastMessageAtUtc")
                         .HasColumnType("TEXT");
 
@@ -264,8 +272,8 @@ namespace BeautyByNegin.DataAccess.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SessionTokenHash")
-                        .HasMaxLength(100)
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("VerificationAttempts")
@@ -283,8 +291,6 @@ namespace BeautyByNegin.DataAccess.Migrations
                     b.HasIndex("Email");
 
                     b.HasIndex("LastMessageAtUtc");
-
-                    b.HasIndex("SessionTokenHash");
 
                     b.ToTable("ChatVisitors");
                 });
@@ -336,6 +342,42 @@ namespace BeautyByNegin.DataAccess.Migrations
                     b.HasIndex("CreatedAtUtc");
 
                     b.ToTable("ContactMessages");
+                });
+
+            modelBuilder.Entity("BeautyByNegin.DataAccess.Entities.CustomerSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastSeenAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VisitorId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("VisitorId");
+
+                    b.ToTable("CustomerSessions");
                 });
 
             modelBuilder.Entity("BeautyByNegin.DataAccess.Entities.GalleryCategory", b =>
@@ -859,6 +901,9 @@ namespace BeautyByNegin.DataAccess.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -1346,6 +1391,17 @@ namespace BeautyByNegin.DataAccess.Migrations
                     b.Navigation("Visitor");
                 });
 
+            modelBuilder.Entity("BeautyByNegin.DataAccess.Entities.CustomerSession", b =>
+                {
+                    b.HasOne("BeautyByNegin.DataAccess.Entities.ChatVisitor", "Visitor")
+                        .WithMany("Sessions")
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Visitor");
+                });
+
             modelBuilder.Entity("BeautyByNegin.DataAccess.Entities.GalleryCategoryTranslation", b =>
                 {
                     b.HasOne("BeautyByNegin.DataAccess.Entities.GalleryCategory", null)
@@ -1554,6 +1610,8 @@ namespace BeautyByNegin.DataAccess.Migrations
             modelBuilder.Entity("BeautyByNegin.DataAccess.Entities.ChatVisitor", b =>
                 {
                     b.Navigation("Messages");
+
+                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("BeautyByNegin.DataAccess.Entities.GalleryCategory", b =>

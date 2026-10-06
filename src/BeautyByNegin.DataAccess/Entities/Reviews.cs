@@ -33,6 +33,9 @@ public class Review : ContentEntity
     public int? ServiceId { get; set; }
     public Service? Service { get; set; }
 
+    /// <summary>Customer account that wrote the review on the website (null = added in the panel).</summary>
+    public int? CustomerId { get; set; }
+
     public ReviewSource Source { get; set; } = ReviewSource.InPerson;
     public ReviewStatus Status { get; set; } = ReviewStatus.Approved;
 

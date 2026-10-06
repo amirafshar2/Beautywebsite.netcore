@@ -8,6 +8,7 @@
     var culture = System.Globalization.CultureInfo.GetCultureInfo(P.Lang switch { "fa" => "fa-IR", "tr" => "tr-TR", "de" => "de-DE", _ => "en-GB" });
 }
 <partial name="_PageIntro" model='("intro.contact", $"/{P.DefaultLanguage.Code}/contact")' />
+<partial name="_VisitorView" model='"contact"' />
 
 <form asp-antiforgery="true" method="post" data-dirty>
     <div class="card form">

@@ -5,6 +5,8 @@ public static class SettingKeys
 {
     // General
     public const string SetupCompleted = "setup.completed";
+    /// <summary>Version of the sample images/content that was added once (never re-added after the admin deletes it).</summary>
+    public const string SampleContentVersion = "seed.sampleContent";
     public const string BrandName = "brand.name";
     public const string LogoImageId = "brand.logoImageId";
     public const string LogoDarkImageId = "brand.logoDarkImageId";
@@ -25,6 +27,12 @@ public static class SettingKeys
     public const string PrivacyConsentRequired = "features.privacyConsentRequired";
     public const string NewsletterEnabled = "features.newsletter";
     public const string ChatEnabled = "features.chat";
+    /// <summary>Customer accounts (login button on the site). Needs working e-mail for the login code.</summary>
+    public const string AccountsEnabled = "accounts.enabled";
+    /// <summary>Logged-in customers see their booking requests and their status.</summary>
+    public const string AccountsShowBookings = "accounts.showBookings";
+    /// <summary>Visitor reviews can only be written by logged-in customers.</summary>
+    public const string ReviewsRequireLogin = "accounts.reviewsRequireLogin";
 
     // Page images
     public const string HeroImageId = "images.hero";

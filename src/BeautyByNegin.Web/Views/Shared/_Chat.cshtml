@@ -11,7 +11,7 @@
 </button>
 
 <section class="chat-panel" id="chat-panel" role="dialog" aria-label="@T["chat.title"]" data-chat
-         data-lang="@Model.Code" data-api="/@Model.Code/api/chat">
+         data-lang="@Model.Code" data-api="/@Model.Code/api/chat" data-session="@Model.Customer.Step.ToString().ToLowerInvariant()">
     <header class="chat-head">
         <strong>@T["chat.title"]</strong>
         <button type="button" data-chat-close>
@@ -23,8 +23,9 @@
     <div class="chat-body" data-chat-body aria-live="polite">
         <form class="chat-step" data-step="register" novalidate>
             <p class="muted small m-0">@T["chat.intro"]</p>
-            <div class="field"><label for="chat-name">@T["chat.name"]</label><input id="chat-name" name="name" autocomplete="name" required maxlength="150" /></div>
             <div class="field"><label for="chat-email">@T["chat.email"]</label><input id="chat-email" name="email" type="email" autocomplete="email" required maxlength="200" dir="ltr" /></div>
+            <div class="field"><label for="chat-name">@T["chat.name"]</label><input id="chat-name" name="name" autocomplete="name" maxlength="150" /></div>
+            <p class="muted small m-0">@T["chat.loginNote"]</p>
             <input class="hp-field" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
             <p class="form-error" data-error hidden></p>
             <button class="btn btn-primary btn-block" type="submit">@T["chat.register"]</button>
@@ -44,6 +45,7 @@
         <div class="chat-step" data-step="conversation" hidden>
             <div class="chat-msg from-admin">@T["chat.welcome"]</div>
             <div class="contents" data-chat-messages></div>
+            <a class="chat-account-link" href="@SiteUrls.Page(SiteRoutes.Account, Model.Code)"><svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>@T["chat.myAccount"]</a>
         </div>
     </div>
 

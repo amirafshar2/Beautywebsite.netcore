@@ -9,6 +9,7 @@
     ViewData["TextsGroup"] = "texts";
 }
 <partial name="_PageIntro" model='("intro.texts", "/" + P.DefaultLanguage.Code)' />
+<partial name="_VisitorView" model='"texts"' />
 <form class="filters card" method="get">
     <div class="field"><label for="q">@P["common.search"]</label><input id="q" name="q" value="@q" placeholder="@P["texts.searchHint"]" /></div>
     <button class="btn btn-primary" type="submit">@P["common.search"]</button>

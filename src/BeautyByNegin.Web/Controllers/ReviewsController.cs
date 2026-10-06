@@ -28,7 +28,7 @@ public class ReviewsController(IInboxService inbox) : PublicController
         var back = SiteUrls.Page(SiteRoutes.Reviews, Ctx.Code) + "#write-review";
         if (!SpamGuard.LooksLikeBot(form.Website, form.FormStartedTicks))
         {
-            var result = await inbox.SubmitReviewAsync(new ReviewInput(form.Name, form.InitialsOnly, form.Rating, form.Text, form.ServiceId, form.PrivacyAccepted),
+            var result = await inbox.SubmitReviewAsync(new ReviewInput(form.Name, form.InitialsOnly, form.Rating, form.Text, form.ServiceId, form.PrivacyAccepted, Ctx.Customer.Customer?.Id),
                 Ctx.Lang, PanelBaseUrl, HttpContext.RequestAborted);
             if (!result.Ok)
             {

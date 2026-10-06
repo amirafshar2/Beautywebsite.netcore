@@ -5,6 +5,7 @@
     ViewData["Nav"] = "newsletter";
 }
 <partial name="_PageIntro" model='("intro.newsletter", (string?)null)' />
+<partial name="_VisitorView" model='"newsletter"' />
 <div class="card">
     <div class="card-head">
         <h2>@P.F("news.count", Model.Count)</h2>

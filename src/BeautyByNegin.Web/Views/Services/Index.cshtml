@@ -21,9 +21,9 @@
         else
         {
             <div class="grid grid-3">
-                @foreach (var s in Model)
+                @for (var i = 0; i < Model.Count; i++)
                 {
-                    <partial name="_ServiceCard" model="s" />
+                    <partial name="_ServiceCard" model="Model[i]" view-data='new ViewDataDictionary(ViewData) { ["CardHeading"] = "h2", ["CardPriority"] = i == 0 }' />
                 }
             </div>
             <p class="note">@T["services.note"]</p>

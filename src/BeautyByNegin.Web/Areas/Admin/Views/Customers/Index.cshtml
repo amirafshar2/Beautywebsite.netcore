@@ -1,0 +1,44 @@
+@model IReadOnlyList<CustomerRow>
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.customers"];
+    ViewData["Nav"] = "customers";
+    var q = ViewData["Q"] as string;
+}
+<partial name="_PageIntro" model='("intro.customers", $"/{P.DefaultLanguage.Code}/account")' />
+<partial name="_VisitorView" model='"customers"' />
+@if (!P.Settings.AccountsAvailable)
+{
+    <p class="hint-note">@P["cust.notActive"] <a href="@P.Url("settings#accounts")">@P["nav.settings"]</a></p>
+}
+<form class="filters card" method="get" action="@P.Url("customers")">
+    <div class="field"><label for="q">@P["common.search"]</label><input id="q" name="q" value="@q" placeholder="@P["cust.searchHint"]" /></div>
+    <div class="row-actions"><button class="btn btn-primary" type="submit">@P["common.search"]</button></div>
+</form>
+@if (Model.Count == 0)
+{
+    <div class="card empty">@(string.IsNullOrWhiteSpace(q) ? P["cust.empty"] : P["cust.noResults"])</div>
+}
+else
+{
+    <h2>@P.F("cust.count", Model.Count)</h2>
+    <div class="list">
+        @foreach (var r in Model)
+        {
+            var c = r.Customer;
+            <a class="item" href="@P.Url($"customers/details/{c.Id}")">
+                <div class="body">
+                    <span class="title">@c.Name @if (c.IsBlocked) { <span class="chip">@P["chat.blocked"]</span> }</span>
+                    <span class="meta"><span class="ltr">@c.Email</span>@if (c.Phone is not null) { <span class="ltr">@c.Phone</span> }</span>
+                    <span class="meta">
+                        <span>@P["cust.registered"] @P.Date(c.CreatedAtUtc, false)</span>
+                        @if (c.LastLoginAtUtc is DateTime ll) { <span>@P["cust.lastLogin"] @P.Date(ll)</span> }
+                        <span>@P.F("cust.bookingsCount", r.Bookings)</span>
+                        <span>@P.F("cust.messagesCount", r.Messages)</span>
+                    </span>
+                </div>
+                @if (r.Unread > 0) { <span class="badge">@r.Unread</span> }
+            </a>
+        }
+    </div>
+}

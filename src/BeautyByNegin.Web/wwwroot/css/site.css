@@ -714,3 +714,46 @@ body.has-action-bar .chat-panel { bottom: calc(var(--bar-h) + 86px + env(safe-ar
 .thanks-icon { width: 72px; height: 72px; margin: 0 auto 1.75rem; border-radius: 50%; border: 1px solid var(--champagne); display: flex; align-items: center; justify-content: center; color: var(--mocha-text); }
 .thanks-icon .icon { width: 32px; height: 32px; }
 .chat-error { background: #F8ECE8; color: #7A2E23; }
+
+/* ---------- Customer account ("My account", login button) ---------- */
+.account-link { display: inline-flex; align-items: center; gap: .4rem; min-height: 42px; padding: .35rem .6rem; border-radius: 999px; color: var(--chocolate); text-decoration: none; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; }
+.account-link .icon { width: 20px; height: 20px; }
+.account-link:hover, .account-link[aria-current] { background: var(--cream); }
+.account-link.is-in .icon { color: var(--mocha-text); }
+@media (max-width: 1079px) { .account-link .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; } .account-link { padding: .5rem; } }
+.account { display: grid; gap: 1.5rem; }
+.account-grid { display: grid; gap: 1.5rem; align-items: start; }
+@media (min-width: 900px) { .account-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); } }
+.account-main, .account-side { display: grid; gap: 1.5rem; min-width: 0; }
+.account-nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+.account-nav a { padding: .55rem 1rem; border: 1px solid var(--line); border-radius: 999px; color: var(--chocolate); text-decoration: none; font-size: .85rem; }
+.account-nav a:hover { background: var(--cream); }
+.account .panel { scroll-margin-top: 96px; }
+.account .panel h2 { margin-top: 0; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; }
+.panel-head h2 { margin: 0; }
+.account-links { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: 1rem; }
+.account-links form { margin: 0; }
+.code-input { font-size: 1.5rem !important; letter-spacing: .5em; text-align: center; }
+.alert-info { border-color: var(--champagne); background: #FAF4E8; }
+.booking-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.booking-list li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 0; border-top: 1px solid var(--line); }
+.booking-list li:first-child { border-top: 0; }
+.booking-list li > div { display: grid; gap: .2rem; min-width: 0; }
+.status-chip { flex: none; padding: .3rem .75rem; border-radius: 999px; font-size: .78rem; background: var(--cream); color: var(--chocolate); white-space: nowrap; }
+.status-chip.s-confirmed, .status-chip.s-completed { background: #E7EEDF; color: #3E5A2F; }
+.status-chip.s-called { background: #F3EAD8; color: #6B4E1F; }
+.status-chip.s-cancelled { background: #F4E4E0; color: #7A2E23; }
+.account-chat { display: flex; flex-direction: column; gap: .6rem; max-height: 420px; overflow-y: auto; padding: .25rem 0 1rem; }
+.account-compose { display: grid; grid-template-columns: 1fr auto; gap: .75rem; align-items: end; }
+.account-compose textarea { min-height: 52px; width: 100%; }
+.check-list { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .55rem; }
+.check-list li { position: relative; padding-inline-start: 1.7rem; line-height: 1.6; }
+.check-list li::before { content: "✓"; position: absolute; inset-inline-start: 0; top: 0; color: var(--mocha-text); font-weight: 600; }
+.account-can h2 { font-size: 1.3rem; line-height: 1.5; margin-bottom: 1rem; }
+.danger-zone summary { cursor: pointer; color: var(--text-soft); }
+.danger-zone form { display: grid; gap: 1rem; margin-top: 1rem; }
+.btn-danger { --btn-bg: transparent; --btn-fg: #7A2E23; --btn-bd: #D7A79E; }
+.btn-danger:hover { --btn-bg: #F8ECE8; }
+.chat-account-link { display: inline-flex; align-items: center; gap: .4rem; align-self: center; margin-top: .5rem; font-size: .82rem; color: var(--mocha-text); }
+.chat-account-link .icon { width: 16px; height: 16px; }

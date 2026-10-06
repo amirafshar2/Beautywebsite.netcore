@@ -44,14 +44,19 @@
             {
                 <p class="alert alert-error" role="alert">@reviewError</p>
             }
-            @if (!sent)
+            @if (!sent && ctx.Settings.ReviewsRequireLogin && !ctx.Customer.IsLoggedIn)
+            {
+                <p class="muted">@T["account.loginRequired"]</p>
+                <a class="btn btn-primary" href="@(SiteUrls.Page(SiteRoutes.Account, ctx.Code) + "?returnUrl=" + Uri.EscapeDataString(SiteUrls.Page(SiteRoutes.Reviews, ctx.Code) + "#write-review"))"><svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>@T["account.loginToReview"]</a>
+            }
+            else if (!sent)
             {
                 <form class="form" method="post" action="/@ctx.Code/api/reviews/submit" novalidate>
                     @Html.AntiForgeryToken()
                     <input class="hp-field" name="Website" tabindex="-1" autocomplete="off" aria-hidden="true" />
                     <input type="hidden" name="FormStartedTicks" value="@DateTime.UtcNow.Ticks" />
                     <div class="form-row cols-2">
-                        <div class="field"><label for="rv-name">@T["reviews.form.name"] <span class="req">*</span></label><input id="rv-name" name="Name" required maxlength="100" autocomplete="name" /></div>
+                        <div class="field"><label for="rv-name">@T["reviews.form.name"] <span class="req">*</span></label><input id="rv-name" name="Name" required maxlength="100" autocomplete="name" value="@ctx.Customer.Customer?.Name" /></div>
                         <div class="field">
                             <label for="rv-rating">@T["reviews.form.rating"]</label>
                             <select id="rv-rating" name="Rating">

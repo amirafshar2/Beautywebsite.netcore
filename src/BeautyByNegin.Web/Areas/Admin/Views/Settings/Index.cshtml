@@ -12,8 +12,9 @@
     string Chk(string key) => s.Bool(key) ? "checked" : "";
 }
 <partial name="_PageIntro" model='("intro.settings", (string?)null)' />
+<partial name="_VisitorView" model='"settings"' />
 <nav class="tabs-line">
-    <a href="#general">@P["set.general"]</a><a href="#features">@P["set.features"]</a><a href="#email">@P["set.email"]</a>
+    <a href="#general">@P["set.general"]</a><a href="#features">@P["set.features"]</a><a href="#accounts">@P["set.accounts"]</a><a href="#email">@P["set.email"]</a>
     <a href="#telegram">Telegram</a><a href="#slots">@P["set.slots"]</a><a href="#security">@P["set.security"]</a>
 </nav>
 
@@ -65,6 +66,48 @@
                 <p class="help">@P[help]</p>
             </div>
         }
+    </div>
+
+    <div class="card form" id="accounts">
+        <h2>@P["set.accounts"]</h2>
+        <p class="help">@P["set.accountsIntro"]</p>
+        @if (!s.SmtpConfigured)
+        {
+            <p class="hint-note">@P["set.accountsNeedEmail"]</p>
+        }
+        @foreach (var (name, key, label, help) in new[]
+        {
+            ("accounts", SettingKeys.AccountsEnabled, "set.accountsEnabled", "set.accountsEnabledHelp"),
+            ("accountsBookings", SettingKeys.AccountsShowBookings, "set.accountsBookings", "set.accountsBookingsHelp"),
+            ("reviewsRequireLogin", SettingKeys.ReviewsRequireLogin, "set.reviewsRequireLogin", "set.reviewsRequireLoginHelp"),
+        })
+        {
+            <div class="field">
+                <label class="switch"><input type="checkbox" name="@name" value="true" @Chk(key) /><span class="track"></span>@P[label]</label>
+                <p class="help">@P[help]</p>
+            </div>
+        }
+        <div class="perm-box">
+            <div>
+                <h3>@P["perm.can"]</h3>
+                <ul class="perm-list yes">
+                    <li>@P["perm.can.chat"]</li>
+                    <li>@P["perm.can.bookings"]</li>
+                    <li>@P["perm.can.reviews"]</li>
+                    <li>@P["perm.can.profile"]</li>
+                    <li>@P["perm.can.delete"]</li>
+                </ul>
+            </div>
+            <div>
+                <h3>@P["perm.cannot"]</h3>
+                <ul class="perm-list no">
+                    <li>@P["perm.cannot.panel"]</li>
+                    <li>@P["perm.cannot.others"]</li>
+                    <li>@P["perm.cannot.publish"]</li>
+                    <li>@P["perm.cannot.blocked"]</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <div class="card form" id="email">

@@ -1,4 +1,6 @@
 using BeautyByNegin.Business.Chat;
+using BeautyByNegin.Business.Customers;
+using BeautyByNegin.Web.Infrastructure.Customers;
 using BeautyByNegin.Web.Infrastructure.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,19 +13,9 @@ namespace BeautyByNegin.Web.Controllers;
 /// </summary>
 public class ChatController(IChatService chat) : PublicController
 {
-    private const string CookieName = "bbn.chat";
+    private string? Token => CustomerCookie.Read(Request);
 
-    private string? Token => Request.Cookies[CookieName];
-
-    private void SetToken(string token) => Response.Cookies.Append(CookieName, token, new CookieOptions
-    {
-        HttpOnly = true,
-        SameSite = SameSiteMode.Lax,
-        Secure = Request.IsHttps,
-        IsEssential = true,
-        Expires = DateTimeOffset.UtcNow.AddDays(180),
-        Path = "/"
-    });
+    private void SetToken(string token) => CustomerCookie.Write(HttpContext, token);
 
     private IActionResult Disabled() => Json(new { ok = false, errorKey = "form.error.generic", message = Ctx.T["form.error.generic"] });
 
@@ -82,11 +74,13 @@ public class ChatController(IChatService chat) : PublicController
         return Json(new { ok = true });
     }
 
-    /// <summary>"Change e-mail": forget this browser's chat identity.</summary>
+    /// <summary>"Change e-mail" while waiting for the code: end this (not yet confirmed) login.</summary>
     [HttpPost, ValidateAntiForgeryToken]
-    public IActionResult Reset()
+    public async Task<IActionResult> Reset([FromServices] ICustomerAccountService accounts)
     {
-        Response.Cookies.Delete(CookieName);
+        var current = await accounts.GetCurrentAsync(Token, HttpContext.RequestAborted);
+        if (current.Step == LoginStep.Verify) await accounts.LogoutAsync(Token, HttpContext.RequestAborted);
+        if (current.Step != LoginStep.LoggedIn) CustomerCookie.Delete(HttpContext);
         return Json(new { ok = true });
     }
 }

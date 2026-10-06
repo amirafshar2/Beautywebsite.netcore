@@ -12,6 +12,9 @@
         (SiteRoutes.Contact, SiteUrls.Page(SiteRoutes.Contact, lang), T["nav.contact"]),
     ];
     var menuPages = Model.Layout.MenuPages;
+    var accountUrl = SiteUrls.Page(SiteRoutes.Account, lang);
+    var loggedIn = Model.Customer.IsLoggedIn;
+    var accountLabel = loggedIn ? T["nav.account"] : T["nav.login"];
 }
 
 @functions {
@@ -72,6 +75,12 @@
 
         <div class="header-tools">
             @{ await LangSwitch(Model); }
+            @if (Model.Settings.AccountsAvailable)
+            {
+                <a class="account-link @(loggedIn ? "is-in" : "")" href="@accountUrl" aria-current="@(Model.ActiveNav == SiteRoutes.Account ? "page" : null)" title="@accountLabel">
+                    <svg class="icon" aria-hidden="true"><use href="#i-user" /></svg><span class="label">@accountLabel</span>
+                </a>
+            }
             <a class="btn btn-primary btn-sm header-book" href="@SiteUrls.Booking(lang)">@T["nav.booking"]</a>
             <button class="menu-toggle" type="button" aria-controls="mobile-menu" aria-expanded="false" data-menu-open>
                 <svg class="icon" aria-hidden="true"><use href="#i-menu" /></svg>
@@ -108,6 +117,10 @@
     </nav>
     <div class="mobile-menu-foot">
         <a class="btn btn-primary btn-block" href="@SiteUrls.Booking(lang)">@T["btn.book"]</a>
+        @if (Model.Settings.AccountsAvailable)
+        {
+            <a class="btn btn-block" href="@accountUrl"><svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>@accountLabel</a>
+        }
         @{ await LangSwitch(Model); }
     </div>
 </div>
