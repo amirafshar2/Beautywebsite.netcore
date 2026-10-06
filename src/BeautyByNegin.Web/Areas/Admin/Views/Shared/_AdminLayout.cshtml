@@ -1,3 +1,4 @@
+@inject BeautyByNegin.Web.Infrastructure.AssetUrls Assets
 @inject IAdminInboxService Inbox
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
@@ -37,7 +38,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <title>@title · @P["panel.name"]</title>
-    <link rel="stylesheet" href="~/admin/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="@Assets.Url("/admin/admin.css")" />
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="@(loggedIn ? "with-nav" : "no-nav")" data-base="@P.BasePath"
@@ -126,7 +127,7 @@
     </dialog>
     <div class="toast-host" aria-live="polite" data-toast-host></div>
 
-    <script src="~/admin/admin.js" asp-append-version="true"></script>
+    <script src="@Assets.Url("/admin/admin.js")"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -16,7 +16,10 @@ public class BookingController(IInboxService inbox) : PublicController
         Seo(Ctx.T["booking.title"], Ctx.T["booking.intro"]);
 
         if (TempData["BookingDone"] is true)
+        {
+            ViewData["NoIndex"] = true;
             return View("Thanks");
+        }
 
         var model = new BookingForm { ServiceId = service, FormStartedTicks = DateTime.UtcNow.Ticks };
         var page = await BuildPage(model);

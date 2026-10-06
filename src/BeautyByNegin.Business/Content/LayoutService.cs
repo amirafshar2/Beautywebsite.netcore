@@ -19,7 +19,9 @@ public sealed record LayoutData(
     IReadOnlyList<OpeningHourView> Hours,
     ImageView? Logo,
     ImageView? LogoDark,
-    string? FaviconUrl);
+    string? FaviconUrl,
+    /// <summary>Image shown when the site is shared (WhatsApp, Telegram…): share image, else hero image.</summary>
+    string? ShareImageUrl);
 
 public interface ILayoutService
 {
@@ -73,7 +75,7 @@ public sealed class LayoutService(
                     : FormatTime(h.Opens.Value, lang) + " – " + FormatTime(h.Closes.Value, lang)))
             .ToList();
 
-        var imageIds = new[] { settings.LogoImageId, settings.LogoDarkImageId, settings.FaviconImageId }.OfType<int>().ToList();
+        var imageIds = new[] { settings.LogoImageId, settings.LogoDarkImageId, settings.FaviconImageId, settings.ShareImageId, settings.HeroImageId }.OfType<int>().ToList();
         var images = await db.MediaImages.AsNoTracking().Include(i => i.Translations)
             .Where(i => imageIds.Contains(i.Id)).ToDictionaryAsync(i => i.Id, ct);
         ImageView? Img(int? id, int width) => id is int i && images.TryGetValue(i, out var m)
@@ -82,7 +84,9 @@ public sealed class LayoutService(
         var favicon = settings.FaviconImageId is int fid && images.TryGetValue(fid, out var fav)
             ? MediaUrls.Url(fav, fav.WidthList.Min()) : null;
 
-        var data = new LayoutData(footer, menu, hours, Img(settings.LogoImageId, 480), Img(settings.LogoDarkImageId, 480), favicon);
+        var shareId = settings.ShareImageId ?? settings.HeroImageId;
+        var share = shareId is int sid && images.TryGetValue(sid, out var shareImg) ? MediaUrls.Url(shareImg, shareImg.WidthList.First(w => w >= Math.Min(960, shareImg.WidthList.Max()))) : null;
+        var data = new LayoutData(footer, menu, hours, Img(settings.LogoImageId, 480), Img(settings.LogoDarkImageId, 480), favicon, share);
         cache.Set(key, data, new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(TimeSpan.FromHours(6))
             .AddExpirationToken(new Microsoft.Extensions.Primitives.CancellationChangeToken(_reset.Token)));

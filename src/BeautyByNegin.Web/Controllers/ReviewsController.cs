@@ -16,7 +16,9 @@ public class ReviewsController(IInboxService inbox) : PublicController
         Seo(Ctx.T["reviews.title"]);
         ViewBag.Services = await Content.GetServicesAsync(Ctx.Lang, HttpContext.RequestAborted);
         if (Request.Query["rl"] == "1") TempData["ReviewError"] = Ctx.T["form.error.rateLimit"];
-        return View(await Content.GetReviewsAsync(Ctx.Lang, null, HttpContext.RequestAborted));
+        var reviews = await Content.GetReviewsAsync(Ctx.Lang, null, HttpContext.RequestAborted);
+        if (reviews.Count > 0) ViewData["JsonLd"] = Infrastructure.Seo.StructuredData.Reviews(Infrastructure.Seo.StructuredData.BaseUrl(Ctx, Request), reviews);
+        return View(reviews);
     }
 
     /// <summary>POST /{lang}/api/reviews/submit (only when visitor reviews are switched on in the panel)</summary>

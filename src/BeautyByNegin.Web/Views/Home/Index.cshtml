@@ -7,6 +7,12 @@
     var lang = ctx.Code;
     var hasHeading = false;
 }
+@section Head {
+    @if (Model.Sections.Contains(HomeSectionKeys.Hero) && !Model.Hero.IsPlaceholder)
+    {
+        <link rel="preload" as="image" href="@Model.Hero.Src" imagesrcset="@Model.Hero.SrcSet" imagesizes="100vw" fetchpriority="high" />
+    }
+}
 
 @foreach (var section in Model.Sections)
 {

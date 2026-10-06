@@ -50,6 +50,8 @@ builder.Services.AddAntiforgery(o =>
     o.HeaderName = "X-CSRF-TOKEN";   // used by the chat and newsletter fetch() calls
 });
 builder.Services.AddScoped<SiteContext>();
+builder.Services.AddSingleton<AssetUrls>();
+builder.Services.AddReverseProxySupport(builder.Configuration);
 builder.Services.AddControllersWithViews();
 
 // Output Persian/Turkish/German characters as-is instead of &#x...; entities (smaller, readable HTML).
@@ -73,6 +75,7 @@ if (AdminCli.IsCliCall(args))
     return await AdminCli.RunAsync(app.Services, args);
 
 // ---------- Pipeline
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/error");
@@ -82,7 +85,10 @@ app.UseStatusCodePagesWithReExecute("/error/{0}");
 // Compression only in production: in Development it blocks Visual Studio's browser-refresh script.
 if (!app.Environment.IsDevelopment())
     app.UseResponseCompression();
-app.UseStaticFiles();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseUploadsGuard();
+app.UseMinifiedAssets();
+app.UseStaticFiles(SecuritySetup.StaticFiles());
 app.UseSerilogRequestLogging();
 
 app.UseRouting();

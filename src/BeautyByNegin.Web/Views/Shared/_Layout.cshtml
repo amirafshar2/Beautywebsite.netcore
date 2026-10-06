@@ -1,3 +1,4 @@
+@inject BeautyByNegin.Web.Infrastructure.AssetUrls Assets
 @inject SiteContext Site
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
@@ -5,6 +6,9 @@
     var T = ctx.T;
     var title = ViewData["Title"] as string;
     var pageTitle = string.IsNullOrWhiteSpace(title) ? (T.Has("seo.home.title") ? T["seo.home.title"] : ctx.Settings.BrandName) : $"{title} · {ctx.Settings.BrandName}";
+    if (ctx.Settings.Bool(BeautyByNegin.DataAccess.SettingKeys.AddCityToTitles) && !string.IsNullOrWhiteSpace(ctx.Settings.City) && !pageTitle.Contains(ctx.Settings.City))
+        pageTitle += " · " + ctx.Settings.City;
+    ViewData["FullTitle"] = pageTitle;
     var description = ViewData["Description"] as string ?? T["seo.home.description"];
 }
 <!DOCTYPE html>
@@ -26,11 +30,8 @@
         <link rel="preload" href="/fonts/cormorant-garamond-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="/fonts/jost-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin />
     }
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    @foreach (var (code, url) in ctx.Alternates)
-    {
-        <link rel="alternate" hreflang="@code" href="@url" />
-    }
+    <link rel="stylesheet" href="@Assets.Url("/css/site.css")" />
+    @await Html.PartialAsync("_Seo", ctx)
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="lang-@ctx.Code has-action-bar">
@@ -48,10 +49,10 @@
     @if (ctx.Settings.ChatAvailable)
     {
         @await Html.PartialAsync("_Chat", ctx)
-        <script src="~/js/chat.js" asp-append-version="true" defer></script>
+        <script src="@Assets.Url("/js/chat.js")" defer></script>
     }
 
-    <script src="~/js/site.js" asp-append-version="true" defer></script>
+    <script src="@Assets.Url("/js/site.js")" defer></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

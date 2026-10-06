@@ -1,3 +1,4 @@
+@inject BeautyByNegin.Web.Infrastructure.AssetUrls Assets
 @inject SiteContext Site
 @{
     Layout = null;
@@ -11,7 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>@T["maintenance.title"] · @ctx.Settings.BrandName</title>
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="@Assets.Url("/css/site.css")" />
 </head>
 <body>
     @await Html.PartialAsync("_Icons")

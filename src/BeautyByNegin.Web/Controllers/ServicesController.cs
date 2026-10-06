@@ -27,6 +27,9 @@ public class ServicesController : PublicController
             l => service.Slugs.TryGetValue(l.Code, out var s) ? SiteUrls.Service(l.Code, s) : SiteUrls.Service(l.Code, service.Card.Slug));
         Seo(string.IsNullOrWhiteSpace(service.MetaTitle) ? service.Card.Name : service.MetaTitle,
             service.MetaDescription ?? service.Card.ShortDescription ?? service.DescriptionHtml);
+        var baseUrl = Infrastructure.Seo.StructuredData.BaseUrl(Ctx, Request);
+        ViewData["JsonLd"] = Infrastructure.Seo.StructuredData.Service(Ctx, baseUrl, service, baseUrl + SiteUrls.Service(Ctx.Code, service.Card.Slug));
+        if (!service.Card.Image.IsPlaceholder) ViewData["OgImage"] = service.Card.Image.Src;
         return View(service);
     }
 }

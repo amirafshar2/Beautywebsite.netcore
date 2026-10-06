@@ -1,0 +1,49 @@
+@model PageContext
+@using BeautyByNegin.Web.Infrastructure.Seo
+@{
+    var baseUrl = StructuredData.BaseUrl(Model, Context.Request);
+    var title = ViewData["FullTitle"] as string ?? Model.Settings.BrandName;
+    var description = ViewData["Description"] as string ?? Model.T["seo.home.description"];
+    var canonical = baseUrl + (Model.Alternates.TryGetValue(Model.Code, out var own) ? own : Context.Request.Path.Value);
+    var image = ViewData["OgImage"] as string ?? Model.Layout.ShareImageUrl;
+    var noIndex = ViewData["NoIndex"] is true || Context.Response.StatusCode >= 400;
+    var ogLocale = Model.Lang.CultureName.Replace('-', '_');
+}
+@if (noIndex)
+{
+    <meta name="robots" content="noindex" />
+}
+else
+{
+    <link rel="canonical" href="@canonical" />
+    @foreach (var (code, url) in Model.Alternates)
+    {
+        <link rel="alternate" hreflang="@code" href="@(baseUrl + url)" />
+    }
+    @if (Model.Alternates.TryGetValue(Model.DefaultLang.Code, out var defaultUrl))
+    {
+        <link rel="alternate" hreflang="x-default" href="@(baseUrl + defaultUrl)" />
+    }
+}
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="@Model.Settings.BrandName" />
+<meta property="og:title" content="@title" />
+<meta property="og:description" content="@description" />
+<meta property="og:url" content="@canonical" />
+<meta property="og:locale" content="@ogLocale" />
+@if (image is not null)
+{
+    <meta property="og:image" content="@(image.StartsWith("http") ? image : baseUrl + image)" />
+    <meta name="twitter:card" content="summary_large_image" />
+}
+else
+{
+    <meta name="twitter:card" content="summary" />
+}
+<meta name="twitter:title" content="@title" />
+<meta name="twitter:description" content="@description" />
+@StructuredData.Script(StructuredData.Salon(Model, baseUrl))
+@if (ViewData["JsonLd"] is object extra)
+{
+    @StructuredData.Script(extra)
+}
