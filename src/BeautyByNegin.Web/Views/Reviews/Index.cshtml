@@ -40,7 +40,11 @@
             {
                 <p class="alert alert-success" role="status">@T["reviews.form.success"]</p>
             }
-            else
+            else if (TempData["ReviewError"] is string reviewError)
+            {
+                <p class="alert alert-error" role="alert">@reviewError</p>
+            }
+            @if (!sent)
             {
                 <form class="form" method="post" action="/@ctx.Code/api/reviews/submit" novalidate>
                     @Html.AntiForgeryToken()

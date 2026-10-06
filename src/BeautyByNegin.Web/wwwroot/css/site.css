@@ -701,3 +701,10 @@ body.has-action-bar .chat-panel { bottom: calc(var(--bar-h) + 86px + env(safe-ar
 .maintenance { min-height: 100vh; display: flex; align-items: center; text-align: center; padding-block: 4rem; }
 .maintenance .brand-text { font-size: 1.1rem; }
 .num, .numbered, .expertise-list .num, .error-page .code { font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "lnum" 1, "tnum" 1; }
+
+/* Thank-you page & chat error */
+.thanks { text-align: center; }
+.thanks .lead { margin-inline: auto; }
+.thanks-icon { width: 72px; height: 72px; margin: 0 auto 1.75rem; border-radius: 50%; border: 1px solid var(--champagne); display: flex; align-items: center; justify-content: center; color: var(--mocha); }
+.thanks-icon .icon { width: 32px; height: 32px; }
+.chat-error { background: #F8ECE8; color: #7A2E23; }

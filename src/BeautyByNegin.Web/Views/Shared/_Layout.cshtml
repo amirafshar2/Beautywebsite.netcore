@@ -1,4 +1,5 @@
 @inject SiteContext Site
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     var ctx = await Site.GetAsync();
     var T = ctx.T;
@@ -14,6 +15,7 @@
     <title>@pageTitle</title>
     <meta name="description" content="@description" />
     <meta name="theme-color" content="#F5F0E8" />
+    <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <link rel="icon" href="@(ctx.Layout.FaviconUrl ?? "/favicon.ico")" />
     @if (ctx.Code is "fa" or "ar")
     {
@@ -46,6 +48,7 @@
     @if (ctx.Settings.ChatAvailable)
     {
         @await Html.PartialAsync("_Chat", ctx)
+        <script src="~/js/chat.js" asp-append-version="true" defer></script>
     }
 
     <script src="~/js/site.js" asp-append-version="true" defer></script>

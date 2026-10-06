@@ -119,6 +119,29 @@
     chat.addEventListener("keydown", function (e) { if (e.key === "Escape") { setChat(false); chatOpener.focus(); } });
   }
 
+  /* ---------- AJAX forms (newsletter): <form data-ajax-form> + <p data-form-status> ---------- */
+  document.querySelectorAll("[data-ajax-form]").forEach(function (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var status = form.querySelector("[data-form-status]");
+      var button = form.querySelector('[type="submit"]');
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      button.disabled = true;
+      fetch(form.action, { method: "POST", body: new FormData(form), headers: { "X-Requested-With": "fetch", "Accept": "application/json" }, credentials: "same-origin" })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (status) {
+            status.hidden = false;
+            status.textContent = d.message || "";
+            status.className = "form-status " + (d.ok ? "is-success" : "is-error");
+          }
+          if (d.ok) form.reset();
+        })
+        .catch(function () { if (status) { status.hidden = false; status.className = "form-status is-error"; } })
+        .finally(function () { button.disabled = false; });
+    });
+  });
+
   /* ---------- Subtle fade-up on scroll ---------- */
   var reveals = document.querySelectorAll(".reveal");
   if (reveals.length) {

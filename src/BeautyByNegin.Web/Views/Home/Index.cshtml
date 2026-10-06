@@ -132,7 +132,7 @@
             break;
 
         case HomeSectionKeys.Newsletter when ctx.Settings.NewsletterEnabled:
-            <section class="section section-tight section-ivory">
+            <section class="section section-tight section-ivory" id="newsletter">
                 <div class="container newsletter reveal">
                     <div>
                         <h2 class="h3">@T["home.newsletter.title"]</h2>
@@ -151,7 +151,14 @@
                         {
                             <div class="small"><partial name="_PrivacyCheck" model='("privacyAccepted", false)' /></div>
                         }
-                        <p class="form-status" data-form-status role="status" hidden></p>
+                        @if (TempData["NewsletterMessage"] is string nlMessage)
+                        {
+                            <p class="form-status" data-form-status role="status">@nlMessage</p>
+                        }
+                        else
+                        {
+                            <p class="form-status" data-form-status role="status" hidden></p>
+                        }
                     </form>
                 </div>
             </section>

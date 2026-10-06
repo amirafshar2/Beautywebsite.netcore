@@ -37,6 +37,24 @@ public abstract class PublicController : Controller
         Ctx.Alternates = SiteUrls.Alternates(routeKey, Ctx.Languages.Select(l => l.Code));
     }
 
+    /// <summary>Absolute URL of the admin panel (used in Telegram/e-mail notification links).</summary>
+    protected string PanelBaseUrl
+    {
+        get
+        {
+            var adminPath = Infrastructure.Startup.IdentitySetup.AdminPath(HttpContext.RequestServices.GetRequiredService<IConfiguration>());
+            var site = Ctx.Settings.SiteUrl;
+            var root = string.IsNullOrWhiteSpace(site) ? $"{Request.Scheme}://{Request.Host}{Request.PathBase}" : site;
+            return root.TrimEnd('/') + adminPath;
+        }
+    }
+
+    /// <summary>Translates error text keys from the business layer into the visitor's language.</summary>
+    protected Dictionary<string, string> Translate(IReadOnlyDictionary<string, string> errors)
+        => errors.ToDictionary(e => e.Key, e => Ctx.T[e.Value]);
+
+    protected bool WantsJson => Request.Headers.XRequestedWith == "fetch" || Request.Headers.Accept.ToString().Contains("application/json");
+
     protected void Seo(string? title, string? description = null)
     {
         ViewData["Title"] = title;

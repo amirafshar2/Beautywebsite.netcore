@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.DataProtection;
 using BeautyByNegin.Web.Infrastructure;
 using BeautyByNegin.Web.Infrastructure.Localization;
 using BeautyByNegin.Web.Infrastructure.Routing;
+using BeautyByNegin.Web.Infrastructure.Security;
 using BeautyByNegin.Web.Infrastructure.Startup;
 using Microsoft.AspNetCore.ResponseCompression;
 using Serilog;
@@ -41,6 +42,12 @@ builder.Services.AddRouting(o =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSpamProtection();
+builder.Services.AddAntiforgery(o =>
+{
+    o.Cookie.Name = "bbn.af";
+    o.HeaderName = "X-CSRF-TOKEN";   // used by the chat and newsletter fetch() calls
+});
 builder.Services.AddScoped<SiteContext>();
 builder.Services.AddControllersWithViews();
 
@@ -75,6 +82,7 @@ app.UseSerilogRequestLogging();
 
 app.UseRouting();
 app.UseMiddleware<SiteCultureMiddleware>();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

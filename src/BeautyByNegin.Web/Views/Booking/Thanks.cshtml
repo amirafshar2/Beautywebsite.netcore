@@ -1,0 +1,21 @@
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var wa = ctx.Contact.WhatsAppUrl(T["wa.booking"]);
+}
+<section class="section thanks">
+    <div class="container container-narrow">
+        <div class="thanks-icon" aria-hidden="true"><svg class="icon"><use href="#i-check" /></svg></div>
+        <p class="eyebrow centered">@T["booking.eyebrow"]</p>
+        <h1>@T["booking.success.title"]</h1>
+        @Html.Paragraphs(T["booking.success.text"], "lead")
+        <div class="btn-row center">
+            @if (wa is not null)
+            {
+                <a class="btn btn-primary" href="@wa" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp" /></svg>@T["booking.success.whatsapp"]</a>
+            }
+            <a class="btn" href="@SiteUrls.Home(ctx.Code)">@T["btn.backHome"]</a>
+        </div>
+    </div>
+</section>

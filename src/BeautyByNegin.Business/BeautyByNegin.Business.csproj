@@ -17,6 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.18.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BeautyByNegin.DataAccess\BeautyByNegin.DataAccess.csproj" />
   </ItemGroup>
 
