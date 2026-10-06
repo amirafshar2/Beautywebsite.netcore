@@ -1,10 +1,43 @@
+@inject SiteContext Site
 @{
-    var lang = Context.GetSiteLanguage()!;
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
     ViewData["Title"] = null;
+    var hero = ImageView.Placeholder("16x9");
 }
-<section class="container stage-check">
-    <p class="eyebrow">FACIAL &amp; SKINCARE TREATMENTS</p>
-    <h1>Beauty by Negin</h1>
-    <p>@lang.NativeName · <code>@lang.CultureName</code> · dir=<code>@lang.Dir</code></p>
-    <p>@DateDisplay.FormatDate(DateTime.UtcNow, lang)</p>
+<section class="hero is-placeholder">
+    <div class="hero-media"><img src="@hero.Src" alt="" width="@hero.Width" height="@hero.Height" fetchpriority="high" /></div>
+    <div class="container hero-content">
+        <p class="eyebrow">@T["home.hero.eyebrow"]</p>
+        <h1 class="latin">@T["home.hero.title"]</h1>
+        <p class="slogan">@T["home.hero.slogan"]</p>
+        <div class="btn-row">
+            <a class="btn btn-primary" href="@SiteUrls.Booking(ctx.Code)">@T["btn.book"]</a>
+            <a class="btn btn-ghost-light" href="@SiteUrls.Page(SiteRoutes.Contact, ctx.Code)">@T["btn.contact"]</a>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container split">
+        <div class="reveal">
+            <p class="eyebrow">@T["home.intro.eyebrow"]</p>
+            <h2>@T["home.intro.title"]</h2>
+            <p class="lead">@T["home.intro.text"]</p>
+            <a class="link-arrow" href="@SiteUrls.Page(SiteRoutes.About, ctx.Code)">@T["btn.about"] <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
+        </div>
+        <div class="media ratio-4x5 arch reveal"><img src="/img/placeholder-4x5.svg" alt="" width="800" height="1000" loading="lazy" /></div>
+    </div>
+</section>
+
+<section class="section section-dark">
+    <div class="container container-narrow section-head centered">
+        <p class="eyebrow centered">@T["consult.eyebrow"]</p>
+        <h2>@T["consult.title"]</h2>
+        <p class="lead">@T["consult.text"]</p>
+        <p class="muted">@T["consult.question"]</p>
+        <div class="btn-row center">
+            <a class="btn btn-light" href="@SiteUrls.Booking(ctx.Code)">@T["btn.book"]</a>
+        </div>
+    </div>
 </section>

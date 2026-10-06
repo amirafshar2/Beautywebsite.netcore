@@ -10,7 +10,7 @@ namespace BeautyByNegin.DataAccess.Seed;
 /// </summary>
 public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> roles)
 {
-    private static readonly string[] Langs = ["fa", "tr", "de", "en"];
+    private static readonly string[] Langs = ["fa", "tr", "de", "en", "ar"];
 
     public async Task SeedAsync()
     {
@@ -34,12 +34,21 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
 
     private async Task SeedLanguagesAsync()
     {
-        if (await db.Languages.AnyAsync()) return;
-        db.Languages.AddRange(
-            new Language { Code = "fa", CultureName = "fa-IR", NativeName = "فارسی", ShortLabel = "FA", IsRtl = true, IsDefault = true, SortOrder = 1, UseNativeDigits = true },
-            new Language { Code = "tr", CultureName = "tr-TR", NativeName = "Türkçe", ShortLabel = "TR", SortOrder = 2 },
-            new Language { Code = "de", CultureName = "de-DE", NativeName = "Deutsch", ShortLabel = "DE", SortOrder = 3 },
-            new Language { Code = "en", CultureName = "en-US", NativeName = "English", ShortLabel = "EN", SortOrder = 4 });
+        Language[] all =
+        [
+            new() { Code = "fa", CultureName = "fa-IR", NativeName = "فارسی", ShortLabel = "FA", IsRtl = true, IsDefault = true, SortOrder = 1, UseNativeDigits = true },
+            new() { Code = "tr", CultureName = "tr-TR", NativeName = "Türkçe", ShortLabel = "TR", SortOrder = 2 },
+            new() { Code = "de", CultureName = "de-DE", NativeName = "Deutsch", ShortLabel = "DE", SortOrder = 3 },
+            new() { Code = "en", CultureName = "en-US", NativeName = "English", ShortLabel = "EN", SortOrder = 4 },
+            new() { Code = "ar", CultureName = "ar-AE", NativeName = "العربية", ShortLabel = "AR", IsRtl = true, SortOrder = 5 },
+        ];
+        var existing = await db.Languages.Select(l => l.Code).ToListAsync();
+        var hasDefault = await db.Languages.AnyAsync(l => l.IsDefault);
+        foreach (var lang in all.Where(l => !existing.Contains(l.Code)))
+        {
+            if (hasDefault) lang.IsDefault = false;
+            db.Languages.Add(lang);
+        }
         await db.SaveChangesAsync();
     }
 
@@ -105,7 +114,7 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
                 text.Group = e.Group; text.Kind = e.Kind; text.Hint = e.Hint; text.SortOrder = order;
             }
 
-            foreach (var (lang, value) in new[] { ("fa", e.Fa), ("tr", e.Tr), ("de", e.De), ("en", e.En) })
+            foreach (var (lang, value) in new[] { ("fa", e.Fa), ("tr", e.Tr), ("de", e.De), ("en", e.En), ("ar", TextSeedAr.Get(e.Key, e.En)) })
                 if (text.Translations.All(t => t.LanguageCode != lang))
                     text.Translations.Add(new SiteTextTranslation { SiteTextKey = e.Key, LanguageCode = lang, Value = value });
         }
@@ -148,7 +157,8 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
         foreach (var item in ServiceSeed.Items)
         {
             var service = new Service { SortOrder = ++order, IsVisible = true, ShowOnHome = item.ShowOnHome };
-            foreach (var (lang, t) in item.Texts)
+            var texts = new Dictionary<string, ServiceSeed.Text>(item.Texts) { ["ar"] = ServiceSeedAr.Texts[item.Slug] };
+            foreach (var (lang, t) in texts)
             {
                 service.Translations.Add(new ServiceTranslation
                 {
@@ -171,9 +181,9 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
     {
         string[][] slots =
         [
-            ["صبح (۱۰ تا ۱۳)", "Sabah (10:00–13:00)", "Vormittag (10–13 Uhr)", "Morning (10am–1pm)"],
-            ["بعدازظهر (۱۳ تا ۱۶)", "Öğleden sonra (13:00–16:00)", "Nachmittag (13–16 Uhr)", "Afternoon (1–4pm)"],
-            ["عصر (۱۶ تا ۱۹)", "Akşam (16:00–19:00)", "Später Nachmittag (16–19 Uhr)", "Evening (4–7pm)"]
+            ["صبح (۱۰ تا ۱۳)", "Sabah (10:00–13:00)", "Vormittag (10–13 Uhr)", "Morning (10am–1pm)", "صباحاً (10–13)"],
+            ["بعدازظهر (۱۳ تا ۱۶)", "Öğleden sonra (13:00–16:00)", "Nachmittag (13–16 Uhr)", "Afternoon (1–4pm)", "بعد الظهر (13–16)"],
+            ["عصر (۱۶ تا ۱۹)", "Akşam (16:00–19:00)", "Später Nachmittag (16–19 Uhr)", "Evening (4–7pm)", "مساءً (16–19)"]
         ];
         var order = 0;
         foreach (var labels in slots)
@@ -190,11 +200,11 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
     {
         string[][] categories =
         [
-            ["نمونه‌کارها", "Çalışmalar", "Arbeiten", "Our Work"],
-            ["نتایج", "Sonuçlar", "Ergebnisse", "Results"],
-            ["فضای کار", "Çalışma Ortamı", "Räumlichkeiten", "Our Space"],
-            ["محصولات", "Ürünler", "Produkte", "Products"],
-            ["فیشیال", "Facial", "Facial", "Facial"]
+            ["نمونه‌کارها", "Çalışmalar", "Arbeiten", "Our Work", "أعمالنا"],
+            ["نتایج", "Sonuçlar", "Ergebnisse", "Results", "النتائج"],
+            ["فضای کار", "Çalışma Ortamı", "Räumlichkeiten", "Our Space", "المكان"],
+            ["محصولات", "Ürünler", "Produkte", "Products", "المنتجات"],
+            ["فیشیال", "Facial", "Facial", "Facial", "العناية بالوجه"]
         ];
         var order = 0;
         foreach (var names in categories)
@@ -211,10 +221,10 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
     {
         string[][] expertise =
         [
-            ["فیشیال‌های تخصصی و شخصی‌سازی‌شده", "Kişiye özel profesyonel facial bakımları", "Individuelle, professionelle Facials", "Personalised professional facials"],
-            ["بررسی و شناخت وضعیت پوست", "Cilt analizi ve değerlendirmesi", "Hautanalyse und Hautberatung", "Skin analysis and consultation"],
-            ["لایه‌برداری‌های ملایم و تخصصی", "Nazik ve profesyonel peeling uygulamaları", "Sanfte und professionelle Peelings", "Gentle and professional exfoliation"],
-            ["میکروکارنت و کانتورینگ صورت", "Microcurrent ve yüz konturlama", "Microcurrent und Gesichtskonturierung", "Microcurrent and facial contouring"]
+            ["فیشیال‌های تخصصی و شخصی‌سازی‌شده", "Kişiye özel profesyonel facial bakımları", "Individuelle, professionelle Facials", "Personalised professional facials", "جلسات عناية احترافية مخصّصة للوجه"],
+            ["بررسی و شناخت وضعیت پوست", "Cilt analizi ve değerlendirmesi", "Hautanalyse und Hautberatung", "Skin analysis and consultation", "تحليل البشرة والاستشارة"],
+            ["لایه‌برداری‌های ملایم و تخصصی", "Nazik ve profesyonel peeling uygulamaları", "Sanfte und professionelle Peelings", "Gentle and professional exfoliation", "تقشير لطيف واحترافي"],
+            ["میکروکارنت و کانتورینگ صورت", "Microcurrent ve yüz konturlama", "Microcurrent und Gesichtskonturierung", "Microcurrent and facial contouring", "الميكروكرنت ونحت ملامح الوجه"]
         ];
         var order = 0;
         foreach (var texts in expertise)
@@ -234,14 +244,16 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
                 ("fa", "Impressum", "impressum", ImpressumFa),
                 ("tr", "Künye (Impressum)", "impressum", ImpressumTr),
                 ("de", "Impressum", "impressum", ImpressumDe),
-                ("en", "Legal Notice (Impressum)", "impressum", ImpressumEn)
+                ("en", "Legal Notice (Impressum)", "impressum", ImpressumEn),
+                ("ar", "البيانات القانونية", "impressum", ImpressumAr)
             ]));
         db.Pages.Add(LegalPage(SystemPages.Privacy, 2,
             [
                 ("fa", "حریم خصوصی", "privacy", PrivacyFa),
                 ("tr", "Gizlilik Politikası", "gizlilik", PrivacyTr),
                 ("de", "Datenschutzerklärung", "datenschutz", PrivacyDe),
-                ("en", "Privacy Policy", "privacy", PrivacyEn)
+                ("en", "Privacy Policy", "privacy", PrivacyEn),
+                ("ar", "سياسة الخصوصية", "privacy", PrivacyAr)
             ]));
         await db.SaveChangesAsync();
     }
@@ -271,6 +283,15 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
     private const string ImpressumFa =
         "<p>اطلاعات حقوقی صاحب سایت (طبق قوانین آلمان، § 5 DDG).</p><p>[نام و نام خانوادگی]<br>Beauty by Negin<br>[آدرس]<br>[کد پستی، شهر]<br>[کشور]</p>" +
         "<h2>تماس</h2><p>تلفن: [شماره تلفن]<br>ایمیل: [آدرس ایمیل]</p>";
+
+    private const string ImpressumAr =
+        "<p>البيانات القانونية لصاحب الموقع (وفقاً للقانون الألماني، § 5 DDG).</p><p>[الاسم الكامل]<br>Beauty by Negin<br>[العنوان]<br>[الرمز البريدي، المدينة]<br>[الدولة]</p>" +
+        "<h2>التواصل</h2><p>الهاتف: [رقم الهاتف]<br>البريد الإلكتروني: [البريد الإلكتروني]</p>";
+    private const string PrivacyAr =
+        "<h2>١. الجهة المسؤولة</h2><p>[الاسم الكامل]، Beauty by Negin، [العنوان]، [البريد الإلكتروني]</p>" +
+        "<h2>٢. لا تتبّع</h2><p>لا يستخدم هذا الموقع أي خدمات تحليل أو تتبّع أو ملفات تعريف ارتباط إعلانية أو محتوى من أطراف ثالثة. تُستخدم ملفات تعريف الارتباط الضرورية فقط لأمان النماذج والدردشة.</p>" +
+        "<h2>٣. طلبات التواصل والحجز والدردشة</h2><p>تُستخدم البيانات التي ترسلها عبر النماذج أو الدردشة (الاسم، الهاتف، البريد الإلكتروني، الرسالة) فقط للرد على طلبك. قد تصلنا إشعارات الطلبات الجديدة عبر البريد الإلكتروني أو تيليجرام.</p>" +
+        "<h2>٤. النشرة الإخبارية</h2><p>نحفظ بريدك الإلكتروني للنشرة بناءً على موافقتك، ويمكنك إلغاء الاشتراك في أي وقت.</p>";
 
     private const string PrivacyDe =
         "<h2>1. Verantwortliche Stelle</h2><p>[Vor- und Nachname], Beauty by Negin, [Anschrift], [E-Mail-Adresse]</p>" +

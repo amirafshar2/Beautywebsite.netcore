@@ -46,7 +46,7 @@ public sealed class LanguageService(IServiceScopeFactory scopeFactory, IMemoryCa
     private const string CacheKey = "site-languages";
 
     /// <summary>Every language code the site knows about. Used by the URL constraint.</summary>
-    public static readonly string[] KnownCodes = ["fa", "tr", "de", "en"];
+    public static readonly string[] KnownCodes = ["fa", "tr", "de", "en", "ar"];
 
     public async Task<IReadOnlyList<SiteLanguage>> GetAllAsync(CancellationToken ct = default)
     {

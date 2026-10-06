@@ -1,0 +1,114 @@
+@model PageContext
+@{
+    var T = Model.T;
+    var c = Model.Contact;
+    var lang = Model.Code;
+    var address = T["contact.address"];
+    var whatsApp = c.WhatsAppUrl(T["wa.general"]);
+    var mail = c.MailUrl(T["mail.subject.general"]);
+}
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a class="brand" href="@SiteUrls.Home(lang)" aria-label="@Model.Settings.BrandName">
+                    @if ((Model.Layout.LogoDark ?? Model.Layout.Logo) is { } logo)
+                    {
+                        <img src="@logo.Src" alt="@Model.Settings.BrandName" width="@logo.Width" height="@logo.Height" loading="lazy" />
+                    }
+                    else
+                    {
+                        <span class="brand-text">@Model.Settings.BrandName.ToUpperInvariant()</span>
+                    }
+                </a>
+                <p>@T["footer.tagline"]</p>
+                @if (c.InstagramUrl is not null || c.TelegramUrl is not null || whatsApp is not null)
+                {
+                    <div class="social" aria-label="@T["footer.follow"]">
+                        @if (c.InstagramUrl is not null)
+                        {
+                            <a href="@c.InstagramUrl" rel="noopener" target="_blank" aria-label="Instagram"><svg class="icon" aria-hidden="true"><use href="#i-instagram" /></svg></a>
+                        }
+                        @if (whatsApp is not null)
+                        {
+                            <a href="@whatsApp" rel="noopener" target="_blank" aria-label="WhatsApp"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp" /></svg></a>
+                        }
+                        @if (c.TelegramUrl is not null)
+                        {
+                            <a href="@c.TelegramUrl" rel="noopener" target="_blank" aria-label="Telegram"><svg class="icon" aria-hidden="true"><use href="#i-telegram" /></svg></a>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div>
+                <h2 class="footer-title">@T["footer.contact"]</h2>
+                <ul class="footer-list">
+                    @if (c.PhoneUrl is not null)
+                    {
+                        <li><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg><a class="ltr-value" href="@c.PhoneUrl">@c.Phone</a></li>
+                    }
+                    @if (whatsApp is not null)
+                    {
+                        <li><svg class="icon" aria-hidden="true"><use href="#i-whatsapp" /></svg><a href="@whatsApp" rel="noopener" target="_blank">@T["btn.whatsapp"]</a></li>
+                    }
+                    @if (mail is not null)
+                    {
+                        <li><svg class="icon" aria-hidden="true"><use href="#i-mail" /></svg><a class="ltr-value" href="@mail">@c.Email</a></li>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(address))
+                    {
+                        <li>
+                            <svg class="icon" aria-hidden="true"><use href="#i-pin" /></svg>
+                            @if (c.MapUrl is not null)
+                            {
+                                <a href="@c.MapUrl" rel="noopener" target="_blank" class="pre-line">@address</a>
+                            }
+                            else
+                            {
+                                <span class="pre-line">@address</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            @if (Model.Layout.Hours.Count > 0)
+            {
+                <div>
+                    <h2 class="footer-title">@T["contact.hoursTitle"]</h2>
+                    <ul class="footer-list footer-hours">
+                        @foreach (var h in Model.Layout.Hours)
+                        {
+                            <li><span>@h.DayName</span><span class="@(h.IsClosed ? "closed" : null) ltr-value">@(h.IsClosed ? T["contact.closed"] : h.Hours)</span></li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div>
+                <h2 class="footer-title">@Model.Settings.BrandName</h2>
+                <ul class="footer-list">
+                    <li><a href="@SiteUrls.Page(SiteRoutes.Services, lang)">@T["nav.services"]</a></li>
+                    <li><a href="@SiteUrls.Page(SiteRoutes.About, lang)">@T["nav.about"]</a></li>
+                    <li><a href="@SiteUrls.Page(SiteRoutes.Gallery, lang)">@T["nav.gallery"]</a></li>
+                    <li><a href="@SiteUrls.Page(SiteRoutes.Contact, lang)">@T["nav.contact"]</a></li>
+                    <li><a href="@SiteUrls.Booking(lang)">@T["nav.booking"]</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© @Model.Num(DateTime.UtcNow.Year) @Model.Settings.BrandName. @T["footer.rights"]</span>
+            @if (Model.Layout.FooterPages.Count > 0)
+            {
+                <nav class="footer-legal" aria-label="Legal">
+                    @foreach (var p in Model.Layout.FooterPages)
+                    {
+                        <a href="@SiteUrls.CustomPage(lang, p.Slug)">@p.Title</a>
+                    }
+                </nav>
+            }
+        </div>
+    </div>
+</footer>

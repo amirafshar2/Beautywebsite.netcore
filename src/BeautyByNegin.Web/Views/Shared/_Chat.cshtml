@@ -1,0 +1,57 @@
+@model PageContext
+@{
+    var T = Model.T;
+}
+@* Floating chat (bottom-left). Steps: register (name + e-mail) → verify 6-digit code → conversation.
+   Behaviour lives in /js/chat.js (stage 5); messages go to the admin panel and Telegram. *@
+<button class="chat-launcher" type="button" aria-controls="chat-panel" aria-expanded="false" data-chat-open>
+    <svg class="icon" aria-hidden="true"><use href="#i-chat" /></svg>
+    <span class="visually-hidden">@T["chat.open"]</span>
+    <span class="badge" data-chat-badge hidden></span>
+</button>
+
+<section class="chat-panel" id="chat-panel" role="dialog" aria-label="@T["chat.title"]" data-chat
+         data-lang="@Model.Code" data-api="/@Model.Code/api/chat">
+    <header class="chat-head">
+        <strong>@T["chat.title"]</strong>
+        <button type="button" data-chat-close>
+            <svg class="icon" aria-hidden="true"><use href="#i-close" /></svg>
+            <span class="visually-hidden">@T["nav.close"]</span>
+        </button>
+    </header>
+
+    <div class="chat-body" data-chat-body aria-live="polite">
+        <form class="chat-step" data-step="register" novalidate>
+            <p class="muted small m-0">@T["chat.intro"]</p>
+            <div class="field"><label for="chat-name">@T["chat.name"]</label><input id="chat-name" name="name" autocomplete="name" required maxlength="150" /></div>
+            <div class="field"><label for="chat-email">@T["chat.email"]</label><input id="chat-email" name="email" type="email" autocomplete="email" required maxlength="200" dir="ltr" /></div>
+            <input class="hp-field" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+            <p class="form-error" data-error hidden></p>
+            <button class="btn btn-primary btn-block" type="submit">@T["chat.register"]</button>
+        </form>
+
+        <form class="chat-step" data-step="verify" novalidate hidden>
+            <p class="muted small m-0">@T["chat.codeSent"]</p>
+            <div class="field"><label for="chat-code">@T["chat.code"]</label><input id="chat-code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required dir="ltr" /></div>
+            <p class="form-error" data-error hidden></p>
+            <button class="btn btn-primary btn-block" type="submit">@T["chat.verify"]</button>
+            <div class="chat-links">
+                <button class="link-btn" type="button" data-chat-resend>@T["chat.resend"]</button>
+                <button class="link-btn" type="button" data-chat-change>@T["chat.changeEmail"]</button>
+            </div>
+        </form>
+
+        <div class="chat-step" data-step="conversation" hidden>
+            <div class="chat-msg from-admin">@T["chat.welcome"]</div>
+            <div class="contents" data-chat-messages></div>
+        </div>
+    </div>
+
+    <form class="chat-compose" data-chat-compose hidden>
+        <label class="visually-hidden" for="chat-text">@T["chat.placeholder"]</label>
+        <textarea id="chat-text" name="text" rows="1" maxlength="2000" placeholder="@T["chat.placeholder"]" required></textarea>
+        <button class="btn btn-primary" type="submit" aria-label="@T["chat.send"]">
+            <svg class="icon flip-rtl" aria-hidden="true"><use href="#i-send" /></svg>
+        </button>
+    </form>
+</section>

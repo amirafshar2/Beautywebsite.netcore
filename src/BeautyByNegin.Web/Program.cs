@@ -1,7 +1,9 @@
 using BeautyByNegin.Business;
 using BeautyByNegin.DataAccess;
 using Microsoft.AspNetCore.DataProtection;
+using BeautyByNegin.Web.Infrastructure;
 using BeautyByNegin.Web.Infrastructure.Localization;
+using BeautyByNegin.Web.Infrastructure.Routing;
 using BeautyByNegin.Web.Infrastructure.Startup;
 using Microsoft.AspNetCore.ResponseCompression;
 using Serilog;
@@ -38,6 +40,8 @@ builder.Services.AddRouting(o =>
     o.ConstraintMap[CultureRouteConstraint.Name] = typeof(CultureRouteConstraint);
 });
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SiteContext>();
 builder.Services.AddControllersWithViews();
 
 // Output Persian/Turkish/German characters as-is instead of &#x...; entities (smaller, readable HTML).
@@ -72,10 +76,15 @@ app.UseMiddleware<SiteCultureMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Public site: every page lives under a language prefix, e.g. /fa/..., /de/...
-app.MapControllerRoute(
-    name: "localized",
-    pattern: "{culture:culture}/{controller=Home}/{action=Index}/{id?}");
+// Admin panel (MVC Area "Admin"), e.g. /admin, /admin/services/edit/3
+var adminPath = IdentitySetup.AdminPath(app.Configuration).Trim('/');
+app.MapAreaControllerRoute(
+    name: "admin",
+    areaName: "Admin",
+    pattern: adminPath + "/{controller=Dashboard}/{action=Index}/{id?}");
+
+// Public site: every page lives under a language prefix with translated segments, e.g. /de/behandlungen
+app.MapSiteRoutes();
 
 // "/" -> default language (or the visitor's browser language when it is enabled)
 app.MapControllerRoute(

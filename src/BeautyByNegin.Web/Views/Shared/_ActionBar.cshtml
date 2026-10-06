@@ -1,0 +1,24 @@
+@model PageContext
+@{
+    var T = Model.T;
+    var c = Model.Contact;
+    var whatsApp = c.WhatsAppUrl(T["wa.general"]);
+    var mail = c.MailUrl(T["mail.subject.general"]);
+    var cols = 1 + (c.PhoneUrl is null ? 0 : 1) + (whatsApp is null ? 0 : 1) + (mail is null ? 0 : 1);
+}
+@* Fixed bottom bar on phones: Call · WhatsApp · Email · Book (hidden items when not configured) *@
+<nav class="action-bar cols-@cols" aria-label="@T["btn.contact"]">
+    @if (c.PhoneUrl is not null)
+    {
+        <a href="@c.PhoneUrl"><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg>@T["bar.call"]</a>
+    }
+    @if (whatsApp is not null)
+    {
+        <a href="@whatsApp" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp" /></svg>@T["bar.whatsapp"]</a>
+    }
+    @if (mail is not null)
+    {
+        <a href="@mail"><svg class="icon" aria-hidden="true"><use href="#i-mail" /></svg>@T["bar.email"]</a>
+    }
+    <a class="is-primary" href="@SiteUrls.Booking(Model.Code)"><svg class="icon" aria-hidden="true"><use href="#i-calendar" /></svg>@T["bar.book"]</a>
+</nav>

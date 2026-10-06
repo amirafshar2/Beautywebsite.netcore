@@ -1,46 +1,53 @@
-@inject ILanguageService Languages
+@inject SiteContext Site
 @{
-    var lang = await Context.GetSiteLanguageOrDefaultAsync();
-    var enabled = await Languages.GetEnabledAsync();
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
     var title = ViewData["Title"] as string;
+    var pageTitle = string.IsNullOrWhiteSpace(title) ? (T.Has("seo.home.title") ? T["seo.home.title"] : ctx.Settings.BrandName) : $"{title} · {ctx.Settings.BrandName}";
+    var description = ViewData["Description"] as string ?? T["seo.home.description"];
 }
 <!DOCTYPE html>
-<html lang="@lang.Code" dir="@lang.Dir">
+<html lang="@ctx.Code" dir="@ctx.Lang.Dir" class="no-js">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>@(string.IsNullOrEmpty(title) ? "Beauty by Negin" : $"{title} · Beauty by Negin")</title>
+    <title>@pageTitle</title>
+    <meta name="description" content="@description" />
+    <meta name="theme-color" content="#F5F0E8" />
+    <link rel="icon" href="@(ctx.Layout.FaviconUrl ?? "/favicon.ico")" />
+    @if (ctx.Code is "fa" or "ar")
+    {
+        <link rel="preload" href="/fonts/Vazirmatn-Light.woff2" as="font" type="font/woff2" crossorigin />
+    }
+    else
+    {
+        <link rel="preload" href="/fonts/cormorant-garamond-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="/fonts/jost-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin />
+    }
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @foreach (var (code, url) in ctx.Alternates)
+    {
+        <link rel="alternate" hreflang="@code" href="@url" />
+    }
     @await RenderSectionAsync("Head", required: false)
 </head>
-<body class="lang-@lang.Code">
-    <header class="site-header">
-        <div class="container header-inner">
-            <a class="brand" href="/@lang.Code">BEAUTY BY NEGIN</a>
-            <nav class="lang-switch" aria-label="Language">
-                @foreach (var l in enabled)
-                {
-                    if (l.Code == lang.Code)
-                    {
-                        <span class="is-current" aria-current="true" lang="@l.Code">@l.ShortLabel</span>
-                    }
-                    else
-                    {
-                        <a href="@CultureUrl.ReplaceCulture(Context.Request, l.Code)" hreflang="@l.Code" lang="@l.Code">@l.ShortLabel</a>
-                    }
-                }
-            </nav>
-        </div>
-    </header>
+<body class="lang-@ctx.Code has-action-bar">
+    <a class="skip-link" href="#main">@T["nav.skip"]</a>
+    @await Html.PartialAsync("_Icons")
+    @await Html.PartialAsync("_Header", ctx)
 
-    <main id="main" class="site-main">
+    <main id="main">
         @RenderBody()
     </main>
 
-    <footer class="site-footer">
-        <div class="container">© @DateTime.UtcNow.Year Beauty by Negin</div>
-    </footer>
+    @await Html.PartialAsync("_Footer", ctx)
+    @await Html.PartialAsync("_ActionBar", ctx)
+    @if (ctx.Settings.ChatAvailable)
+    {
+        @await Html.PartialAsync("_Chat", ctx)
+    }
 
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

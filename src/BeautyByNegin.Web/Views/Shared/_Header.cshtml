@@ -1,0 +1,113 @@
+@model PageContext
+@{
+    var T = Model.T;
+    var lang = Model.Code;
+    (string Key, string Url, string Label)[] nav =
+    [
+        ("home", SiteUrls.Home(lang), T["nav.home"]),
+        (SiteRoutes.About, SiteUrls.Page(SiteRoutes.About, lang), T["nav.about"]),
+        (SiteRoutes.Services, SiteUrls.Page(SiteRoutes.Services, lang), T["nav.services"]),
+        (SiteRoutes.Gallery, SiteUrls.Page(SiteRoutes.Gallery, lang), T["nav.gallery"]),
+        (SiteRoutes.Reviews, SiteUrls.Page(SiteRoutes.Reviews, lang), T["nav.reviews"]),
+        (SiteRoutes.Contact, SiteUrls.Page(SiteRoutes.Contact, lang), T["nav.contact"]),
+    ];
+    var menuPages = Model.Layout.MenuPages;
+}
+
+@functions {
+    private async Task Brand(PageContext m)
+    {
+        <a class="brand" href="@SiteUrls.Home(m.Code)" aria-label="@m.Settings.BrandName">
+            @if (m.Layout.Logo is { } logo)
+            {
+                <img src="@logo.Src" alt="@m.Settings.BrandName" width="@logo.Width" height="@logo.Height" />
+            }
+            else
+            {
+                <span class="brand-text">@m.Settings.BrandName.ToUpperInvariant()</span>
+            }
+        </a>
+        await Task.CompletedTask;
+    }
+
+    private async Task LangSwitch(PageContext m)
+    {
+        if (m.Languages.Count < 2) return;
+        <nav class="lang-switch" aria-label="Language">
+            @for (var i = 0; i < m.Languages.Count; i++)
+            {
+                var l = m.Languages[i];
+                if (i > 0) { <span class="sep" aria-hidden="true">·</span> }
+                if (l.Code == m.Code)
+                {
+                    <span class="is-current" aria-current="true" lang="@l.Code" title="@l.NativeName">@l.ShortLabel</span>
+                }
+                else
+                {
+                    var href = m.Alternates.TryGetValue(l.Code, out var u) ? u : SiteUrls.Home(l.Code);
+                    <a href="@href" hreflang="@l.Code" lang="@l.Code" title="@l.NativeName">@l.ShortLabel</a>
+                }
+            }
+        </nav>
+        await Task.CompletedTask;
+    }
+}
+
+<header class="site-header" data-header>
+    <div class="container header-inner">
+        @{ await Brand(Model); }
+
+        <nav class="main-nav" aria-label="Main">
+            <ul>
+                @foreach (var item in nav.Skip(1))
+                {
+                    <li><a href="@item.Url" aria-current="@(Model.ActiveNav == item.Key ? "page" : null)">@item.Label</a></li>
+                }
+                @foreach (var p in menuPages)
+                {
+                    <li><a href="@SiteUrls.CustomPage(lang, p.Slug)">@p.Title</a></li>
+                }
+            </ul>
+        </nav>
+
+        <div class="header-tools">
+            @{ await LangSwitch(Model); }
+            <a class="btn btn-primary btn-sm header-book" href="@SiteUrls.Booking(lang)">@T["nav.booking"]</a>
+            <button class="menu-toggle" type="button" aria-controls="mobile-menu" aria-expanded="false" data-menu-open>
+                <svg class="icon" aria-hidden="true"><use href="#i-menu" /></svg>
+                <span class="visually-hidden">@T["nav.menu"]</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="@T["nav.menu"]" data-menu>
+    <div class="mobile-menu-top">
+        @{ await Brand(Model); }
+        <button class="menu-toggle" type="button" data-menu-close>
+            <svg class="icon" aria-hidden="true"><use href="#i-close" /></svg>
+            <span class="visually-hidden">@T["nav.close"]</span>
+        </button>
+    </div>
+    <nav class="mobile-menu-nav" aria-label="Main">
+        <ul>
+            @foreach (var item in nav)
+            {
+                <li>
+                    <a href="@item.Url" aria-current="@(Model.ActiveNav == item.Key ? "page" : null)">
+                        @item.Label
+                        <svg class="icon flip-rtl" aria-hidden="true"><use href="#i-chevron" /></svg>
+                    </a>
+                </li>
+            }
+            @foreach (var p in menuPages)
+            {
+                <li><a href="@SiteUrls.CustomPage(lang, p.Slug)">@p.Title <svg class="icon flip-rtl" aria-hidden="true"><use href="#i-chevron" /></svg></a></li>
+            }
+        </ul>
+    </nav>
+    <div class="mobile-menu-foot">
+        <a class="btn btn-primary btn-block" href="@SiteUrls.Booking(lang)">@T["btn.book"]</a>
+        @{ await LangSwitch(Model); }
+    </div>
+</div>

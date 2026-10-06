@@ -1,20 +1,15 @@
+@inject SiteContext Site
 @{
-    ViewData["Title"] = "Error";
-    var lang = Context.GetSiteLanguage()!;
+    var ctx = await Site.GetAsync();
+    ViewData["Title"] = ctx.T["error.500.title"];
 }
 <section class="container error-page">
-    <h1>@(lang.Code switch
-    {
-        "fa" => "متأسفیم، مشکلی پیش آمد",
-        "tr" => "Üzgünüz, bir sorun oluştu",
-        "de" => "Entschuldigung, etwas ist schiefgelaufen",
-        _ => "Sorry, something went wrong"
-    })</h1>
-    <a class="btn btn-primary" href="/@lang.Code">@(lang.Code switch
-    {
-        "fa" => "بازگشت به صفحه اصلی",
-        "tr" => "Ana sayfaya dön",
-        "de" => "Zur Startseite",
-        _ => "Back to home"
-    })</a>
+    <h1>@ctx.T["error.500.title"]</h1>
+    <div class="btn-row">
+        <a class="btn btn-primary" href="@SiteUrls.Home(ctx.Code)">@ctx.T["btn.backHome"]</a>
+        @if (ctx.Contact.PhoneUrl is not null)
+        {
+            <a class="btn" href="@ctx.Contact.PhoneUrl">@ctx.T["btn.call"]</a>
+        }
+    </div>
 </section>

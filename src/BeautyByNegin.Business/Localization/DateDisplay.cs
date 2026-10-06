@@ -29,7 +29,7 @@ public static class DateDisplay
             var text = $"{Persian.GetDayOfMonth(date)} {PersianMonths[Persian.GetMonth(date) - 1]} {Persian.GetYear(date)}";
             return lang.UseNativeDigits ? Digits.ToPersian(text) : text;
         }
-        return date.ToString("D", lang.CreateCulture());
+        return Digits.Native(date.ToString("D", lang.CreateCulture()), lang);
     }
 
     /// <summary>Short numeric date, e.g. "۱۴۰۵/۰۷/۱۴" (fa) or "06.10.2026" (de).</summary>
@@ -40,7 +40,7 @@ public static class DateDisplay
             var text = $"{Persian.GetYear(date):0000}/{Persian.GetMonth(date):00}/{Persian.GetDayOfMonth(date):00}";
             return lang.UseNativeDigits ? Digits.ToPersian(text) : text;
         }
-        return date.ToString("d", lang.CreateCulture());
+        return Digits.Native(date.ToString("d", lang.CreateCulture()), lang);
     }
 
     /// <summary>Converts a Jalali date to a Gregorian <see cref="DateOnly"/> (for form input).</summary>
@@ -56,6 +56,22 @@ public static class Digits
 {
     private const string PersianDigits = "۰۱۲۳۴۵۶۷۸۹";
     private const string ArabicDigits = "٠١٢٣٤٥٦٧٨٩";
+
+    /// <summary>Applies the language's digit style: Persian (۱۲۳) for fa, Arabic-Indic (١٢٣) for ar, Latin otherwise.</summary>
+    public static string Native(string? input, SiteLanguage lang)
+    {
+        if (!lang.UseNativeDigits || string.IsNullOrEmpty(input)) return input ?? "";
+        return lang.Code == "ar" ? ToArabic(input) : ToPersian(input);
+    }
+
+    public static string ToArabic(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return input ?? "";
+        var sb = new StringBuilder(input.Length);
+        foreach (var c in input)
+            sb.Append(c is >= '0' and <= '9' ? ArabicDigits[c - '0'] : c);
+        return sb.ToString();
+    }
 
     public static string ToPersian(string? input)
     {
@@ -84,7 +100,6 @@ public static class Digits
     /// <summary>Formats a number for display in the given language.</summary>
     public static string Format(int number, SiteLanguage lang)
     {
-        var text = number.ToString(CultureInfo.InvariantCulture);
-        return lang.UseNativeDigits ? ToPersian(text) : text;
+        return Native(number.ToString(CultureInfo.InvariantCulture), lang);
     }
 }
