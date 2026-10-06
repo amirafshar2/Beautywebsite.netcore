@@ -1,0 +1,144 @@
+@model BookingPage
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var c = ctx.Contact;
+    var f = Model.Form;
+    var errors = Model.Errors;
+    var jalali = ctx.Code == "fa";
+    var today = DateDisplay.ToLocal(DateTime.UtcNow, ctx.Settings.TimeZone);
+    var (jy, _, _) = DateDisplay.ToJalali(today);
+    string[] persianMonths = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+    string Err(string key) => errors.ContainsKey(key) ? "has-error" : "";
+}
+<section class="page-hero">
+    <div class="container container-narrow">
+        <p class="eyebrow">@T["booking.eyebrow"]</p>
+        <h1>@T["booking.title"]</h1>
+        @Html.Paragraphs(T["booking.intro"], "lead")
+
+        @if (c.PhoneUrl is not null || c.HasWhatsApp || c.HasEmail)
+        {
+            <p class="label-sm">@T["booking.quick"]</p>
+            <div class="quick-actions">
+                @if (c.PhoneUrl is not null)
+                {
+                    <a class="contact-option" href="@c.PhoneUrl"><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg><span>@T["btn.call"]</span></a>
+                }
+                @if (c.HasWhatsApp)
+                {
+                    <a class="contact-option" href="@c.WhatsAppUrl(T["wa.general"])" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp" /></svg><span>@T["btn.whatsapp"]</span></a>
+                }
+                @if (c.HasEmail)
+                {
+                    <a class="contact-option" href="@c.MailUrl(T["mail.subject.general"])"><svg class="icon" aria-hidden="true"><use href="#i-mail" /></svg><span>@T["btn.email"]</span></a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section class="section pt-0">
+    <div class="container container-narrow">
+        <div class="panel">
+            @if (errors.TryGetValue("", out var general))
+            {
+                <p class="alert alert-error" role="alert">@general</p>
+            }
+            <form class="form" method="post" action="/@ctx.Code/api/booking/submit" novalidate data-booking-form>
+                @Html.AntiForgeryToken()
+                <input class="hp-field" name="Website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+                <input type="hidden" name="FormStartedTicks" value="@f.FormStartedTicks" />
+
+                <div class="form-row cols-2">
+                    <div class="field @Err("FullName")">
+                        <label for="bk-name">@T["booking.name"] <span class="req">*</span></label>
+                        <input id="bk-name" name="FullName" value="@f.FullName" required maxlength="150" autocomplete="name" />
+                        @if (errors.TryGetValue("FullName", out var e)) { <span class="error">@e</span> }
+                    </div>
+                    <div class="field @Err("Phone")">
+                        <label for="bk-phone">@T["booking.phone"] <span class="req">*</span></label>
+                        <input id="bk-phone" name="Phone" value="@f.Phone" type="tel" required maxlength="40" autocomplete="tel" dir="ltr" inputmode="tel" />
+                        <span class="hint">@T["booking.phoneHint"]</span>
+                        @if (errors.TryGetValue("Phone", out var e2)) { <span class="error">@e2</span> }
+                    </div>
+                </div>
+
+                <div class="field @Err("Email")">
+                    <label for="bk-email">@T["booking.email"]</label>
+                    <input id="bk-email" name="Email" value="@f.Email" type="email" maxlength="200" autocomplete="email" dir="ltr" />
+                    @if (errors.TryGetValue("Email", out var e3)) { <span class="error">@e3</span> }
+                </div>
+
+                <div class="field @Err("ServiceId")">
+                    <label for="bk-service">@T["booking.service"]</label>
+                    <select id="bk-service" name="ServiceId">
+                        <option value="">@T["booking.service.choose"]</option>
+                        @foreach (var s in Model.Services)
+                        {
+                            <option value="@s.Id" selected="@(f.ServiceId == s.Id)">@s.Name</option>
+                        }
+                        <option value="0" selected="@(f.ServiceId == 0)">@T["booking.service.notSure"]</option>
+                    </select>
+                </div>
+
+                <div class="form-row cols-2">
+                    <div class="field @Err("PreferredDate")">
+                        @if (jalali)
+                        {
+                            <span class="label" id="bk-date-label">@T["booking.date"]</span>
+                            <div class="jalali-date" role="group" aria-labelledby="bk-date-label">
+                                <select name="JalaliDay" aria-label="روز">
+                                    <option value="">روز</option>
+                                    @for (var d = 1; d <= 31; d++) { <option value="@d" selected="@(f.JalaliDay == d)">@Digits.ToPersian(d.ToString())</option> }
+                                </select>
+                                <select name="JalaliMonth" aria-label="ماه">
+                                    <option value="">ماه</option>
+                                    @for (var m = 1; m <= 12; m++) { <option value="@m" selected="@(f.JalaliMonth == m)">@persianMonths[m - 1]</option> }
+                                </select>
+                                <select name="JalaliYear" aria-label="سال">
+                                    @for (var y = jy; y <= jy + 1; y++) { <option value="@y" selected="@(f.JalaliYear == y || (f.JalaliYear is null && y == jy))">@Digits.ToPersian(y.ToString())</option> }
+                                </select>
+                            </div>
+                        }
+                        else
+                        {
+                            <label for="bk-date">@T["booking.date"]</label>
+                            <input id="bk-date" name="PreferredDate" value="@f.PreferredDate" type="date" min="@today.ToString("yyyy-MM-dd")" max="@today.AddYears(1).ToString("yyyy-MM-dd")" />
+                        }
+                        @if (errors.TryGetValue("PreferredDate", out var e4)) { <span class="error">@e4</span> }
+                    </div>
+                    @if (Model.TimeSlots.Count > 0)
+                    {
+                        <div class="field">
+                            <label for="bk-time">@T["booking.time"]</label>
+                            <select id="bk-time" name="TimeSlotId">
+                                <option value="">@T["booking.service.choose"]</option>
+                                @foreach (var slot in Model.TimeSlots)
+                                {
+                                    <option value="@slot.Id" selected="@(f.TimeSlotId == slot.Id)">@slot.Label</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="bk-msg">@T["booking.message"]</label>
+                    <textarea id="bk-msg" name="Message" maxlength="3000">@f.Message</textarea>
+                </div>
+
+                @if (ctx.Settings.PrivacyConsentRequired)
+                {
+                    <div class="field @Err("PrivacyAccepted")">
+                        <partial name="_PrivacyCheck" model='("PrivacyAccepted", f.PrivacyAccepted)' />
+                        @if (errors.TryGetValue("PrivacyAccepted", out var e5)) { <span class="error">@e5</span> }
+                    </div>
+                }
+
+                <div><button class="btn btn-primary" type="submit">@T["booking.submit"]</button></div>
+            </form>
+        </div>
+    </div>
+</section>

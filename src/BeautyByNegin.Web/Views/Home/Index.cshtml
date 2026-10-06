@@ -1,43 +1,175 @@
+@model HomeData
 @inject SiteContext Site
+@using BeautyByNegin.DataAccess.Entities
 @{
     var ctx = await Site.GetAsync();
     var T = ctx.T;
-    ViewData["Title"] = null;
-    var hero = ImageView.Placeholder("16x9");
+    var lang = ctx.Code;
+    var hasHeading = false;
 }
-<section class="hero is-placeholder">
-    <div class="hero-media"><img src="@hero.Src" alt="" width="@hero.Width" height="@hero.Height" fetchpriority="high" /></div>
-    <div class="container hero-content">
-        <p class="eyebrow">@T["home.hero.eyebrow"]</p>
-        <h1 class="latin">@T["home.hero.title"]</h1>
-        <p class="slogan">@T["home.hero.slogan"]</p>
-        <div class="btn-row">
-            <a class="btn btn-primary" href="@SiteUrls.Booking(ctx.Code)">@T["btn.book"]</a>
-            <a class="btn btn-ghost-light" href="@SiteUrls.Page(SiteRoutes.Contact, ctx.Code)">@T["btn.contact"]</a>
-        </div>
-    </div>
-</section>
 
-<section class="section">
-    <div class="container split">
-        <div class="reveal">
-            <p class="eyebrow">@T["home.intro.eyebrow"]</p>
-            <h2>@T["home.intro.title"]</h2>
-            <p class="lead">@T["home.intro.text"]</p>
-            <a class="link-arrow" href="@SiteUrls.Page(SiteRoutes.About, ctx.Code)">@T["btn.about"] <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
-        </div>
-        <div class="media ratio-4x5 arch reveal"><img src="/img/placeholder-4x5.svg" alt="" width="800" height="1000" loading="lazy" /></div>
-    </div>
-</section>
+@foreach (var section in Model.Sections)
+{
+    switch (section)
+    {
+        case HomeSectionKeys.Hero:
+            hasHeading = true;
+            <section class="hero @(Model.Hero.IsPlaceholder ? "is-placeholder" : "")">
+                <div class="hero-media">@Html.Img(Model.Hero, "100vw", "", priority: true)</div>
+                <div class="container hero-content">
+                    <p class="eyebrow">@T["home.hero.eyebrow"]</p>
+                    <h1 class="@(T["home.hero.title"].Any(c => c > 0x0600 && c < 0x06FF) ? "" : "latin")">@T["home.hero.title"]</h1>
+                    <p class="slogan">@T["home.hero.slogan"]</p>
+                    <div class="btn-row">
+                        <a class="btn @(Model.Hero.IsPlaceholder ? "btn-primary" : "btn-light")" href="@SiteUrls.Booking(lang)">@T["btn.book"]</a>
+                        <a class="btn btn-ghost-light" href="@SiteUrls.Page(SiteRoutes.Contact, lang)">@T["btn.contact"]</a>
+                    </div>
+                </div>
+            </section>
+            break;
 
-<section class="section section-dark">
-    <div class="container container-narrow section-head centered">
-        <p class="eyebrow centered">@T["consult.eyebrow"]</p>
-        <h2>@T["consult.title"]</h2>
-        <p class="lead">@T["consult.text"]</p>
-        <p class="muted">@T["consult.question"]</p>
-        <div class="btn-row center">
-            <a class="btn btn-light" href="@SiteUrls.Booking(ctx.Code)">@T["btn.book"]</a>
-        </div>
-    </div>
-</section>
+        case HomeSectionKeys.Intro:
+            <section class="section">
+                <div class="container split">
+                    <div class="reveal">
+                        <p class="eyebrow">@T["home.intro.eyebrow"]</p>
+                        @if (hasHeading) { <h2>@T["home.intro.title"]</h2> } else { hasHeading = true; <h1>@T["home.intro.title"]</h1> }
+                        @Html.Paragraphs(T["home.intro.text"], "lead")
+                        <a class="link-arrow" href="@SiteUrls.Page(SiteRoutes.About, lang)">@T["btn.about"] <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
+                    </div>
+                    <div class="media ratio-4x5 arch reveal">@Html.Img(Model.IntroImage, "(min-width: 900px) 45vw, 92vw")</div>
+                </div>
+            </section>
+            break;
+
+        case HomeSectionKeys.Services when Model.Services.Count > 0:
+            <section class="section section-ivory">
+                <div class="container">
+                    <div class="section-head reveal">
+                        <p class="eyebrow">@T["home.services.eyebrow"]</p>
+                        <h2>@T["home.services.title"]</h2>
+                    </div>
+                    <div class="grid grid-3">
+                        @foreach (var s in Model.Services)
+                        {
+                            <partial name="_ServiceCard" model="s" />
+                        }
+                    </div>
+                    <div class="section-foot">
+                        <a class="btn" href="@SiteUrls.Page(SiteRoutes.Services, lang)">@T["btn.allServices"]</a>
+                    </div>
+                </div>
+            </section>
+            break;
+
+        case HomeSectionKeys.Consultation:
+            ViewData["ConsultImage"] = Model.ConsultationImage;
+            <partial name="_Consultation" view-data="ViewData" />
+            break;
+
+        case HomeSectionKeys.Gallery when Model.Gallery.Count > 0:
+            <section class="section">
+                <div class="container">
+                    <div class="section-head reveal">
+                        <p class="eyebrow">@T["home.gallery.eyebrow"]</p>
+                        <h2>@T["home.gallery.title"]</h2>
+                    </div>
+                    <div class="home-gallery">
+                        @foreach (var g in Model.Gallery)
+                        {
+                            <a class="media ratio-1x1 reveal" href="@SiteUrls.Page(SiteRoutes.Gallery, lang)">@Html.Img(g.AfterImage ?? g.Image, "(min-width: 1000px) 380px, 46vw", g.Caption)</a>
+                        }
+                    </div>
+                    <div class="section-foot">
+                        <a class="btn" href="@SiteUrls.Page(SiteRoutes.Gallery, lang)">@T["btn.allGallery"]</a>
+                    </div>
+                </div>
+            </section>
+            break;
+
+        case HomeSectionKeys.Reviews when Model.Reviews.Count > 0:
+            <section class="section section-sand">
+                <div class="container">
+                    <div class="section-head centered reveal">
+                        <p class="eyebrow centered">@T["home.reviews.eyebrow"]</p>
+                        <h2>@T["home.reviews.title"]</h2>
+                    </div>
+                    <div class="review-track" tabindex="0" aria-label="@T["home.reviews.title"]">
+                        @foreach (var r in Model.Reviews)
+                        {
+                            <partial name="_ReviewCard" model="r" />
+                        }
+                    </div>
+                    <div class="section-foot">
+                        <a class="link-arrow" href="@SiteUrls.Page(SiteRoutes.Reviews, lang)">@T["btn.allReviews"] <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
+                    </div>
+                </div>
+            </section>
+            break;
+
+        case HomeSectionKeys.Instagram when Model.Instagram.Count > 0:
+            <section class="section">
+                <div class="container">
+                    <div class="section-head centered reveal">
+                        <p class="eyebrow centered">Instagram</p>
+                        <h2>@T["home.instagram.title"]</h2>
+                        @if (ctx.Contact.InstagramUrl is not null)
+                        {
+                            <a class="link-arrow latin" href="@ctx.Contact.InstagramUrl" rel="noopener" target="_blank">@@@ctx.Contact.InstagramUser</a>
+                        }
+                    </div>
+                    <div class="insta-grid">
+                        @foreach (var p in Model.Instagram)
+                        {
+                            <a class="media ratio-1x1 reveal" href="@p.Url" rel="noopener" target="_blank">
+                                @Html.Img(p.Image, "(min-width: 1000px) 240px, 31vw")
+                                <svg class="icon insta-icon" aria-hidden="true"><use href="#i-instagram" /></svg>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </section>
+            break;
+
+        case HomeSectionKeys.Newsletter when ctx.Settings.NewsletterEnabled:
+            <section class="section section-tight section-ivory">
+                <div class="container newsletter reveal">
+                    <div>
+                        <h2 class="h3">@T["home.newsletter.title"]</h2>
+                        @Html.Paragraphs(T["home.newsletter.text"], "muted m-0")
+                    </div>
+                    <form class="newsletter-form" method="post" action="/@lang/api/newsletter/subscribe" data-ajax-form novalidate>
+                        @Html.AntiForgeryToken()
+                        <input class="hp-field" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+                        <input type="hidden" name="formStartedTicks" value="@DateTime.UtcNow.Ticks" />
+                        <div class="newsletter-row">
+                            <label class="visually-hidden" for="nl-email">@T["newsletter.email"]</label>
+                            <input class="input" id="nl-email" name="email" type="email" required maxlength="200" autocomplete="email" dir="ltr" placeholder="@T["newsletter.email"]" />
+                            <button class="btn btn-primary" type="submit">@T["btn.subscribe"]</button>
+                        </div>
+                        @if (ctx.Settings.PrivacyConsentRequired)
+                        {
+                            <div class="small"><partial name="_PrivacyCheck" model='("privacyAccepted", false)' /></div>
+                        }
+                        <p class="form-status" data-form-status role="status" hidden></p>
+                    </form>
+                </div>
+            </section>
+            break;
+
+        case HomeSectionKeys.Contact:
+            <section class="section">
+                <div class="container container-narrow section-head centered m-0 reveal">
+                    <h2>@T["home.contact.title"]</h2>
+                    @Html.Paragraphs(T["home.contact.text"], "lead")
+                    <partial name="_ContactButtons" model="@("center")" />
+                </div>
+            </section>
+            break;
+    }
+}
+
+@if (!hasHeading)
+{
+    <h1 class="visually-hidden">@ctx.Settings.BrandName</h1>
+}

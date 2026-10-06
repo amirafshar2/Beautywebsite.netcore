@@ -1,17 +1,16 @@
-using BeautyByNegin.Web.Infrastructure;
 using BeautyByNegin.Web.Infrastructure.Routing;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BeautyByNegin.Web.Controllers;
 
-public class HomeController(SiteContext site) : Controller
+public class HomeController : PublicController
 {
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var ctx = await site.GetAsync();
-        ctx.ActiveNav = "home";
-        ctx.Alternates = ctx.Languages.ToDictionary(l => l.Code, l => SiteUrls.Home(l.Code));
-        return View();
+        Ctx.ActiveNav = "home";
+        Ctx.Alternates = Ctx.Languages.ToDictionary(l => l.Code, l => SiteUrls.Home(l.Code));
+        Seo(null, Ctx.T["seo.home.description"]);
+        return View(await Content.GetHomeAsync(Ctx.Lang, HttpContext.RequestAborted));
     }
 }

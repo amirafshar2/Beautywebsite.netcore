@@ -15,6 +15,8 @@ public static class BusinessSetup
         services.AddSingleton<ITextService, TextService>();
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<ILayoutService, LayoutService>();
+        services.AddSingleton<IContentService, ContentService>();
+        services.AddSingleton<ISiteCache, SiteCache>();
         return services;
     }
 }

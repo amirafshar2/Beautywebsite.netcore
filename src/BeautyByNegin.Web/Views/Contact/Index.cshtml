@@ -1,0 +1,111 @@
+@model ContactData
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var c = ctx.Contact;
+    var address = T["contact.address"];
+    var sent = TempData["ContactSent"] as bool? == true;
+    var errors = ViewData["Errors"] as Dictionary<string, string> ?? [];
+    var form = ViewData["Form"] as BeautyByNegin.Web.Models.ContactForm ?? new();
+}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">@T["contact.eyebrow"]</p>
+        <h1>@T["contact.title"]</h1>
+        @Html.Paragraphs(T["contact.intro"], "lead")
+    </div>
+</section>
+
+<section class="section pt-0">
+    <div class="container">
+        <div class="contact-tiles">
+            @if (c.PhoneUrl is not null)
+            {
+                <a class="contact-tile" href="@c.PhoneUrl"><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg><span class="t">@T["btn.call"]</span><span class="v ltr-value">@c.Phone</span></a>
+            }
+            @if (c.HasWhatsApp)
+            {
+                <a class="contact-tile" href="@c.WhatsAppUrl(T["wa.general"])" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp" /></svg><span class="t">@T["btn.whatsapp"]</span><span class="v ltr-value">@c.WhatsAppNumber</span></a>
+            }
+            @if (c.HasEmail)
+            {
+                <a class="contact-tile" href="@c.MailUrl(T["mail.subject.general"])"><svg class="icon" aria-hidden="true"><use href="#i-mail" /></svg><span class="t">@T["btn.email"]</span><span class="v ltr-value">@c.Email</span></a>
+            }
+            @if (c.InstagramUrl is not null)
+            {
+                <a class="contact-tile" href="@c.InstagramUrl" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-instagram" /></svg><span class="t">@T["btn.instagram"]</span><span class="v ltr-value">@@@c.InstagramUser</span></a>
+            }
+            @if (c.TelegramUrl is not null)
+            {
+                <a class="contact-tile" href="@c.TelegramUrl" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-telegram" /></svg><span class="t">@T["btn.telegram"]</span><span class="v ltr-value">@ctx.Settings.Telegram</span></a>
+            }
+        </div>
+
+        <div class="split contact-info">
+            <div>
+                @if (!string.IsNullOrWhiteSpace(address))
+                {
+                    <h2 class="h3">@T["contact.addressTitle"]</h2>
+                    <p class="pre-line">@address</p>
+                    @if (c.MapUrl is not null)
+                    {
+                        <a class="link-arrow" href="@c.MapUrl" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-pin" /></svg> @T["btn.openMap"]</a>
+                    }
+                    @if (Model.MapImage is { } map)
+                    {
+                        <a class="media ratio-16x9 map-image" href="@(c.MapUrl ?? "#")" rel="noopener" target="_blank">@Html.Img(map, "(min-width: 900px) 45vw, 92vw")</a>
+                    }
+                }
+                @if (ctx.Layout.Hours.Count > 0)
+                {
+                    <h2 class="h3 mt">@T["contact.hoursTitle"]</h2>
+                    <ul class="hours-list">
+                        @foreach (var h in ctx.Layout.Hours)
+                        {
+                            <li><span>@h.DayName</span><span class="ltr-value @(h.IsClosed ? "muted" : "")">@(h.IsClosed ? T["contact.closed"] : h.Hours)</span></li>
+                        }
+                    </ul>
+                }
+            </div>
+
+            <div class="panel" id="contact-form">
+                <h2 class="h3">@T["contact.form.title"]</h2>
+                @if (sent)
+                {
+                    <p class="alert alert-success" role="status">@T["contact.form.success"]</p>
+                }
+                else
+                {
+                    @if (errors.TryGetValue("", out var general)) { <p class="alert alert-error" role="alert">@general</p> }
+                    <form class="form" method="post" action="/@ctx.Code/api/contact/send" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input class="hp-field" name="Website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+                        <input type="hidden" name="FormStartedTicks" value="@DateTime.UtcNow.Ticks" />
+                        <div class="field @(errors.ContainsKey("Name") ? "has-error" : "")">
+                            <label for="ct-name">@T["contact.form.name"] <span class="req">*</span></label>
+                            <input id="ct-name" name="Name" value="@form.Name" required maxlength="150" autocomplete="name" />
+                            @if (errors.TryGetValue("Name", out var e1)) { <span class="error">@e1</span> }
+                        </div>
+                        <div class="field @(errors.ContainsKey("ContactInfo") ? "has-error" : "")">
+                            <label for="ct-info">@T["contact.form.contactInfo"] <span class="req">*</span></label>
+                            <input id="ct-info" name="ContactInfo" value="@form.ContactInfo" required maxlength="200" dir="ltr" />
+                            @if (errors.TryGetValue("ContactInfo", out var e2)) { <span class="error">@e2</span> }
+                        </div>
+                        <div class="field @(errors.ContainsKey("Message") ? "has-error" : "")">
+                            <label for="ct-msg">@T["contact.form.message"] <span class="req">*</span></label>
+                            <textarea id="ct-msg" name="Message" required maxlength="3000">@form.Message</textarea>
+                            @if (errors.TryGetValue("Message", out var e3)) { <span class="error">@e3</span> }
+                        </div>
+                        @if (ctx.Settings.PrivacyConsentRequired)
+                        {
+                            <partial name="_PrivacyCheck" model='("PrivacyAccepted", form.PrivacyAccepted)' />
+                            @if (errors.TryGetValue("PrivacyAccepted", out var e4)) { <span class="error">@e4</span> }
+                        }
+                        <div><button class="btn btn-primary" type="submit">@T["btn.send"]</button></div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</section>

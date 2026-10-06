@@ -1,0 +1,77 @@
+@model IReadOnlyList<ReviewView>
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var services = (IReadOnlyList<ServiceCard>)ViewBag.Services;
+    var sent = TempData["ReviewSent"] as bool? == true;
+}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">@T["reviews.eyebrow"]</p>
+        <h1>@T["reviews.title"]</h1>
+    </div>
+</section>
+
+<section class="section pt-0">
+    <div class="container">
+        @if (Model.Count == 0)
+        {
+            <p class="empty-state">@T["reviews.empty"]</p>
+        }
+        else
+        {
+            <div class="review-grid">
+                @foreach (var r in Model)
+                {
+                    <div class="reveal"><partial name="_ReviewCard" model="r" /></div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@if (ctx.Settings.AllowVisitorReviews)
+{
+    <section class="section section-ivory" id="write-review">
+        <div class="container container-narrow">
+            <h2>@T["reviews.form.title"]</h2>
+            @if (sent)
+            {
+                <p class="alert alert-success" role="status">@T["reviews.form.success"]</p>
+            }
+            else
+            {
+                <form class="form" method="post" action="/@ctx.Code/api/reviews/submit" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input class="hp-field" name="Website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+                    <input type="hidden" name="FormStartedTicks" value="@DateTime.UtcNow.Ticks" />
+                    <div class="form-row cols-2">
+                        <div class="field"><label for="rv-name">@T["reviews.form.name"] <span class="req">*</span></label><input id="rv-name" name="Name" required maxlength="100" autocomplete="name" /></div>
+                        <div class="field">
+                            <label for="rv-rating">@T["reviews.form.rating"]</label>
+                            <select id="rv-rating" name="Rating">
+                                <option value="">—</option>
+                                @for (var i = 5; i >= 1; i--) { <option value="@i">@(new string('★', i))</option> }
+                            </select>
+                        </div>
+                    </div>
+                    <label class="check"><input type="checkbox" name="InitialsOnly" value="true" /> <span>@T["reviews.form.initials"]</span></label>
+                    <div class="field">
+                        <label for="rv-service">@T["reviews.form.service"]</label>
+                        <select id="rv-service" name="ServiceId">
+                            <option value="">—</option>
+                            @foreach (var s in services) { <option value="@s.Id">@s.Name</option> }
+                        </select>
+                    </div>
+                    <div class="field"><label for="rv-text">@T["reviews.form.text"] <span class="req">*</span></label><textarea id="rv-text" name="Text" required maxlength="3000"></textarea></div>
+                    @if (ctx.Settings.PrivacyConsentRequired)
+                    {
+                        <partial name="_PrivacyCheck" model='("PrivacyAccepted", false)' />
+                    }
+                    <div><button class="btn btn-primary" type="submit">@T["btn.send"]</button></div>
+                </form>
+            }
+        </div>
+    </section>
+}

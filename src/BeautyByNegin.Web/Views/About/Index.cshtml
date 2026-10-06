@@ -1,0 +1,62 @@
+@model AboutData
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+}
+<section class="page-hero">
+    <div class="container split wide-start">
+        <div class="reveal">
+            <p class="eyebrow">@T["about.eyebrow"]</p>
+            <h1>@T["about.title"]</h1>
+            @Html.Paragraphs(T["about.intro"], "lead")
+        </div>
+        <div class="media ratio-4x5 arch reveal">@Html.Img(Model.Image, "(min-width: 900px) 40vw, 92vw", T["about.title"], priority: true)</div>
+    </div>
+</section>
+
+@if (Model.Expertise.Count > 0)
+{
+    <section class="section section-ivory">
+        <div class="container split">
+            <div class="reveal">
+                <h2>@T["about.expertise.title"]</h2>
+            </div>
+            <ol class="expertise-list reveal">
+                @for (var i = 0; i < Model.Expertise.Count; i++)
+                {
+                    <li><span class="num">@((i + 1).ToString("00"))</span><span>@Model.Expertise[i].Text</span></li>
+                }
+            </ol>
+        </div>
+    </section>
+}
+
+<section class="section section-dark">
+    <div class="container container-narrow section-head centered m-0 reveal">
+        <p class="eyebrow centered">@T["about.philosophy.title"]</p>
+        <blockquote class="philosophy">@T["about.philosophy.text"]</blockquote>
+    </div>
+</section>
+
+@if (Model.Certificates.Count > 0)
+{
+    <section class="section">
+        <div class="container container-narrow">
+            <h2 class="reveal">@T["about.certificates.title"]</h2>
+            <ul class="cert-list reveal">
+                @foreach (var c in Model.Certificates)
+                {
+                    <li><strong>@c.Text</strong>@if (!string.IsNullOrWhiteSpace(c.Detail)) { <span class="muted">@c.Detail</span> }</li>
+                }
+            </ul>
+        </div>
+    </section>
+}
+
+<section class="section section-tight">
+    <div class="container container-narrow section-head centered m-0">
+        <p class="lead">@T["consult.question"]</p>
+        <partial name="_ContactButtons" model="@("center")" />
+    </div>
+</section>

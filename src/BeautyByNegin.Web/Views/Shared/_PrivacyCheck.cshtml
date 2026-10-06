@@ -1,0 +1,16 @@
+@model (string Name, bool Checked)
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var privacy = ctx.Layout.FooterPages.FirstOrDefault(p => p.SystemKey == BeautyByNegin.DataAccess.Entities.SystemPages.Privacy);
+}
+<label class="check">
+    <input type="checkbox" name="@Model.Name" value="true" required checked="@Model.Checked" />
+    <span>
+        @ctx.T["form.privacy"]
+        @if (privacy is not null)
+        {
+            <a href="@SiteUrls.CustomPage(ctx.Code, privacy.Slug)" target="_blank">@privacy.Title</a>
+        }
+    </span>
+</label>

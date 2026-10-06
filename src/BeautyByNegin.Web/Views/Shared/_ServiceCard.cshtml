@@ -1,0 +1,30 @@
+@model ServiceCard
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var url = SiteUrls.Service(ctx.Code, Model.Slug);
+}
+<article class="card service-card reveal">
+    <a href="@url" class="media ratio-4x5" tabindex="-1" aria-hidden="true">@Html.Img(Model.Image, "(min-width: 1000px) 380px, (min-width: 640px) 45vw, 92vw", Model.Name)</a>
+    <div class="card-body">
+        <p class="numbered"><span class="num">@Model.NumberLabel</span><span>—</span><span>@Model.Name.ToUpperInvariant()</span></p>
+        <h3><a class="stretched" href="@url">@Model.Name</a></h3>
+        @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
+        {
+            <p class="subtitle">@Model.Subtitle</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.ShortDescription))
+        {
+            <p>@Model.ShortDescription</p>
+        }
+        @if (Model.Price is decimal price)
+        {
+            <p class="price"><span class="muted">@T["services.price"]:</span> @Digits.Native(price.ToString("N0", ctx.Lang.CreateCulture()), ctx.Lang)</p>
+        }
+        <div class="card-actions">
+            <a class="link-arrow" href="@url">@T["btn.details"] <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
+            <partial name="_AskButton" model="Model" view-data='new ViewDataDictionary(ViewData) { ["AskCss"] = "btn btn-sm" }' />
+        </div>
+    </div>
+</article>

@@ -1,0 +1,31 @@
+@model PageContext
+@{
+    var T = Model.T;
+    var c = Model.Contact;
+}
+@* One shared window per page; site.js fills the links from the clicked button's data-ask-* attributes *@
+<div class="modal" id="ask-modal" aria-hidden="true" data-ask-modal>
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="ask-modal-title" tabindex="-1">
+        <button class="modal-close" type="button" data-modal-close>
+            <svg class="icon" aria-hidden="true"><use href="#i-close" /></svg><span class="visually-hidden">@T["nav.close"]</span>
+        </button>
+        <p class="eyebrow" data-ask-title>@T["btn.ask"]</p>
+        <h2 class="h3" id="ask-modal-title">@T["ask.title"]</h2>
+        <div class="contact-options">
+            @if (c.PhoneUrl is not null)
+            {
+                <a class="contact-option" href="@c.PhoneUrl"><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg><span>@T["btn.call"]</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron" /></svg></a>
+            }
+            @if (c.HasWhatsApp)
+            {
+                <a class="contact-option" href="@c.WhatsAppUrl(T["wa.general"])" data-ask-link="wa" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp" /></svg><span>@T["btn.whatsapp"]</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron" /></svg></a>
+            }
+            @if (c.HasEmail)
+            {
+                <a class="contact-option" href="@c.MailUrl(T["mail.subject.general"])" data-ask-link="mail"><svg class="icon" aria-hidden="true"><use href="#i-mail" /></svg><span>@T["btn.email"]</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron" /></svg></a>
+            }
+            <a class="contact-option" href="@SiteUrls.Booking(Model.Code)" data-ask-link="book"><svg class="icon" aria-hidden="true"><use href="#i-calendar" /></svg><span>@T["btn.bookForm"]</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron" /></svg></a>
+        </div>
+    </div>
+</div>

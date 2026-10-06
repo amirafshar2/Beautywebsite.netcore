@@ -42,6 +42,7 @@
 
     @await Html.PartialAsync("_Footer", ctx)
     @await Html.PartialAsync("_ActionBar", ctx)
+    @await Html.PartialAsync("_AskModal", ctx)
     @if (ctx.Settings.ChatAvailable)
     {
         @await Html.PartialAsync("_Chat", ctx)

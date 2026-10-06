@@ -1,0 +1,21 @@
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var image = ViewData["ConsultImage"] as ImageView;
+}
+<section class="section section-dark consult">
+    <div class="container @(image is null ? "container-narrow" : "split")">
+        @if (image is not null)
+        {
+            <div class="media ratio-4x5 arch reveal">@Html.Img(image, "(min-width: 900px) 45vw, 92vw")</div>
+        }
+        <div class="@(image is null ? "section-head centered m-0" : "") reveal">
+            <p class="eyebrow @(image is null ? "centered" : "")">@T["consult.eyebrow"]</p>
+            <h2>@T["consult.title"]</h2>
+            @Html.Paragraphs(T["consult.text"], "lead")
+            <p class="question">@T["consult.question"]</p>
+            <partial name="_ContactButtons" model="@("dark")" />
+        </div>
+    </div>
+</section>

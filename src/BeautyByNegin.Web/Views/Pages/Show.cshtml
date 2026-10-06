@@ -1,0 +1,11 @@
+@model PageView
+<section class="page-hero">
+    <div class="container container-narrow">
+        <h1>@Model.Title</h1>
+    </div>
+</section>
+<section class="section pt-0">
+    <div class="container container-narrow prose">
+        @Html.Raw(Model.ContentHtml)
+    </div>
+</section>

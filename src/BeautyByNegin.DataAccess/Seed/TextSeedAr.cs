@@ -153,7 +153,7 @@ internal static class TextSeedAr
 
         // Forms
         ["form.required"] = "مطلوب",
-        ["form.privacy"] = "أوافق على استخدام بياناتي فقط للرد على طلبي. (سياسة الخصوصية)",
+        ["form.privacy"] = "أوافق على استخدام بياناتي فقط للرد على طلبي.",
         ["form.error.required"] = "يرجى ملء هذا الحقل.",
         ["form.error.email"] = "يرجى إدخال بريد إلكتروني صحيح.",
         ["form.error.phone"] = "يرجى إدخال رقم هاتف صحيح.",

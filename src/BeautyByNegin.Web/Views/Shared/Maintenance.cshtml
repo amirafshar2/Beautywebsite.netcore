@@ -1,0 +1,28 @@
+@inject SiteContext Site
+@{
+    Layout = null;
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+}
+<!DOCTYPE html>
+<html lang="@ctx.Code" dir="@ctx.Lang.Dir">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>@T["maintenance.title"] · @ctx.Settings.BrandName</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @await Html.PartialAsync("_Icons")
+    <main class="maintenance">
+        <div class="container container-narrow">
+            <p class="brand-text">@ctx.Settings.BrandName.ToUpperInvariant()</p>
+            <hr class="divider" />
+            <h1>@T["maintenance.title"]</h1>
+            @Html.Paragraphs(T["maintenance.text"], "lead")
+            <partial name="_ContactButtons" model="@("center")" />
+        </div>
+    </main>
+</body>
+</html>

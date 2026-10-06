@@ -1,0 +1,27 @@
+@model string
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var c = ctx.Contact;
+    var dark = Model == "dark";
+    var center = Model is "dark" or "center";
+    var primary = dark ? "btn btn-light" : "btn btn-primary";
+    var secondary = dark ? "btn btn-ghost-light" : "btn";
+}
+@* Call / WhatsApp / Email / Book — only the channels that are configured *@
+<div class="btn-row contact-buttons @(center ? "center" : "")">
+    @if (c.PhoneUrl is not null)
+    {
+        <a class="@secondary" href="@c.PhoneUrl"><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg>@T["btn.call"]</a>
+    }
+    @if (c.HasWhatsApp)
+    {
+        <a class="@secondary" href="@c.WhatsAppUrl(T["wa.general"])" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp" /></svg>@T["btn.whatsapp"]</a>
+    }
+    @if (c.HasEmail)
+    {
+        <a class="@secondary" href="@c.MailUrl(T["mail.subject.general"])"><svg class="icon" aria-hidden="true"><use href="#i-mail" /></svg>@T["btn.email"]</a>
+    }
+    <a class="@primary" href="@SiteUrls.Booking(ctx.Code)"><svg class="icon" aria-hidden="true"><use href="#i-calendar" /></svg>@T["btn.book"]</a>
+</div>

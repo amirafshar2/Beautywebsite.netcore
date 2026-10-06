@@ -1,0 +1,74 @@
+@model GalleryData
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+}
+<section class="page-hero">
+    <div class="container">
+        <p class="eyebrow">@T["gallery.eyebrow"]</p>
+        <h1>@T["gallery.title"]</h1>
+        @Html.Paragraphs(T["gallery.intro"], "lead")
+    </div>
+</section>
+
+<section class="section pt-0">
+    <div class="container" data-gallery>
+        @if (Model.Items.Count == 0)
+        {
+            <p class="empty-state">@T["gallery.empty"]</p>
+        }
+        else
+        {
+            @if (Model.Categories.Count > 1)
+            {
+                <div class="filter-tabs" role="tablist" aria-label="@T["gallery.title"]">
+                    <button type="button" role="tab" aria-selected="true" data-filter="all">@T["gallery.all"]</button>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <button type="button" role="tab" aria-selected="false" data-filter="@c.Id">@c.Name</button>
+                    }
+                </div>
+            }
+            <div class="gallery-grid" data-lightbox-group>
+                @foreach (var item in Model.Items)
+                {
+                    if (item.AfterImage is { } after)
+                    {
+                        <figure class="gallery-item ba-item" data-category="@item.CategoryId">
+                            <div class="ba-slider" data-ba dir="ltr">
+                                @Html.Img(after, "(min-width: 1000px) 380px, (min-width: 640px) 45vw, 92vw", item.Caption, cssClass: "ba-after")
+                                <div class="ba-before">@Html.Img(item.Image, "(min-width: 1000px) 380px, (min-width: 640px) 45vw, 92vw", item.Caption)</div>
+                                <span class="ba-label ba-label-before">@T["gallery.before"]</span>
+                                <span class="ba-label ba-label-after">@T["gallery.after"]</span>
+                                <span class="ba-handle" aria-hidden="true"></span>
+                                <input class="ba-range" type="range" min="0" max="100" value="50" aria-label="@T["gallery.before"] / @T["gallery.after"]" />
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(item.Caption)) { <figcaption>@item.Caption</figcaption> }
+                        </figure>
+                    }
+                    else
+                    {
+                        <figure class="gallery-item" data-category="@item.CategoryId">
+                            <a class="media" href="@item.Image.Src" data-lightbox data-full="@item.Image.Src" data-caption="@item.Caption">
+                                @Html.Img(item.Image, "(min-width: 1000px) 380px, (min-width: 640px) 45vw, 92vw", item.Caption)
+                            </a>
+                            @if (!string.IsNullOrWhiteSpace(item.Caption)) { <figcaption>@item.Caption</figcaption> }
+                        </figure>
+                    }
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<div class="lightbox" data-lightbox-box hidden role="dialog" aria-modal="true" aria-label="@T["gallery.title"]">
+    <button class="lb-close" type="button" data-lb-close><svg class="icon" aria-hidden="true"><use href="#i-close" /></svg><span class="visually-hidden">@T["nav.close"]</span></button>
+    <button class="lb-prev" type="button" data-lb-prev><svg class="icon" aria-hidden="true"><use href="#i-chevron" /></svg><span class="visually-hidden">@T["gallery.prev"]</span></button>
+    <figure><img alt="" data-lb-img /><figcaption data-lb-caption></figcaption></figure>
+    <button class="lb-next" type="button" data-lb-next><svg class="icon" aria-hidden="true"><use href="#i-chevron" /></svg><span class="visually-hidden">@T["gallery.next"]</span></button>
+</div>
+
+@section Scripts {
+    <script src="~/js/gallery.js" asp-append-version="true" defer></script>
+}

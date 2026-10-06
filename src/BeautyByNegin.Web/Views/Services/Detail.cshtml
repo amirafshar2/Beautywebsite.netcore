@@ -1,0 +1,99 @@
+@model ServiceDetail
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var card = Model.Card;
+}
+<article>
+    <section class="page-hero service-hero">
+        <div class="container split">
+            <div class="media ratio-4x5 reveal">@Html.Img(card.Image, "(min-width: 900px) 45vw, 92vw", card.Name, priority: true)</div>
+            <div class="reveal">
+                <nav class="breadcrumb small" aria-label="Breadcrumb">
+                    <a href="@SiteUrls.Page(SiteRoutes.Services, ctx.Code)">@T["nav.services"]</a>
+                    <svg class="icon flip-rtl" aria-hidden="true"><use href="#i-chevron" /></svg>
+                    <span aria-current="page">@card.Name</span>
+                </nav>
+                <p class="numbered"><span class="num">@card.NumberLabel</span><span>—</span><span>@card.Name.ToUpperInvariant()</span></p>
+                <h1 class="latin">@card.Name</h1>
+                @if (!string.IsNullOrWhiteSpace(card.Subtitle))
+                {
+                    <p class="subtitle-lg">@card.Subtitle</p>
+                }
+                <dl class="facts">
+                    @if (!string.IsNullOrWhiteSpace(Model.SuitableFor))
+                    {
+                        <div><dt>@T["services.suitableFor"]</dt><dd>@Model.SuitableFor</dd></div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ExpectedResult))
+                    {
+                        <div><dt>@T["services.expectedResult"]</dt><dd>@Model.ExpectedResult</dd></div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Duration))
+                    {
+                        <div><dt>@T["services.duration"]</dt><dd>@Model.Duration</dd></div>
+                    }
+                    @if (card.Price is decimal price)
+                    {
+                        <div><dt>@T["services.price"]</dt><dd>@Digits.Native(price.ToString("N0", ctx.Lang.CreateCulture()), ctx.Lang)</dd></div>
+                    }
+                </dl>
+                <div class="btn-row">
+                    @{ ViewData["AskCss"] = "btn btn-primary"; }
+                    <partial name="_AskButton" model="card" view-data="ViewData" />
+                    <a class="btn" href="@SiteUrls.Booking(ctx.Code, card.Id)">@T["btn.book"]</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.DescriptionHtml))
+    {
+        <section class="section pt-0">
+            <div class="container container-narrow prose reveal">
+                @Html.Raw(Model.DescriptionHtml)
+            </div>
+        </section>
+    }
+
+    @if (Model.Gallery.Count > 0)
+    {
+        <section class="section pt-0">
+            <div class="container">
+                <div class="service-gallery" data-lightbox-group>
+                    @foreach (var img in Model.Gallery)
+                    {
+                        <a class="media ratio-1x1 reveal" href="@img.Src" data-lightbox data-full="@img.Src" data-caption="@img.Alt">@Html.Img(img, "(min-width: 1000px) 280px, 45vw")</a>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    <div class="container container-narrow">
+        <p class="note">@T["services.note"]</p>
+    </div>
+</article>
+
+@if (Model.Related.Count > 0)
+{
+    <section class="section section-ivory">
+        <div class="container">
+            <h2 class="reveal">@T["services.related"]</h2>
+            <div class="grid grid-3">
+                @foreach (var s in Model.Related)
+                {
+                    <partial name="_ServiceCard" model="s" />
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    @if (Model.Gallery.Count > 0)
+    {
+        <script src="~/js/gallery.js" asp-append-version="true" defer></script>
+    }
+}

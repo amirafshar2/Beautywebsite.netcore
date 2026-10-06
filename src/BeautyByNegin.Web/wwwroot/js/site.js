@@ -83,6 +83,25 @@
   window.BBN.openModal = openModal;
   window.BBN.closeModal = closeModal;
 
+  /* ---------- "Ask about this treatment": fill the shared window with the clicked service ---------- */
+  var ask = document.querySelector("[data-ask-modal]");
+  if (ask) {
+    var defaults = {};
+    ask.querySelectorAll("[data-ask-link]").forEach(function (a) { defaults[a.getAttribute("data-ask-link")] = a.getAttribute("href"); });
+    var titleEl = ask.querySelector("[data-ask-title]");
+    var defaultTitle = titleEl ? titleEl.textContent : "";
+    ask.addEventListener("modal:open", function (e) {
+      var b = e.detail && e.detail.opener;
+      var name = b && b.getAttribute("data-ask-name");
+      if (titleEl) titleEl.textContent = name || defaultTitle;
+      ask.querySelectorAll("[data-ask-link]").forEach(function (a) {
+        var key = a.getAttribute("data-ask-link");
+        var v = b && b.getAttribute("data-ask-" + key);
+        a.setAttribute("href", v || defaults[key]);
+      });
+    });
+  }
+
   /* ---------- Chat panel open/close (conversation logic: chat.js) ---------- */
   var chat = document.querySelector("[data-chat]");
   var chatOpener = document.querySelector("[data-chat-open]");

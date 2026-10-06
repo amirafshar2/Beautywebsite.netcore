@@ -1,0 +1,15 @@
+@model ServiceCard
+@inject SiteContext Site
+@{
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var css = ViewData["AskCss"] as string ?? "btn btn-sm";
+}
+@* Opens the "Ask about this treatment" window with links prepared for this service *@
+<button type="button" class="@css" data-modal-open="ask-modal"
+        data-ask-name="@Model.Name"
+        data-ask-wa="@ctx.Contact.WhatsAppUrl(T.Format("wa.service", ("service", Model.Name)))"
+        data-ask-mail="@ctx.Contact.MailUrl(T.Format("mail.subject.service", ("service", Model.Name)))"
+        data-ask-book="@SiteUrls.Booking(ctx.Code, Model.Id)">
+    @T["btn.ask"]
+</button>
