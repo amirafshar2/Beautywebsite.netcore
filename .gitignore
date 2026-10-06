@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+*.user
+publish/
+# runtime data (database, logs, backups, uploaded images)
+**/App_Data/
+**/wwwroot/uploads/

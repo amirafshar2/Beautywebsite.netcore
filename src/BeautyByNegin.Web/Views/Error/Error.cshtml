@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Error";
+    var lang = Context.GetSiteLanguage()!;
+}
+<section class="container error-page">
+    <h1>@(lang.Code switch
+    {
+        "fa" => "متأسفیم، مشکلی پیش آمد",
+        "tr" => "Üzgünüz, bir sorun oluştu",
+        "de" => "Entschuldigung, etwas ist schiefgelaufen",
+        _ => "Sorry, something went wrong"
+    })</h1>
+    <a class="btn btn-primary" href="/@lang.Code">@(lang.Code switch
+    {
+        "fa" => "بازگشت به صفحه اصلی",
+        "tr" => "Ana sayfaya dön",
+        "de" => "Zur Startseite",
+        _ => "Back to home"
+    })</a>
+</section>

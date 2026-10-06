@@ -1,0 +1,10 @@
+@{
+    var lang = Context.GetSiteLanguage()!;
+    ViewData["Title"] = null;
+}
+<section class="container stage-check">
+    <p class="eyebrow">FACIAL &amp; SKINCARE TREATMENTS</p>
+    <h1>Beauty by Negin</h1>
+    <p>@lang.NativeName · <code>@lang.CultureName</code> · dir=<code>@lang.Dir</code></p>
+    <p>@DateDisplay.FormatDate(DateTime.UtcNow, lang)</p>
+</section>

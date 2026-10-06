@@ -1,0 +1,99 @@
+/* Beauty by Negin — base styles (stage 1 skeleton; full design system comes in stage 3).
+   Only logical properties (margin-inline-start, padding-inline, inset-inline…) are used,
+   so the same CSS works for LTR (tr/de/en) and RTL (fa) without overrides. */
+
+:root {
+  --cream: #F5F0E8;
+  --ivory: #FBF8F3;
+  --sand: #D5C7B0;
+  --taupe: #A89B8C;
+  --mocha: #8A6D5A;
+  --chocolate: #3A2E2B;
+  --champagne: #C2A878;
+
+  --font-heading: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-body: "Jost", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-fa: "Vazirmatn", Tahoma, sans-serif;
+
+  --container: 1200px;
+  --gutter: 20px;
+  --radius: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--chocolate);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+html[lang="fa"] body { font-family: var(--font-fa); }
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  line-height: 1.2;
+  margin-block: 0 .5em;
+}
+html[lang="fa"] h1, html[lang="fa"] h2, html[lang="fa"] h3 { font-family: var(--font-fa); font-weight: 300; }
+
+h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
+
+a { color: var(--mocha); }
+
+.container {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  font-size: .78rem;
+  color: var(--taupe);
+  margin-block: 0 1rem;
+}
+
+/* Header */
+.site-header { border-block-end: 1px solid var(--sand); background: var(--cream); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; min-height: 72px; gap: 1rem; }
+.brand {
+  font-family: var(--font-heading);
+  letter-spacing: .25em;
+  text-decoration: none;
+  color: var(--chocolate);
+  font-size: 1.05rem;
+  direction: ltr; /* the brand name is always Latin */
+}
+.lang-switch { display: flex; gap: .15rem; font-size: .8rem; letter-spacing: .1em; }
+.lang-switch a, .lang-switch span { padding: .35rem .45rem; text-decoration: none; color: var(--taupe); }
+.lang-switch a:hover { color: var(--chocolate); }
+.lang-switch .is-current { color: var(--chocolate); border-block-end: 1px solid var(--champagne); }
+
+.site-main { min-height: 60vh; padding-block: 4rem; }
+
+.site-footer { background: var(--chocolate); color: var(--ivory); padding-block: 2rem; font-size: .85rem; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; padding-inline: 1.6rem;
+  border-radius: 4px; text-decoration: none; letter-spacing: .12em; text-transform: uppercase; font-size: .8rem;
+  transition: background-color .25s ease, color .25s ease;
+}
+.btn-primary { background: var(--chocolate); color: var(--ivory); }
+.btn-primary:hover { background: var(--mocha); }
+
+.error-page { text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

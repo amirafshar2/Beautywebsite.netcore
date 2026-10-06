@@ -1,0 +1,46 @@
+@inject ILanguageService Languages
+@{
+    var lang = await Context.GetSiteLanguageOrDefaultAsync();
+    var enabled = await Languages.GetEnabledAsync();
+    var title = ViewData["Title"] as string;
+}
+<!DOCTYPE html>
+<html lang="@lang.Code" dir="@lang.Dir">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>@(string.IsNullOrEmpty(title) ? "Beauty by Negin" : $"{title} · Beauty by Negin")</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body class="lang-@lang.Code">
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="/@lang.Code">BEAUTY BY NEGIN</a>
+            <nav class="lang-switch" aria-label="Language">
+                @foreach (var l in enabled)
+                {
+                    if (l.Code == lang.Code)
+                    {
+                        <span class="is-current" aria-current="true" lang="@l.Code">@l.ShortLabel</span>
+                    }
+                    else
+                    {
+                        <a href="@CultureUrl.ReplaceCulture(Context.Request, l.Code)" hreflang="@l.Code" lang="@l.Code">@l.ShortLabel</a>
+                    }
+                }
+            </nav>
+        </div>
+    </header>
+
+    <main id="main" class="site-main">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">© @DateTime.UtcNow.Year Beauty by Negin</div>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

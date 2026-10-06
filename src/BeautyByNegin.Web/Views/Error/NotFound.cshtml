@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "404";
+    var lang = Context.GetSiteLanguage()!;
+}
+<section class="container error-page">
+    <p class="eyebrow">404</p>
+    <h1>@(lang.Code switch
+    {
+        "fa" => "این صفحه پیدا نشد",
+        "tr" => "Sayfa bulunamadı",
+        "de" => "Seite nicht gefunden",
+        _ => "Page not found"
+    })</h1>
+    <a class="btn btn-primary" href="/@lang.Code">@(lang.Code switch
+    {
+        "fa" => "بازگشت به صفحه اصلی",
+        "tr" => "Ana sayfaya dön",
+        "de" => "Zur Startseite",
+        _ => "Back to home"
+    })</a>
+</section>
