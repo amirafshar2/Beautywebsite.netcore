@@ -17,7 +17,9 @@ public class ContactController(IAdminCatalogService catalog, IAdminTextService t
     {
         ViewData["Address"] = await texts.GetTextsByKeysAsync(AddressKeys, HttpContext.RequestAborted);
         ViewData["Templates"] = await texts.GetTextsByKeysAsync(TemplateKeys, HttpContext.RequestAborted);
-        ViewData["Hours"] = await catalog.GetOpeningHoursAsync(HttpContext.RequestAborted);
+        var firstDay = WeekStart.For(P.Settings.Text(BeautyByNegin.DataAccess.SettingKeys.CountryCode));
+        ViewData["Hours"] = (await catalog.GetOpeningHoursAsync(HttpContext.RequestAborted))
+            .OrderBy(h => WeekStart.Position(h.Day, firstDay)).ToList();
         ViewData["Instagram"] = await catalog.GetInstagramPostsAsync(HttpContext.RequestAborted);
         ViewData["InstagramTitle"] = await texts.GetTextsByKeysAsync(["home.instagram.title"], HttpContext.RequestAborted);
         ViewData["Map"] = P.Settings.MapImageId is int id && await media.GetAsync(id) is { } m ? MediaUrls.Url(m, m.WidthList.First(w => w >= Math.Min(480, m.WidthList.Max()))) : null;

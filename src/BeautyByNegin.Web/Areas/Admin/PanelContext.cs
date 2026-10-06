@@ -23,7 +23,13 @@ public sealed class PanelContext
 
     /// <summary>Panel text in the panel language.</summary>
     public string this[string key] => PanelText.Get(key, Lang);
-    public string F(string key, params object?[] args) => string.Format(CultureInfo.InvariantCulture, PanelText.Get(key, Lang), args);
+    /// <summary>Panel text with placeholders; numbers are written with Persian digits in the Persian panel.</summary>
+    public string F(string key, params object?[] args)
+    {
+        if (Lang == "fa")
+            args = args.Select(a => a is int or long or decimal or double ? (object)Digits.ToPersian(Convert.ToString(a, CultureInfo.InvariantCulture)) : a).ToArray();
+        return string.Format(CultureInfo.InvariantCulture, PanelText.Get(key, Lang), args);
+    }
 
     public string Url(string path) => BasePath + "/" + path.TrimStart('/');
 

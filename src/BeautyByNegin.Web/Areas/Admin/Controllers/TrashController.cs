@@ -6,7 +6,7 @@ namespace BeautyByNegin.Web.Areas.Admin.Controllers;
 public class TrashController(ITrashService trash) : AdminController
 {
     [HttpGet]
-    public async Task<IActionResult> Index() => View(await trash.ListAsync(HttpContext.RequestAborted));
+    public async Task<IActionResult> Index() => View(await trash.ListAsync(P.Lang, HttpContext.RequestAborted));
 
     [HttpPost]
     public async Task<IActionResult> Restore(string kind, int id)

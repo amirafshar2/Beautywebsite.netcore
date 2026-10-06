@@ -10,7 +10,7 @@ namespace BeautyByNegin.Business.Content;
 
 public sealed record FooterPageLink(string Title, string Slug, string? SystemKey);
 
-public sealed record OpeningHourView(string DayName, bool IsClosed, string? Hours);
+public sealed record OpeningHourView(DayOfWeek Day, string DayName, bool IsClosed, string? Hours);
 
 /// <summary>Data shared by every public page (header/footer), per language.</summary>
 public sealed record LayoutData(
@@ -66,8 +66,11 @@ public sealed class LayoutService(
         var menu = pages.Where(p => p.ShowInMenu).Select(Link).OfType<FooterPageLink>().ToList();
 
         var culture = lang.CreateCulture();
-        var hours = (await db.OpeningHours.AsNoTracking().OrderBy(h => h.SortOrder).ToListAsync(ct))
+        var firstDay = WeekStart.For(settings.Text(SettingKeys.CountryCode));
+        var hours = (await db.OpeningHours.AsNoTracking().ToListAsync(ct))
+            .OrderBy(h => WeekStart.Position(h.Day, firstDay))
             .Select(h => new OpeningHourView(
+                h.Day,
                 culture.DateTimeFormat.GetDayName(h.Day),
                 h.IsClosed || h.Opens is null || h.Closes is null,
                 h.IsClosed || h.Opens is null || h.Closes is null

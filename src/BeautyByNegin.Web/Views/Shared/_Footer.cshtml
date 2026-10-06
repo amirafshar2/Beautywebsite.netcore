@@ -41,6 +41,8 @@
                 }
             </div>
 
+            @if (c.PhoneUrl is not null || whatsApp is not null || mail is not null || !string.IsNullOrWhiteSpace(address))
+            {
             <div>
                 <h2 class="footer-title">@T["footer.contact"]</h2>
                 <ul class="footer-list">
@@ -72,6 +74,7 @@
                     }
                 </ul>
             </div>
+            }
 
             @if (Model.Layout.Hours.Count > 0)
             {

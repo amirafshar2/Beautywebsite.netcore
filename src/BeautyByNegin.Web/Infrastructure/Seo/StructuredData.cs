@@ -55,12 +55,11 @@ public static class StructuredData
 
     private static object[]? OpeningHours(PageContext ctx, Dictionary<DayOfWeek, string> names)
     {
-        // LayoutData only keeps display strings; parse "HH:mm – HH:mm" back (Latin digits) for the schema.
-        var culture = ctx.Lang.CreateCulture();
+        // LayoutData keeps display strings; parse "HH:mm – HH:mm" back (Latin digits) for the schema.
         var list = new List<object>();
         foreach (var h in ctx.Layout.Hours.Where(h => !h.IsClosed && h.Hours is not null))
         {
-            var day = Enum.GetValues<DayOfWeek>().FirstOrDefault(d => culture.DateTimeFormat.GetDayName(d) == h.DayName);
+            var day = h.Day;
             var parts = Business.Localization.Digits.ToLatin(h.Hours!).Split('–', StringSplitOptions.TrimEntries);
             if (parts.Length != 2) continue;
             list.Add(new Dictionary<string, object> { ["@type"] = "OpeningHoursSpecification", ["dayOfWeek"] = names[day], ["opens"] = parts[0], ["closes"] = parts[1] });

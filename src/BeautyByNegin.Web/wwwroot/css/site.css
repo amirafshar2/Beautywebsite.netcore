@@ -109,6 +109,9 @@ h4 { font-size: 1.25rem; font-weight: 400; }
 .serif { font-family: var(--font-heading); }
 .latin, [dir="rtl"] .latin { font-family: var(--font-heading); direction: ltr; unicode-bidi: isolate; letter-spacing: -.005em; }
 [dir="rtl"] h1.latin { font-weight: 300; line-height: 1.12; }
+/* Latin block text (e.g. a service name) inside an RTL page still lines up on the right */
+[dir="rtl"] :is(h1, h2, h3, p, div).latin { text-align: right; }
+[dir="rtl"] :is(.centered, .thanks, .maintenance, .error-page, .empty-state) .latin { text-align: center; }
 
 .icon { width: 1.25em; height: 1.25em; flex: none; }
 

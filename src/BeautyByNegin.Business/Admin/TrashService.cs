@@ -30,7 +30,8 @@ public sealed record TrashEntry(string Kind, int Id, string Title, DateTime Dele
 
 public interface ITrashService
 {
-    Task<IReadOnlyList<TrashEntry>> ListAsync(CancellationToken ct = default);
+    /// <param name="preferredLanguage">Titles are shown in this language when available (the panel language).</param>
+    Task<IReadOnlyList<TrashEntry>> ListAsync(string? preferredLanguage = null, CancellationToken ct = default);
     Task<bool> RestoreAsync(string kind, int id, CancellationToken ct = default);
     Task<bool> DeleteForeverAsync(string kind, int id, CancellationToken ct = default);
     Task<int> PurgeExpiredAsync(CancellationToken ct = default);
@@ -45,14 +46,17 @@ public sealed class TrashService(AppDbContext db, IMediaService media, ISiteCach
     private IQueryable<T> Deleted<T>() where T : class, ISoftDelete
         => db.Set<T>().IgnoreQueryFilters().Where(e => e.DeletedAtUtc != null);
 
-    private static string? Name<TTr>(IEnumerable<TTr> tr, Func<TTr, string?> pick) where TTr : TranslationBase
+    private string? _preferred;
+
+    private string? Name<TTr>(IEnumerable<TTr> tr, Func<TTr, string?> pick) where TTr : TranslationBase
     {
-        var list = tr.ToList();
+        var list = tr.OrderBy(t => t.LanguageCode == _preferred ? 0 : 1).ToList();
         return list.Select(pick).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
     }
 
-    public async Task<IReadOnlyList<TrashEntry>> ListAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<TrashEntry>> ListAsync(string? preferredLanguage = null, CancellationToken ct = default)
     {
+        _preferred = preferredLanguage;
         var r = new List<TrashEntry>();
         foreach (var s in await Deleted<Service>().Include(x => x.Translations).ToListAsync(ct))
             r.Add(new(TrashKinds.Service, s.Id, Name(s.Translations, t => t.Name) ?? $"#{s.Id}", s.DeletedAtUtc!.Value));
@@ -81,7 +85,7 @@ public sealed class TrashService(AppDbContext db, IMediaService media, ISiteCach
         return r.OrderByDescending(x => x.DeletedAtUtc).ToList();
     }
 
-    public async Task<int> CountAsync(CancellationToken ct = default) => (await ListAsync(ct)).Count;
+    public async Task<int> CountAsync(CancellationToken ct = default) => (await ListAsync(null, ct)).Count;
 
     private async Task<ISoftDelete?> FindAsync(string kind, int id, CancellationToken ct) => kind switch
     {
@@ -156,7 +160,7 @@ public sealed class TrashService(AppDbContext db, IMediaService media, ISiteCach
     public async Task<int> PurgeExpiredAsync(CancellationToken ct = default)
     {
         var limit = DateTime.UtcNow.AddDays(-RetentionDays);
-        var expired = (await ListAsync(ct)).Where(e => e.DeletedAtUtc < limit).ToList();
+        var expired = (await ListAsync(null, ct)).Where(e => e.DeletedAtUtc < limit).ToList();
         foreach (var e in expired) await DeleteForeverAsync(e.Kind, e.Id, ct);
         return expired.Count;
     }
