@@ -1,4 +1,6 @@
-using BeautyByNegin.Web.Data;
+using BeautyByNegin.Business;
+using BeautyByNegin.DataAccess;
+using Microsoft.AspNetCore.DataProtection;
 using BeautyByNegin.Web.Infrastructure.Localization;
 using BeautyByNegin.Web.Infrastructure.Startup;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -20,10 +22,15 @@ builder.Host.UseSerilog((ctx, cfg) => cfg
         rollingInterval: RollingInterval.Day, retainedFileCountLimit: 30));
 
 // ---------- Services
-builder.Services.AddAppDatabase(builder.Configuration, contentRoot);
+builder.Services.AddDataAccess(builder.Configuration, contentRoot);
+builder.Services.AddBusiness();
 builder.Services.AddAppIdentity(builder.Configuration);
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<ILanguageService, LanguageService>();
+
+// Encryption keys (login cookies, encrypted SMTP password / Telegram token) live in App_Data,
+// so they move together with the database when the site is moved to another server.
+builder.Services.AddDataProtection()
+    .SetApplicationName("BeautyByNegin")
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppPaths.AppData(contentRoot), "keys")));
 
 builder.Services.AddRouting(o =>
 {

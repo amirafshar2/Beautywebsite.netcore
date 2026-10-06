@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace BeautyByNegin.Web.Data.Entities;
+namespace BeautyByNegin.DataAccess.Entities;
 
 public class AppUser : IdentityUser
 {

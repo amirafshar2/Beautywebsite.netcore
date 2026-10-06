@@ -1,5 +1,5 @@
-using BeautyByNegin.Web.Data;
-using BeautyByNegin.Web.Data.Entities;
+using BeautyByNegin.DataAccess;
+using BeautyByNegin.DataAccess.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace BeautyByNegin.Web.Infrastructure.Startup;

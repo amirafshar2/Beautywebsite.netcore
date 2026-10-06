@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace BeautyByNegin.Web.Infrastructure.Localization;
+namespace BeautyByNegin.Business.Localization;
 
 /// <summary>
 /// Display-only date helpers. The database always stores UTC / Gregorian; Persian pages show

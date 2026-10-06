@@ -1,9 +1,9 @@
 using System.Globalization;
-using BeautyByNegin.Web.Data;
+using BeautyByNegin.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace BeautyByNegin.Web.Infrastructure.Localization;
+namespace BeautyByNegin.Business.Localization;
 
 /// <summary>Immutable snapshot of a language row, safe to cache and share between requests.</summary>
 public sealed record SiteLanguage(

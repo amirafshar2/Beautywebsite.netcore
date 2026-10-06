@@ -1,4 +1,4 @@
-namespace BeautyByNegin.Web.Data.Entities;
+namespace BeautyByNegin.DataAccess.Entities;
 
 /// <summary>
 /// A content language of the public site (fa, tr, de, en).
