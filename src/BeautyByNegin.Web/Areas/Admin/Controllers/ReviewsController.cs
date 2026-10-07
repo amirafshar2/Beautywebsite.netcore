@@ -11,23 +11,23 @@ public class ReviewsController(IAdminCatalogService catalog, IAdminData data) : 
     {
         var pending = tab == "pending";
         ViewData["Pending"] = pending;
-        ViewData["PendingCount"] = (await catalog.GetReviewsAsync(ReviewStatus.Pending, HttpContext.RequestAborted)).Count;
-        return View(await catalog.GetReviewsAsync(pending ? ReviewStatus.Pending : ReviewStatus.Approved, HttpContext.RequestAborted));
+        ViewData["PendingCount"] = (await catalog.GetReviewsAsync(ReviewStatus.Pending, Ct)).Count;
+        return View(await catalog.GetReviewsAsync(pending ? ReviewStatus.Pending : ReviewStatus.Approved, Ct));
     }
 
     [HttpGet]
     public async Task<IActionResult> Create()
     {
-        ViewData["Services"] = await catalog.GetServicesAsync(HttpContext.RequestAborted);
+        ViewData["Services"] = await catalog.GetServicesAsync(Ct);
         return View("Edit", new ReviewInputModel { LanguageCode = P.DefaultLanguage.Code, ReviewDate = DateOnly.FromDateTime(DateTime.UtcNow), Rating = 5 });
     }
 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var r = await catalog.GetReviewAsync(id, HttpContext.RequestAborted);
+        var r = await catalog.GetReviewAsync(id, Ct);
         if (r is null) return NotFound();
-        ViewData["Services"] = await catalog.GetServicesAsync(HttpContext.RequestAborted);
+        ViewData["Services"] = await catalog.GetServicesAsync(Ct);
         ViewData["Pending"] = r.Status == ReviewStatus.Pending;
         return View(new ReviewInputModel
         {
@@ -39,11 +39,11 @@ public class ReviewsController(IAdminCatalogService catalog, IAdminData data) : 
     [HttpPost]
     public async Task<IActionResult> Save(ReviewInputModel input)
     {
-        var result = await catalog.SaveReviewAsync(input, HttpContext.RequestAborted);
+        var result = await catalog.SaveReviewAsync(input, Ct);
         if (!result.Ok)
         {
             ViewData["Errors"] = Errors(result.Errors);
-            ViewData["Services"] = await catalog.GetServicesAsync(HttpContext.RequestAborted);
+            ViewData["Services"] = await catalog.GetServicesAsync(Ct);
             return View("Edit", input);
         }
         Saved();
@@ -53,25 +53,25 @@ public class ReviewsController(IAdminCatalogService catalog, IAdminData data) : 
     [HttpPost]
     public async Task<IActionResult> Approve(int id)
     {
-        await catalog.ApproveReviewAsync(id, HttpContext.RequestAborted);
+        await catalog.ApproveReviewAsync(id, Ct);
         if (Request.Headers.XRequestedWith == "fetch") return Ok();
         Saved("rev.approved");
         return Back("reviews?tab=pending");
     }
 
-    [HttpPost] public async Task<IActionResult> Toggle(int id) => Ok(await data.ToggleVisibilityAsync<Review>(id, HttpContext.RequestAborted));
+    [HttpPost] public async Task<IActionResult> Toggle(int id) => Ok(await data.ToggleVisibilityAsync<Review>(id, Ct));
 
     [HttpPost]
     public async Task<IActionResult> Sort(string ids)
     {
-        await data.ReorderAsync<Review>(ServicesController.ParseIds(ids), HttpContext.RequestAborted);
+        await data.ReorderAsync<Review>(ServicesController.ParseIds(ids), Ct);
         return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        await data.MoveToTrashAsync<Review>(id, HttpContext.RequestAborted);
+        await data.MoveToTrashAsync<Review>(id, Ct);
         if (Request.Headers.XRequestedWith == "fetch") return Ok();
         Saved("toast.movedToTrash");
         return Back("reviews");

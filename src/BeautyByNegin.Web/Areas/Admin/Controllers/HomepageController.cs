@@ -23,39 +23,39 @@ public class HomepageController(IAdminCatalogService catalog, IAdminTextService 
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        ViewData["Sections"] = await catalog.GetHomeSectionsAsync(HttpContext.RequestAborted);
+        ViewData["Sections"] = await catalog.GetHomeSectionsAsync(Ct);
         ViewData["Hero"] = await Preview(P.Settings.HeroImageId);
         ViewData["Consult"] = await Preview(P.Settings.ConsultationImageId);
-        return View(await texts.GetTextsByKeysAsync(TextKeys, HttpContext.RequestAborted));
+        return View(await texts.GetTextsByKeysAsync(TextKeys, Ct));
     }
 
     [HttpPost]
     public async Task<IActionResult> Index(int? heroImageId, int? consultationImageId)
     {
         var form = await ReadTexts();
-        await texts.SaveTextsAsync(form, HttpContext.RequestAborted);
+        await texts.SaveTextsAsync(form, Ct);
         await settings.SaveAsync(new Dictionary<string, string?>
         {
             [SettingKeys.HeroImageId] = heroImageId?.ToString(),
             [SettingKeys.ConsultationImageId] = consultationImageId?.ToString()
-        }, HttpContext.RequestAborted);
+        }, Ct);
         data.Changed();
         Saved();
         return Back("homepage");
     }
 
-    [HttpPost] public async Task<IActionResult> ToggleSection(int id) => Ok(await catalog.ToggleHomeSectionAsync(id, HttpContext.RequestAborted));
+    [HttpPost] public async Task<IActionResult> ToggleSection(int id) => Ok(await catalog.ToggleHomeSectionAsync(id, Ct));
 
     [HttpPost]
     public async Task<IActionResult> SortSections(string ids)
     {
-        await data.ReorderAsync<DataAccess.Entities.HomeSection>(ServicesController.ParseIds(ids), HttpContext.RequestAborted);
+        await data.ReorderAsync<DataAccess.Entities.HomeSection>(ServicesController.ParseIds(ids), Ct);
         return Ok();
     }
 
     private async Task<string?> Preview(int? id)
     {
-        if (id is not int i || await media.GetAsync(i, HttpContext.RequestAborted) is not { } m) return null;
+        if (id is not int i || await media.GetAsync(i, Ct) is not { } m) return null;
         return MediaUrls.Url(m, m.WidthList.First(w => w >= Math.Min(480, m.WidthList.Max())));
     }
 

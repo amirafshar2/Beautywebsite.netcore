@@ -11,20 +11,20 @@ public class AppointmentsController(IAdminInboxService inbox, IAdminData data) :
     {
         var filter = new AppointmentFilter(status, from, to, q, page);
         ViewData["Filter"] = filter;
-        return View(await inbox.GetAppointmentsAsync(filter, HttpContext.RequestAborted));
+        return View(await inbox.GetAppointmentsAsync(filter, Ct));
     }
 
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        var a = await inbox.GetAppointmentAsync(id, HttpContext.RequestAborted);
+        var a = await inbox.GetAppointmentAsync(id, Ct);
         return a is null ? NotFound() : View(a);
     }
 
     [HttpPost]
     public async Task<IActionResult> Details(int id, AppointmentStatus status, string? adminNotes)
     {
-        if (!await inbox.UpdateAppointmentAsync(id, status, adminNotes, HttpContext.RequestAborted)) return NotFound();
+        if (!await inbox.UpdateAppointmentAsync(id, status, adminNotes, Ct)) return NotFound();
         Saved();
         return Back($"appointments/details/{id}");
     }
@@ -33,23 +33,23 @@ public class AppointmentsController(IAdminInboxService inbox, IAdminData data) :
     [HttpPost]
     public async Task<IActionResult> Status(int id, AppointmentStatus status)
     {
-        var a = await inbox.GetAppointmentAsync(id, HttpContext.RequestAborted);
+        var a = await inbox.GetAppointmentAsync(id, Ct);
         if (a is null) return Fail("err.notFound");
-        await inbox.UpdateAppointmentAsync(id, status, a.AdminNotes, HttpContext.RequestAborted);
+        await inbox.UpdateAppointmentAsync(id, status, a.AdminNotes, Ct);
         return Ok();
     }
 
     [HttpGet]
     public async Task<IActionResult> Export(AppointmentStatus? status, DateOnly? from, DateOnly? to, string? q)
     {
-        var bytes = await inbox.ExportAppointmentsCsvAsync(new AppointmentFilter(status, from, to, q, 1, int.MaxValue), HttpContext.RequestAborted);
+        var bytes = await inbox.ExportAppointmentsCsvAsync(new AppointmentFilter(status, from, to, q, 1, int.MaxValue), Ct);
         return File(bytes, "text/csv; charset=utf-8", $"appointments-{DateTime.UtcNow:yyyy-MM-dd}.csv");
     }
 
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        await data.MoveToTrashAsync<AppointmentRequest>(id, HttpContext.RequestAborted);
+        await data.MoveToTrashAsync<AppointmentRequest>(id, Ct);
         Saved("toast.movedToTrash");
         return Back("appointments");
     }

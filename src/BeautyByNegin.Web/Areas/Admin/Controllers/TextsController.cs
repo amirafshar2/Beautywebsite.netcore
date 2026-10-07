@@ -9,17 +9,17 @@ public class TextsController(IAdminTextService texts) : AdminController
     [HttpGet]
     public async Task<IActionResult> Index(string? group, string? q)
     {
-        ViewData["Groups"] = await texts.GetGroupsAsync(P.ContentLanguages.Where(l => l.IsEnabled).Select(l => l.Code), HttpContext.RequestAborted);
+        ViewData["Groups"] = await texts.GetGroupsAsync(P.ContentLanguages.Where(l => l.IsEnabled).Select(l => l.Code), Ct);
         ViewData["Group"] = group;
         ViewData["Q"] = q;
         if (string.IsNullOrWhiteSpace(group) && string.IsNullOrWhiteSpace(q)) return View(null);
-        return View(await texts.GetTextsAsync(group, q, HttpContext.RequestAborted));
+        return View(await texts.GetTextsAsync(group, q, Ct));
     }
 
     [HttpPost]
     public async Task<IActionResult> Index(string? group, string? q, bool _ = false)
     {
-        await texts.SaveTextsAsync(await TextForm.ReadAsync(Request), HttpContext.RequestAborted);
+        await texts.SaveTextsAsync(await TextForm.ReadAsync(Request), Ct);
         Saved();
         return Back($"texts?group={Uri.EscapeDataString(group ?? "")}&q={Uri.EscapeDataString(q ?? "")}");
     }

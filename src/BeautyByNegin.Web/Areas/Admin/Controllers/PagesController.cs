@@ -7,7 +7,7 @@ namespace BeautyByNegin.Web.Areas.Admin.Controllers;
 public class PagesController(IAdminCatalogService catalog, IAdminData data) : AdminController
 {
     [HttpGet]
-    public async Task<IActionResult> Index() => View(await catalog.GetPagesAsync(HttpContext.RequestAborted));
+    public async Task<IActionResult> Index() => View(await catalog.GetPagesAsync(Ct));
 
     [HttpGet]
     public IActionResult Create() => View("Edit", new PageInput());
@@ -15,7 +15,7 @@ public class PagesController(IAdminCatalogService catalog, IAdminData data) : Ad
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var p = await catalog.GetPageAsync(id, HttpContext.RequestAborted);
+        var p = await catalog.GetPageAsync(id, Ct);
         if (p is null) return NotFound();
         ViewData["SystemKey"] = p.SystemKey;
         return View(new PageInput
@@ -31,7 +31,7 @@ public class PagesController(IAdminCatalogService catalog, IAdminData data) : Ad
     [HttpPost]
     public async Task<IActionResult> Save(PageInput input)
     {
-        var result = await catalog.SavePageAsync(input, P.DefaultLanguage.Code, HttpContext.RequestAborted);
+        var result = await catalog.SavePageAsync(input, P.DefaultLanguage.Code, Ct);
         if (!result.Ok)
         {
             ViewData["Errors"] = Errors(result.Errors);
@@ -42,21 +42,21 @@ public class PagesController(IAdminCatalogService catalog, IAdminData data) : Ad
         return Back($"pages/edit/{result.Id}");
     }
 
-    [HttpPost] public async Task<IActionResult> Toggle(int id) => Ok(await data.ToggleVisibilityAsync<Page>(id, HttpContext.RequestAborted));
+    [HttpPost] public async Task<IActionResult> Toggle(int id) => Ok(await data.ToggleVisibilityAsync<Page>(id, Ct));
 
     [HttpPost]
     public async Task<IActionResult> Sort(string ids)
     {
-        await data.ReorderAsync<Page>(ServicesController.ParseIds(ids), HttpContext.RequestAborted);
+        await data.ReorderAsync<Page>(ServicesController.ParseIds(ids), Ct);
         return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        var page = await catalog.GetPageAsync(id, HttpContext.RequestAborted);
+        var page = await catalog.GetPageAsync(id, Ct);
         if (page?.SystemKey is not null) { Problem("page.systemNoDelete"); return Back($"pages/edit/{id}"); }
-        await data.MoveToTrashAsync<Page>(id, HttpContext.RequestAborted);
+        await data.MoveToTrashAsync<Page>(id, Ct);
         Saved("toast.movedToTrash");
         return Back("pages");
     }

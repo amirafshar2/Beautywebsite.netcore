@@ -9,13 +9,13 @@ namespace BeautyByNegin.Web.Areas.Admin.Controllers;
 public class LanguagesController(IAdminTextService texts) : AdminController
 {
     [HttpGet]
-    public async Task<IActionResult> Index() => View(await texts.GetLanguagesAsync(HttpContext.RequestAborted));
+    public async Task<IActionResult> Index() => View(await texts.GetLanguagesAsync(Ct));
 
     [HttpPost]
     public async Task<IActionResult> Index(List<string> order, List<string>? enabled, List<string>? nativeDigits, string defaultCode)
     {
         var list = order.Select(c => (c, enabled?.Contains(c) == true, nativeDigits?.Contains(c) == true)).ToList();
-        var error = await texts.SaveLanguagesAsync(list, defaultCode, HttpContext.RequestAborted);
+        var error = await texts.SaveLanguagesAsync(list, defaultCode, Ct);
         if (error is not null) Problem(error); else Saved();
         return Back("languages");
     }

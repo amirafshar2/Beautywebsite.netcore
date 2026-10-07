@@ -21,6 +21,13 @@ public abstract class AdminController : Controller
 {
     protected PanelContext P { get; private set; } = null!;
 
+    /// <summary>
+    /// Cancellation for database work: page loads stop when the visitor leaves, but saving (POST) always
+    /// finishes, even if the browser cancels the request (double click, closed tab) – nothing is half-saved.
+    /// </summary>
+    protected CancellationToken Ct => HttpMethods.IsGet(Request.Method) || HttpMethods.IsHead(Request.Method)
+        ? HttpContext.RequestAborted : CancellationToken.None;
+
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var sp = HttpContext.RequestServices;

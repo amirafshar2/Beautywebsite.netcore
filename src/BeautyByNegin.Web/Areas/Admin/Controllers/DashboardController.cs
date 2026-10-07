@@ -6,5 +6,5 @@ namespace BeautyByNegin.Web.Areas.Admin.Controllers;
 public class DashboardController(IAdminInboxService inbox) : AdminController
 {
     [HttpGet]
-    public async Task<IActionResult> Index() => View(await inbox.GetDashboardAsync(HttpContext.RequestAborted));
+    public async Task<IActionResult> Index() => View(await inbox.GetDashboardAsync(Ct));
 }

@@ -15,13 +15,13 @@ public class ContactController(IAdminCatalogService catalog, IAdminTextService t
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        ViewData["Address"] = await texts.GetTextsByKeysAsync(AddressKeys, HttpContext.RequestAborted);
-        ViewData["Templates"] = await texts.GetTextsByKeysAsync(TemplateKeys, HttpContext.RequestAborted);
+        ViewData["Address"] = await texts.GetTextsByKeysAsync(AddressKeys, Ct);
+        ViewData["Templates"] = await texts.GetTextsByKeysAsync(TemplateKeys, Ct);
         var firstDay = WeekStart.For(P.Settings.Text(BeautyByNegin.DataAccess.SettingKeys.CountryCode));
-        ViewData["Hours"] = (await catalog.GetOpeningHoursAsync(HttpContext.RequestAborted))
+        ViewData["Hours"] = (await catalog.GetOpeningHoursAsync(Ct))
             .OrderBy(h => WeekStart.Position(h.Day, firstDay)).ToList();
-        ViewData["Instagram"] = await catalog.GetInstagramPostsAsync(HttpContext.RequestAborted);
-        ViewData["InstagramTitle"] = await texts.GetTextsByKeysAsync(["home.instagram.title"], HttpContext.RequestAborted);
+        ViewData["Instagram"] = await catalog.GetInstagramPostsAsync(Ct);
+        ViewData["InstagramTitle"] = await texts.GetTextsByKeysAsync(["home.instagram.title"], Ct);
         ViewData["Map"] = P.Settings.MapImageId is int id && await media.GetAsync(id) is { } m ? MediaUrls.Url(m, m.WidthList.First(w => w >= Math.Min(480, m.WidthList.Max()))) : null;
         return View();
     }
@@ -44,9 +44,9 @@ public class ContactController(IAdminCatalogService catalog, IAdminTextService t
             [SettingKeys.TelegramUsername] = telegram?.Trim().TrimStart('@'),
             [SettingKeys.MapUrl] = string.IsNullOrWhiteSpace(mapUrl) ? null : mapUrl.Trim().StartsWith("http") ? mapUrl.Trim() : "https://" + mapUrl.Trim(),
             [SettingKeys.MapImageId] = mapImageId?.ToString()
-        }, HttpContext.RequestAborted);
-        await texts.SaveTextsAsync(await TextForm.ReadAsync(Request), HttpContext.RequestAborted);
-        if (hours.Count > 0) await catalog.SaveOpeningHoursAsync(hours, HttpContext.RequestAborted);
+        }, Ct);
+        await texts.SaveTextsAsync(await TextForm.ReadAsync(Request), Ct);
+        if (hours.Count > 0) await catalog.SaveOpeningHoursAsync(hours, Ct);
         data.Changed();
         Saved();
         return Back("contact");
@@ -57,24 +57,24 @@ public class ContactController(IAdminCatalogService catalog, IAdminTextService t
     [HttpPost]
     public async Task<IActionResult> AddInstagram(string ids)
     {
-        await catalog.AddInstagramPostsAsync(ServicesController.ParseIds(ids), HttpContext.RequestAborted);
+        await catalog.AddInstagramPostsAsync(ServicesController.ParseIds(ids), Ct);
         Saved();
         return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> InstagramLink(int id, string? url)
-        => await catalog.SetInstagramLinkAsync(id, url, HttpContext.RequestAborted) ? Ok() : Fail("err.notFound");
+        => await catalog.SetInstagramLinkAsync(id, url, Ct) ? Ok() : Fail("err.notFound");
 
-    [HttpPost] public async Task<IActionResult> ToggleInstagram(int id) => Ok(await data.ToggleVisibilityAsync<InstagramPost>(id, HttpContext.RequestAborted));
+    [HttpPost] public async Task<IActionResult> ToggleInstagram(int id) => Ok(await data.ToggleVisibilityAsync<InstagramPost>(id, Ct));
 
     [HttpPost]
     public async Task<IActionResult> SortInstagram(string ids)
     {
-        await data.ReorderAsync<InstagramPost>(ServicesController.ParseIds(ids), HttpContext.RequestAborted);
+        await data.ReorderAsync<InstagramPost>(ServicesController.ParseIds(ids), Ct);
         return Ok();
     }
 
     [HttpPost]
-    public async Task<IActionResult> DeleteInstagram(int id) => await data.MoveToTrashAsync<InstagramPost>(id, HttpContext.RequestAborted) ? Ok() : Fail("err.notFound");
+    public async Task<IActionResult> DeleteInstagram(int id) => await data.MoveToTrashAsync<InstagramPost>(id, Ct) ? Ok() : Fail("err.notFound");
 }

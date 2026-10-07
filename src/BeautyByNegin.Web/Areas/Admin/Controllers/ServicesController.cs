@@ -8,7 +8,7 @@ namespace BeautyByNegin.Web.Areas.Admin.Controllers;
 public class ServicesController(IAdminCatalogService catalog, IAdminData data) : AdminController
 {
     [HttpGet]
-    public async Task<IActionResult> Index() => View(await catalog.GetServicesAsync(HttpContext.RequestAborted));
+    public async Task<IActionResult> Index() => View(await catalog.GetServicesAsync(Ct));
 
     [HttpGet]
     public IActionResult Create()
@@ -20,7 +20,7 @@ public class ServicesController(IAdminCatalogService catalog, IAdminData data) :
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var s = await catalog.GetServiceAsync(id, HttpContext.RequestAborted);
+        var s = await catalog.GetServiceAsync(id, Ct);
         if (s is null) return NotFound();
         ViewData["Entity"] = s;
         var input = new ServiceInput
@@ -40,11 +40,11 @@ public class ServicesController(IAdminCatalogService catalog, IAdminData data) :
     [HttpPost]
     public async Task<IActionResult> Save(ServiceInput input)
     {
-        var result = await catalog.SaveServiceAsync(input, P.DefaultLanguage.Code, HttpContext.RequestAborted);
+        var result = await catalog.SaveServiceAsync(input, P.DefaultLanguage.Code, Ct);
         if (!result.Ok)
         {
             ViewData["Errors"] = Errors(result.Errors);
-            ViewData["Entity"] = input.Id == 0 ? null : await catalog.GetServiceAsync(input.Id, HttpContext.RequestAborted);
+            ViewData["Entity"] = input.Id == 0 ? null : await catalog.GetServiceAsync(input.Id, Ct);
             return View("Edit", input);
         }
         Saved();
@@ -52,22 +52,22 @@ public class ServicesController(IAdminCatalogService catalog, IAdminData data) :
     }
 
     [HttpPost]
-    public async Task<IActionResult> Toggle(int id) => Ok(await data.ToggleVisibilityAsync<Service>(id, HttpContext.RequestAborted));
+    public async Task<IActionResult> Toggle(int id) => Ok(await data.ToggleVisibilityAsync<Service>(id, Ct));
 
     [HttpPost]
-    public async Task<IActionResult> Home(int id) => Ok(await catalog.ToggleServiceHomeAsync(id, HttpContext.RequestAborted));
+    public async Task<IActionResult> Home(int id) => Ok(await catalog.ToggleServiceHomeAsync(id, Ct));
 
     [HttpPost]
     public async Task<IActionResult> Sort(string ids)
     {
-        await data.ReorderAsync<Service>(ParseIds(ids), HttpContext.RequestAborted);
+        await data.ReorderAsync<Service>(ParseIds(ids), Ct);
         return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> Duplicate(int id)
     {
-        var copy = await catalog.DuplicateServiceAsync(id, HttpContext.RequestAborted);
+        var copy = await catalog.DuplicateServiceAsync(id, Ct);
         if (copy is null) return NotFound();
         Saved("toast.duplicated");
         return Back($"services/edit/{copy}");
@@ -76,7 +76,7 @@ public class ServicesController(IAdminCatalogService catalog, IAdminData data) :
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        await data.MoveToTrashAsync<Service>(id, HttpContext.RequestAborted);
+        await data.MoveToTrashAsync<Service>(id, Ct);
         Saved("toast.movedToTrash");
         return Back("services");
     }

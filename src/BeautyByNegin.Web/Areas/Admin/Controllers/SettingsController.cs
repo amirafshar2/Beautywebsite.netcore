@@ -29,7 +29,7 @@ public class SettingsController(
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        ViewData["Slots"] = await catalog.GetTimeSlotsAsync(HttpContext.RequestAborted);
+        ViewData["Slots"] = await catalog.GetTimeSlotsAsync(Ct);
         ViewData["Images"] = new Dictionary<string, string?>
         {
             ["logo"] = await Preview(P.Settings.LogoImageId),
@@ -90,7 +90,7 @@ public class SettingsController(
             [SettingKeys.Hsts] = B("hsts"),
             [SettingKeys.AutoBackupEnabled] = B("autoBackup"),
         };
-        await settings.SaveAsync(values, HttpContext.RequestAborted);
+        await settings.SaveAsync(values, Ct);
 
         // Secrets: an empty field keeps the saved value; the "remove" box clears it.
         if (!string.IsNullOrEmpty(V("smtpPassword"))) await settings.SaveSecretAsync(SettingKeys.SmtpPassword, V("smtpPassword"));
@@ -111,7 +111,7 @@ public class SettingsController(
     {
         to ??= P.Settings.Text(SettingKeys.NotificationEmail);
         if (string.IsNullOrWhiteSpace(to)) return Fail("set.testEmailNoAddress");
-        var result = await email.SendAsync(to, P["set.testEmailSubject"], P["set.testEmailBody"], null, HttpContext.RequestAborted);
+        var result = await email.SendAsync(to, P["set.testEmailSubject"], P["set.testEmailBody"], null, Ct);
         return result.Ok ? Json(new { ok = true, message = P["set.testEmailOk"] }) : Json(new { ok = false, message = P["set.testEmailFail"] + " (" + result.Error + ")" });
     }
 
@@ -122,7 +122,7 @@ public class SettingsController(
         var token = await settings.GetSecretAsync(SettingKeys.TelegramBotToken);
         var chat = P.Settings.Text(SettingKeys.TelegramChatId);
         if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(chat)) return Fail("set.tgMissing");
-        var r = await telegram.SendWithAsync(token, chat, "✅ " + P["set.tgTestText"], HttpContext.RequestAborted);
+        var r = await telegram.SendWithAsync(token, chat, "✅ " + P["set.tgTestText"], Ct);
         return r.Ok ? Json(new { ok = true, message = P["set.tgTestOk"] }) : Json(new { ok = false, message = P["set." + r.Error] });
     }
 
@@ -132,7 +132,7 @@ public class SettingsController(
     {
         var token = await settings.GetSecretAsync(SettingKeys.TelegramBotToken);
         if (string.IsNullOrWhiteSpace(token)) return Fail("set.tgMissing");
-        var (result, chats) = await telegram.DiscoverChatsAsync(token, HttpContext.RequestAborted);
+        var (result, chats) = await telegram.DiscoverChatsAsync(token, Ct);
         if (!result.Ok) return Json(new { ok = false, message = P["set." + result.Error] });
         if (chats.Count == 0) return Json(new { ok = false, message = P["set.tgNoChats"] });
         return Json(new { ok = true, message = P["set.tgFound"], data = chats.Select(c => new { id = c.ChatId, name = c.Name }) });
@@ -143,23 +143,23 @@ public class SettingsController(
     [HttpPost]
     public async Task<IActionResult> SaveSlot(NamedInput input)
     {
-        var r = await catalog.SaveTimeSlotAsync(input, P.DefaultLanguage.Code, HttpContext.RequestAborted);
+        var r = await catalog.SaveTimeSlotAsync(input, P.DefaultLanguage.Code, Ct);
         if (r.Ok) Saved(); else Problem("err.textRequired");
         return Back("settings#slots");
     }
 
-    [HttpPost] public async Task<IActionResult> ToggleSlot(int id) => Ok(await data.ToggleVisibilityAsync<TimeSlot>(id, HttpContext.RequestAborted));
-    [HttpPost] public async Task<IActionResult> DeleteSlot(int id) => await data.MoveToTrashAsync<TimeSlot>(id, HttpContext.RequestAborted) ? Ok() : Fail("err.notFound");
+    [HttpPost] public async Task<IActionResult> ToggleSlot(int id) => Ok(await data.ToggleVisibilityAsync<TimeSlot>(id, Ct));
+    [HttpPost] public async Task<IActionResult> DeleteSlot(int id) => await data.MoveToTrashAsync<TimeSlot>(id, Ct) ? Ok() : Fail("err.notFound");
 
     [HttpPost]
     public async Task<IActionResult> SortSlots(string ids)
     {
-        await data.ReorderAsync<TimeSlot>(ServicesController.ParseIds(ids), HttpContext.RequestAborted);
+        await data.ReorderAsync<TimeSlot>(ServicesController.ParseIds(ids), Ct);
         return Ok();
     }
 
     private async Task<string?> Preview(int? id)
-        => id is int i && await media.GetAsync(i, HttpContext.RequestAborted) is { } m ? MediaUrls.Url(m, m.WidthList.Min()) : null;
+        => id is int i && await media.GetAsync(i, Ct) is { } m ? MediaUrls.Url(m, m.WidthList.Min()) : null;
 
     /// <summary>Accepts the whole meta tag from Google or only its code; keeps only the code.</summary>
     internal static string? GoogleCode(string? input)

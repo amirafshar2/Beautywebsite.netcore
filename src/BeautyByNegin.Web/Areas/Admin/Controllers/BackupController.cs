@@ -17,7 +17,7 @@ public class BackupController(IBackupService backups) : AdminController
     [HttpPost]
     public async Task<IActionResult> Download()
     {
-        var path = await backups.CreateAsync(automatic: false, HttpContext.RequestAborted);
+        var path = await backups.CreateAsync(automatic: false, Ct);
         return PhysicalFile(path, "application/zip", Path.GetFileName(path));
     }
 
@@ -40,7 +40,7 @@ public class BackupController(IBackupService backups) : AdminController
     {
         if (file is null || !confirm) { Problem("backup.chooseFile"); return Back("backup"); }
         await using var stream = file.OpenReadStream();
-        var result = await backups.RestoreAsync(stream, HttpContext.RequestAborted);
+        var result = await backups.RestoreAsync(stream, Ct);
         if (!result.Ok) { Problem(result.ErrorKey!); return Back("backup"); }
         await HttpContext.SignOutAsync(Microsoft.AspNetCore.Identity.IdentityConstants.ApplicationScheme);
         TempData["Toast"] = P["backup.restored"];

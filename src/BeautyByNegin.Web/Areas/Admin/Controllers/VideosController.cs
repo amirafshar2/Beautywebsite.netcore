@@ -14,7 +14,7 @@ public class VideosController(IVideoService videos) : AdminController
     {
         if (file is null || file.Length == 0) return Fail("media.empty");
         await using var stream = file.OpenReadStream();
-        var result = await videos.UploadAsync(stream, file.FileName, file.Length, HttpContext.RequestAborted);
+        var result = await videos.UploadAsync(stream, file.FileName, file.Length, Ct);
         if (!result.Ok) return Fail(result.ErrorKey!);
         return Json(Describe(result.Video!));
     }
@@ -22,7 +22,7 @@ public class VideosController(IVideoService videos) : AdminController
     [HttpGet]
     public async Task<IActionResult> Status(int id)
     {
-        var v = await videos.GetAsync(id, HttpContext.RequestAborted);
+        var v = await videos.GetAsync(id, Ct);
         return v is null ? Fail("video.err.gone") : Json(Describe(v));
     }
 

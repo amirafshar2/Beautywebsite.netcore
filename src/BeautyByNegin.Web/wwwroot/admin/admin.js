@@ -673,4 +673,13 @@
     box.addEventListener("drop", function (e) { upload(e.dataTransfer.files[0]); });
     if (field.getAttribute("data-status") === "processing" && value.value) poll(value.value);
   });
+  // Saving twice by double-clicking: the second click is ignored while the page is being sent.
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (e.defaultPrevented || f.method.toLowerCase() !== "post") return;
+    if (f._sending) { e.preventDefault(); return; }
+    f._sending = true;
+    setTimeout(function () { f._sending = false; }, 8000);
+  });
+  window.addEventListener("pageshow", function () { document.querySelectorAll("form").forEach(function (f) { f._sending = false; }); });
 })();

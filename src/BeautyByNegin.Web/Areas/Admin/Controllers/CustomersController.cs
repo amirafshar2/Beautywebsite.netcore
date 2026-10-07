@@ -12,20 +12,20 @@ public class CustomersController(IAdminInboxService inbox, ICustomerAccountServi
     public async Task<IActionResult> Index(string? q)
     {
         ViewData["Q"] = q;
-        return View(await inbox.GetCustomersAsync(q, HttpContext.RequestAborted));
+        return View(await inbox.GetCustomersAsync(q, Ct));
     }
 
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        var c = await inbox.GetCustomerAsync(id, HttpContext.RequestAborted);
+        var c = await inbox.GetCustomerAsync(id, Ct);
         return c is null ? NotFound() : View(c);
     }
 
     [HttpPost]
     public async Task<IActionResult> Notes(int id, string? notes)
     {
-        await inbox.UpdateCustomerNotesAsync(id, notes, HttpContext.RequestAborted);
+        await inbox.UpdateCustomerNotesAsync(id, notes, Ct);
         Saved();
         return Back($"customers/details/{id}");
     }
@@ -34,8 +34,8 @@ public class CustomersController(IAdminInboxService inbox, ICustomerAccountServi
     [HttpPost]
     public async Task<IActionResult> Block(int id, bool blocked)
     {
-        await inbox.SetChatBlockedAsync(id, blocked, HttpContext.RequestAborted);
-        if (blocked) await accounts.EndAllSessionsAsync(id, HttpContext.RequestAborted);
+        await inbox.SetChatBlockedAsync(id, blocked, Ct);
+        if (blocked) await accounts.EndAllSessionsAsync(id, Ct);
         Saved(blocked ? "cust.blockedToast" : "cust.unblockedToast");
         return Back($"customers/details/{id}");
     }
@@ -43,7 +43,7 @@ public class CustomersController(IAdminInboxService inbox, ICustomerAccountServi
     [HttpPost]
     public async Task<IActionResult> Logout(int id)
     {
-        await accounts.EndAllSessionsAsync(id, HttpContext.RequestAborted);
+        await accounts.EndAllSessionsAsync(id, Ct);
         Saved("cust.loggedOutToast");
         return Back($"customers/details/{id}");
     }
@@ -51,8 +51,8 @@ public class CustomersController(IAdminInboxService inbox, ICustomerAccountServi
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        await accounts.EndAllSessionsAsync(id, HttpContext.RequestAborted);
-        await data.MoveToTrashAsync<ChatVisitor>(id, HttpContext.RequestAborted);
+        await accounts.EndAllSessionsAsync(id, Ct);
+        await data.MoveToTrashAsync<ChatVisitor>(id, Ct);
         Saved("toast.movedToTrash");
         return Back("customers");
     }

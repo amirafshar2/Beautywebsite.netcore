@@ -12,7 +12,7 @@ public class MediaController(IMediaService media) : AdminController
         if (file is null || file.Length == 0) return Fail("media.empty");
         CropBox? crop = w is > 0 && h is > 0 ? new CropBox(x ?? 0, y ?? 0, w.Value, h.Value) : null;
         await using var stream = file.OpenReadStream();
-        var result = await media.SaveAsync(stream, file.FileName, crop, 1600, HttpContext.RequestAborted);
+        var result = await media.SaveAsync(stream, file.FileName, crop, 1600, Ct);
         if (!result.Ok) return Fail(result.ErrorKey!);
         var img = result.Image!;
         return Json(new { ok = true, id = img.Id, url = MediaUrls.Url(img, img.WidthList.First(w2 => w2 >= Math.Min(480, img.WidthList.Max()))) });

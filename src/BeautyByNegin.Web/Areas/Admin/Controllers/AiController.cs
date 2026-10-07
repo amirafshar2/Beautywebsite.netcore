@@ -18,7 +18,7 @@ public class AiController(IAiTranslator translator) : AdminController
         if (p?.Items is null || p.Targets is null || string.IsNullOrWhiteSpace(p.Source)) return Fail("ai.err.nothing");
         if (p.Items.Count > 400 || p.Items.Sum(i => i.Text?.Length ?? 0) > 120_000) return Fail("ai.err.tooLong");
 
-        var r = await translator.TranslateAsync(p.Source, p.Targets, p.Items.Where(i => i.Key is not null && i.Text is not null).ToList(), HttpContext.RequestAborted);
+        var r = await translator.TranslateAsync(p.Source, p.Targets, p.Items.Where(i => i.Key is not null && i.Text is not null).ToList(), Ct);
         return r.Ok
             ? Json(new { ok = true, message = P["ai.done"], translations = r.Translations })
             : Json(new { ok = false, message = P[r.ErrorKey ?? "ai.err.generic"] + (r.Detail is null ? "" : $" ({r.Detail})") });
@@ -28,7 +28,7 @@ public class AiController(IAiTranslator translator) : AdminController
     [HttpPost]
     public async Task<IActionResult> Test()
     {
-        var r = await translator.TranslateAsync("fa", ["en", "de"], [new TranslateItem("t", "پوست شما، زیبایی شما.", false)], HttpContext.RequestAborted);
+        var r = await translator.TranslateAsync("fa", ["en", "de"], [new TranslateItem("t", "پوست شما، زیبایی شما.", false)], Ct);
         return r.Ok
             ? Json(new { ok = true, message = P.F("ai.testOk", r.Translations!["en"].GetValueOrDefault("t") ?? "", r.Translations!["de"].GetValueOrDefault("t") ?? "") })
             : Json(new { ok = false, message = P[r.ErrorKey ?? "ai.err.generic"] + (r.Detail is null ? "" : $" ({r.Detail})") });
