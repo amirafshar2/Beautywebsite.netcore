@@ -10,6 +10,39 @@
 
 <form asp-antiforgery="true" method="post" class="colors-layout" data-dirty data-colors>
     <div class="colors-groups">
+        <section class="card color-combos">
+            <h2>@P["col.combos"]</h2>
+            <p class="help">@P["col.combosHelp"]</p>
+            <div class="combos" role="radiogroup" aria-label="@P["col.combos"]">
+                @foreach (var c in Theme.Combos)
+                {
+                    var set = Theme.FromThree(c);
+                    var json = System.Text.Json.JsonSerializer.Serialize(set);
+                    var on = Theme.Groups.All(g => string.Equals(Theme.Value(s, g), set[g.Key], StringComparison.OrdinalIgnoreCase));
+                    <button type="button" class="combo @(on ? "is-on" : "")" role="radio" aria-checked="@(on ? "true" : "false")" data-combo="@json">
+                        <svg viewBox="0 0 90 36" aria-hidden="true">
+                            <rect x="0" y="0" width="90" height="36" rx="8" fill="@c.Light" stroke="#00000022" />
+                            <circle cx="22" cy="18" r="11" fill="@c.Dark" />
+                            <circle cx="45" cy="18" r="11" fill="@c.Light" stroke="#00000033" />
+                            <circle cx="68" cy="18" r="11" fill="@c.Accent" />
+                        </svg>
+                        <span>@P["col.combo." + c.Key]</span>
+                    </button>
+                }
+            </div>
+            <div class="combo-own">
+                <h3>@P["col.ownCombo"]</h3>
+                <p class="help">@P["col.ownComboHelp"]</p>
+                <div class="combo-own-row" data-own-combo>
+                    <label><input type="color" value="#3a2e2b" data-own="dark" /><span>@P["col.ownDark"]</span></label>
+                    <label><input type="color" value="#f5f0e8" data-own="light" /><span>@P["col.ownLight"]</span></label>
+                    <label><input type="color" value="#c2a878" data-own="accent" /><span>@P["col.ownAccent"]</span></label>
+                    <button type="button" class="btn" data-own-apply>@P["col.ownApply"]</button>
+                </div>
+            </div>
+        </section>
+        <h2 class="colors-advanced-title">@P["col.advanced"]</h2>
+        <p class="help">@P["col.advancedHelp"]</p>
         @foreach (var g in Theme.Groups)
         {
             var current = Theme.Value(s, g);

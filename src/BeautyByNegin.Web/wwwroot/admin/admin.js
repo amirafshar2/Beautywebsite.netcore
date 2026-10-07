@@ -547,8 +547,33 @@
       var chip = g.querySelector("[data-custom-chip]"); if (chip) chip.hidden = preset;
       dirty = true;
       refresh();
+      if (typeof markCombo === "function") markCombo();
     };
 
+    // Three-color combinations: one click sets all 8 groups.
+    var combos = colorsForm.querySelectorAll("[data-combo]");
+    var markCombo = function () {
+      combos.forEach(function (b) {
+        var set = JSON.parse(b.getAttribute("data-combo"));
+        var on = Object.keys(groups).every(function (k) { return (set[k] || "").toUpperCase() === val(k); });
+        b.classList.toggle("is-on", on); b.setAttribute("aria-checked", on ? "true" : "false");
+      });
+    };
+    var applySet = function (set) { Object.keys(set).forEach(function (k) { if (groups[k]) choose(groups[k], set[k]); }); markCombo(); };
+    var fromThree = function (dark, light, accent) {
+      var soft = mix(light, "#FFFFFF", .5);
+      return { brown: mix(accent, dark, .35), cream: light, darkBg: dark, textLight: readable(dark, light), textDark: soft, btnLight: dark, btnDark: soft, gold: accent };
+    };
+    var own = colorsForm.querySelector("[data-own-combo]");
+    colorsForm.addEventListener("click", function (e) {
+      var cb = e.target.closest("[data-combo]");
+      if (cb) { e.preventDefault(); applySet(JSON.parse(cb.getAttribute("data-combo"))); return; }
+      if (e.target.closest("[data-own-apply]")) {
+        e.preventDefault();
+        var v = function (n) { return own.querySelector("[data-own=" + n + "]").value.toUpperCase(); };
+        applySet(fromThree(v("dark"), v("light"), v("accent"))); return;
+      }
+    });
     colorsForm.addEventListener("click", function (e) {
       var g = e.target.closest("[data-group]"); if (!g) return;
       var s = e.target.closest(".swatch");

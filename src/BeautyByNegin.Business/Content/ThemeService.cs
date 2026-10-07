@@ -8,6 +8,9 @@ namespace BeautyByNegin.Business.Content;
 /// <summary>A group of site colors that change together (e.g. "all browns"), with ~20 matching suggestions.</summary>
 public sealed record ColorGroup(string Key, string Default, IReadOnlyList<string> Presets);
 
+/// <summary>A whole-site color combination of three colors: dark, light and an accent.</summary>
+public sealed record ThreeColors(string Key, string Dark, string Light, string Accent);
+
 /// <summary>
 /// Site colors chosen in the panel ("Colors"). Each group is one setting ("theme.&lt;key&gt;") from which all
 /// related shades are derived, so e.g. every brown on the site follows the chosen brown.
@@ -45,6 +48,49 @@ public static class Theme
         new("gold", "#C2A878", ["#C2A878", "#B8976A", "#D4B483", "#A88A5C", "#C9A96E", "#BFA27A", "#D8C3A5", "#B39069", "#CBB28A", "#A67C52",
                                  "#E0C9A6", "#9E8466", "#C4A484", "#B5A07A", "#D1B48C", "#A89060", "#C8B08A", "#BC9B6A", "#D9BF8C", "#AD9171"]),
     ];
+
+    /// <summary>Ready-made three-color combinations (dark, light, accent). The whole site is built from these three.</summary>
+    public static readonly IReadOnlyList<ThreeColors> Combos =
+    [
+        new("original", "#3A2E2B", "#F5F0E8", "#C2A878"),
+        new("mochaRose", "#4A3428", "#F6EFE9", "#C9A0A0"),
+        new("burgundy", "#5A2332", "#F8F1F1", "#D4B483"),
+        new("forest", "#2F3D33", "#F1EFE8", "#A8B59A"),
+        new("navySand", "#24303F", "#F4EEE3", "#C8B08A"),
+        new("charcoalGold", "#2E2E2E", "#FAF7F2", "#C2A878"),
+        new("espresso", "#2B211E", "#F3ECE2", "#B8976A"),
+        new("plumBlush", "#4A2E3A", "#F7F0F2", "#D8A7B1"),
+        new("tealCoral", "#1F3B3D", "#F2F5F3", "#E0A387"),
+        new("olive", "#3F4232", "#F5F2E8", "#B5A07A"),
+        new("slate", "#36404A", "#F0F2F4", "#AAB4BE"),
+        new("terracotta", "#5C4033", "#F7F1EA", "#D08C60"),
+        new("blackGold", "#1C1A19", "#FFFFFF", "#C9A96E"),
+        new("winePink", "#6D2E3B", "#FBF5F4", "#E3B6B6"),
+        new("cocoaMint", "#3D3027", "#EEF0EA", "#9DB8A6"),
+        new("lavender", "#2A2A35", "#F4F2F8", "#B6A9CF"),
+        new("rosewood", "#6E4B4B", "#FAF7F2", "#D9BF8C"),
+        new("pine", "#233A2E", "#F4F1E8", "#C9A96E"),
+        new("peach", "#4E3B31", "#FBF4EE", "#E8B996"),
+        new("graphiteBlush", "#333333", "#F8F1F1", "#D4A5A5"),
+    ];
+
+    /// <summary>All 8 group colors from three colors. The original combination gives exactly the original site.</summary>
+    public static IReadOnlyDictionary<string, string> FromThree(ThreeColors c)
+    {
+        if (c.Key == "original") return Groups.ToDictionary(g => g.Key, g => g.Default);
+        var soft = Mix(c.Light, "#FFFFFF", .5);
+        return new Dictionary<string, string>
+        {
+            ["brown"] = Mix(c.Accent, c.Dark, .35),
+            ["cream"] = c.Light,
+            ["darkBg"] = c.Dark,
+            ["textLight"] = Readable(c.Dark, c.Light),
+            ["textDark"] = soft,
+            ["btnLight"] = c.Dark,
+            ["btnDark"] = soft,
+            ["gold"] = c.Accent,
+        };
+    }
 
     public static string SettingKey(string group) => SettingPrefix + group;
 

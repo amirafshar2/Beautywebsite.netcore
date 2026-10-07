@@ -355,3 +355,13 @@ a.item:hover .title { text-decoration: underline; }
 .tp-body .tp-btn { justify-self: start; }
 .tp-footer { display: grid; gap: .2rem; background: var(--t-dark); color: var(--t-on-dark); }
 .tp-gold { color: var(--t-gold); }
+.combos { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: .6rem; margin: .75rem 0 1rem; }
+.combo { display: grid; gap: .35rem; justify-items: center; padding: .55rem .4rem; border: 2px solid var(--line); border-radius: 12px; background: var(--card); font: inherit; font-size: .82rem; color: var(--text); cursor: pointer; text-align: center; }
+.combo svg { width: 90px; height: 36px; }
+.combo:hover { border-color: var(--line-strong); }
+.combo.is-on { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); }
+.combo-own { border-top: 1px solid var(--line); padding-top: 1rem; }
+.combo-own-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin-top: .6rem; }
+.combo-own-row label { display: inline-flex; align-items: center; gap: .45rem; font-size: .92rem; cursor: pointer; }
+.combo-own-row input[type="color"] { width: 46px; height: 36px; padding: 2px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--card); cursor: pointer; }
+.colors-advanced-title { margin: .5rem 0 0; }
