@@ -11,7 +11,8 @@
 </button>
 
 <section class="chat-panel" id="chat-panel" role="dialog" aria-label="@T["chat.title"]" data-chat
-         data-lang="@Model.Code" data-api="/@Model.Code/api/chat" data-session="@Model.Customer.Step.ToString().ToLowerInvariant()">
+         data-lang="@Model.Code" data-api="/@Model.Code/api/chat" data-session="@Model.Customer.Step.ToString().ToLowerInvariant()"
+         data-msg-ratelimit="@T["form.error.rateLimit"]" data-msg-generic="@T["form.error.generic"]">
     <header class="chat-head">
         <strong>@T["chat.title"]</strong>
         <button type="button" data-chat-close>

@@ -28,7 +28,11 @@
     return fetch(api + "/" + action, {
       method: "POST", body: fd, credentials: "same-origin",
       headers: { "X-CSRF-TOKEN": csrf, "X-Requested-With": "fetch", "Accept": "application/json" }
-    }).then(function (r) { return r.json(); });
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      // The server's rate limiter answers with a key only: show the visitor a readable text.
+      if (d && !d.ok && !d.message) d.message = d.errorKey === "form.error.rateLimit" ? panel.getAttribute("data-msg-ratelimit") : panel.getAttribute("data-msg-generic");
+      return d;
+    });
   }
 
   function showError(form, message) {
@@ -102,7 +106,7 @@
         if (d.ok) { setStep("verify"); }
         else showError(f, d.message);
       })
-      .catch(function () { showError(f, "…"); })
+      .catch(function () { showError(f, panel.getAttribute("data-msg-generic")); })
       .finally(function () { lock(f, false); });
   });
 

@@ -60,7 +60,10 @@ public class AccountController(ICustomerAccountService accounts, IChatService ch
             }
         }
 
-        return View(new AccountPage(current, TempData["NeedName"] as string, TempData["AccountError"] as string,
+        var error = TempData["AccountError"] as string;
+        if (Request.Query["rl"] == "1") error = Ctx.T["form.error.rateLimit"];
+
+        return View(new AccountPage(current, TempData["NeedName"] as string, error,
             TempData["AccountNotice"] as string, bookings, messages, Url.IsLocalUrl(returnUrl) ? returnUrl : null));
     }
 

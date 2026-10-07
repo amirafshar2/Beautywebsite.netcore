@@ -34,7 +34,8 @@ public static class SpamGuard
             o.AddPolicy(FormsPolicy, ctx => RateLimitPartition.GetFixedWindowLimiter(ClientKey(ctx),
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(10), QueueLimit = 0 }));
             o.AddPolicy(ChatAuthPolicy, ctx => RateLimitPartition.GetFixedWindowLimiter(ClientKey(ctx),
-                _ => new FixedWindowRateLimiterOptions { PermitLimit = 8, Window = TimeSpan.FromHours(1), QueueLimit = 0 }));
+                // Login / code requests. Guessing codes is already blocked per code (5 tries, 15 min) and per e-mail (1 code per minute).
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(15), QueueLimit = 0 }));
             o.AddPolicy(ChatPolicy, ctx => RateLimitPartition.GetFixedWindowLimiter(ClientKey(ctx),
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = 90, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 
