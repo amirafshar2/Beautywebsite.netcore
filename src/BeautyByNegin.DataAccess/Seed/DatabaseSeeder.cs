@@ -254,11 +254,11 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
             ]));
         db.Pages.Add(LegalPage(SystemPages.Privacy, 2,
             [
-                ("fa", "حریم خصوصی", "privacy", PrivacyFa),
-                ("tr", "Gizlilik Politikası", "gizlilik", PrivacyTr),
-                ("de", "Datenschutzerklärung", "datenschutz", PrivacyDe),
-                ("en", "Privacy Policy", "privacy", PrivacyEn),
-                ("ar", "سياسة الخصوصية", "privacy", PrivacyAr)
+                ("fa", "حریم خصوصی", "privacy", LegalTexts.Privacy["fa"]),
+                ("tr", "Gizlilik Politikası", "gizlilik", LegalTexts.Privacy["tr"]),
+                ("de", "Datenschutzerklärung", "datenschutz", LegalTexts.Privacy["de"]),
+                ("en", "Privacy Policy", "privacy", LegalTexts.Privacy["en"]),
+                ("ar", "سياسة الخصوصية", "privacy", LegalTexts.Privacy["ar"])
             ]));
         await db.SaveChangesAsync();
     }
@@ -292,33 +292,5 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
     private const string ImpressumAr =
         "<p>البيانات القانونية لصاحب الموقع (وفقاً للقانون الألماني، § 5 DDG).</p><p>[الاسم الكامل]<br>Beauty by Negin<br>[العنوان]<br>[الرمز البريدي، المدينة]<br>[الدولة]</p>" +
         "<h2>التواصل</h2><p>الهاتف: [رقم الهاتف]<br>البريد الإلكتروني: [البريد الإلكتروني]</p>";
-    private const string PrivacyAr =
-        "<h2>١. الجهة المسؤولة</h2><p>[الاسم الكامل]، Beauty by Negin، [العنوان]، [البريد الإلكتروني]</p>" +
-        "<h2>٢. لا تتبّع</h2><p>لا يستخدم هذا الموقع أي خدمات تحليل أو تتبّع أو ملفات تعريف ارتباط إعلانية أو محتوى من أطراف ثالثة. تُستخدم ملفات تعريف الارتباط الضرورية فقط لأمان النماذج والدردشة.</p>" +
-        "<h2>٣. طلبات التواصل والحجز والدردشة</h2><p>تُستخدم البيانات التي ترسلها عبر النماذج أو الدردشة (الاسم، الهاتف، البريد الإلكتروني، الرسالة) فقط للرد على طلبك. قد تصلنا إشعارات الطلبات الجديدة عبر البريد الإلكتروني أو تيليجرام.</p>" +
-        "<h2>٤. النشرة الإخبارية</h2><p>نحفظ بريدك الإلكتروني للنشرة بناءً على موافقتك، ويمكنك إلغاء الاشتراك في أي وقت.</p>";
 
-    private const string PrivacyDe =
-        "<h2>1. Verantwortliche Stelle</h2><p>[Vor- und Nachname], Beauty by Negin, [Anschrift], [E-Mail-Adresse]</p>" +
-        "<h2>2. Keine Tracking- oder Analysedienste</h2><p>Diese Website verwendet keine Analyse- oder Trackingdienste, keine Werbe-Cookies und bindet keine externen Inhalte (z. B. Schriftarten, Karten, Social-Media-Plugins) von Drittanbietern ein. Technisch notwendige Cookies werden nur für die Sicherheit von Formularen und den Chat verwendet.</p>" +
-        "<h2>3. Kontakt-, Termin- und Chatanfragen</h2><p>Wenn Sie uns über ein Formular oder den Chat kontaktieren, verarbeiten wir Ihre Angaben (z. B. Name, Telefonnummer, E-Mail-Adresse, Nachricht) ausschließlich zur Bearbeitung Ihrer Anfrage (Art. 6 Abs. 1 lit. b DSGVO). Benachrichtigungen über neue Anfragen können per E-Mail bzw. über Telegram an uns weitergeleitet werden.</p>" +
-        "<h2>4. Newsletter</h2><p>Für den Newsletter speichern wir Ihre E-Mail-Adresse auf Grundlage Ihrer Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Sie können sich jederzeit abmelden.</p>" +
-        "<h2>5. Server-Logfiles</h2><p>Beim Aufruf der Website werden technisch notwendige Daten (z. B. IP-Adresse, Zeitpunkt, aufgerufene Seite) in Logdateien gespeichert und nach spätestens 30 Tagen gelöscht.</p>" +
-        "<h2>6. Ihre Rechte</h2><p>Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie das Recht auf Beschwerde bei einer Aufsichtsbehörde.</p>";
-    private const string PrivacyEn =
-        "<h2>1. Controller</h2><p>[Full name], Beauty by Negin, [Address], [Email address]</p>" +
-        "<h2>2. No tracking</h2><p>This website does not use analytics or tracking services, advertising cookies or external third-party content. Technically necessary cookies are only used for form security and the chat.</p>" +
-        "<h2>3. Contact, booking and chat requests</h2><p>When you contact us via a form or the chat, we process your details (e.g. name, phone, email, message) solely to handle your request. Notifications about new requests may be forwarded to us by email or Telegram.</p>" +
-        "<h2>4. Newsletter</h2><p>We store your email address for the newsletter based on your consent. You can unsubscribe at any time.</p>" +
-        "<h2>5. Your rights</h2><p>You have the right to access, rectification, erasure, restriction, data portability and objection, and the right to lodge a complaint with a supervisory authority.</p>";
-    private const string PrivacyTr =
-        "<h2>1. Sorumlu</h2><p>[Ad Soyad], Beauty by Negin, [Adres], [E-posta adresi]</p>" +
-        "<h2>2. Takip yok</h2><p>Bu web sitesi analiz veya takip hizmetleri, reklam çerezleri ya da üçüncü taraf içerikleri kullanmaz. Teknik olarak gerekli çerezler yalnızca form güvenliği ve sohbet için kullanılır.</p>" +
-        "<h2>3. İletişim, randevu ve sohbet talepleri</h2><p>Bize bir form veya sohbet üzerinden ulaştığınızda bilgileriniz (ad, telefon, e-posta, mesaj) yalnızca talebinizi yanıtlamak için işlenir. Yeni taleplerle ilgili bildirimler bize e-posta veya Telegram ile iletilebilir.</p>" +
-        "<h2>4. Bülten</h2><p>Bülten için e-posta adresinizi onayınıza dayanarak saklarız. Aboneliğinizi istediğiniz zaman iptal edebilirsiniz.</p>";
-    private const string PrivacyFa =
-        "<h2>۱. مسئول</h2><p>[نام و نام خانوادگی]، Beauty by Negin، [آدرس]، [ایمیل]</p>" +
-        "<h2>۲. بدون ردیابی</h2><p>این سایت از هیچ سرویس آمار، ردیابی، کوکی تبلیغاتی یا محتوای شخص ثالث استفاده نمی‌کند. کوکی‌های ضروری فقط برای امنیت فرم‌ها و چت به کار می‌روند.</p>" +
-        "<h2>۳. فرم تماس، رزرو و چت</h2><p>اطلاعاتی که از طریق فرم‌ها یا چت می‌فرستید (نام، تلفن، ایمیل، پیام) فقط برای پاسخ به درخواست شما استفاده می‌شود. اعلان درخواست‌های جدید ممکن است از طریق ایمیل یا تلگرام برای ما ارسال شود.</p>" +
-        "<h2>۴. خبرنامه</h2><p>ایمیل شما برای خبرنامه با رضایت خودتان ذخیره می‌شود و هر زمان می‌توانید عضویت را لغو کنید.</p>";
 }

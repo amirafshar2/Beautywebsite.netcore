@@ -18,6 +18,12 @@ public sealed class SampleContentSeeder(AppDbContext db, IMediaService media, IS
 
     public async Task SeedAsync(string sampleFolder, CancellationToken ct = default)
     {
+        // Updated privacy policy for databases that still have the earlier, unedited draft.
+        if (await BeautyByNegin.DataAccess.Seed.LegalTexts.UpgradePrivacyAsync(db, ct))
+        {
+            logger.LogInformation("Privacy policy text updated to the current version");
+            cache.InvalidateAll();
+        }
         var flag = await db.SiteSettings.FirstOrDefaultAsync(s => s.Key == SettingKeys.SampleContentVersion, ct);
         if (flag?.Value == Version) return;
         if (!Directory.Exists(sampleFolder)) { logger.LogWarning("Sample content folder not found: {Folder}", sampleFolder); return; }
