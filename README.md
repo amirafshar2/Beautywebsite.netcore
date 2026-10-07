@@ -81,6 +81,10 @@ dotnet ef migrations add <Ad> --project src/BeautyByNegin.DataAccess --startup-p
 ASPNETCORE_ENVIRONMENT=Production dotnet run --project src/BeautyByNegin.Web
 ```
 
+> **E-postasız yerel test:** `appsettings.Development.json` içindeki `"Site": { "DevMailToFile": true }` sayesinde, Development ortamında SMTP ayarlanmamışsa e-postalar (ör. müşteri giriş kodu) gönderilmez; `App_Data/dev-mail/` klasörüne ve Visual Studio'nun **Output** penceresine yazılır. Böylece "Giriş" butonu ve sohbet bilgisayarınızda da görünür ve test edilebilir. Production'da bu ayar yoktur; orada gerçek SMTP gerekir.
+>
+> Site adresi `/` her zaman panelde seçilen **ana dile** (varsayılan: Farsça) yönlenir; tarayıcı dili dikkate alınmaz.
+
 > Geliştirme ortamında (`Development`) CSS/JS dosyaları olduğu gibi gelir ve yanıt sıkıştırma kapalıdır (Visual Studio'nun tarayıcı yenileme özelliği bozulmasın diye). `Production` ortamında dosyalar küçültülür ve sıkıştırılır.
 
 ## 3. İlk kurulum sihirbazı

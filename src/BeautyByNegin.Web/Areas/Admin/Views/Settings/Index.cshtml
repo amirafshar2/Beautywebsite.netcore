@@ -71,7 +71,11 @@
     <div class="card form" id="accounts">
         <h2>@P["set.accounts"]</h2>
         <p class="help">@P["set.accountsIntro"]</p>
-        @if (!s.SmtpConfigured)
+        @if (!s.SmtpConfigured && s.DevMailToFile)
+        {
+            <p class="hint-note">@P["set.devMail"]</p>
+        }
+        else if (!s.SmtpConfigured)
         {
             <p class="hint-note">@P["set.accountsNeedEmail"]</p>
         }

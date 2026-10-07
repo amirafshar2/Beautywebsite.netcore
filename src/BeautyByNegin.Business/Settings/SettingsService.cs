@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using System.Globalization;
 using BeautyByNegin.DataAccess;
 using BeautyByNegin.DataAccess.Entities;
@@ -8,8 +9,14 @@ using Microsoft.Extensions.Caching.Memory;
 namespace BeautyByNegin.Business.Settings;
 
 /// <summary>Read-only snapshot of all non-translatable settings, cached in memory.</summary>
-public sealed class SiteSettings(IReadOnlyDictionary<string, string?> values)
+public sealed class SiteSettings(IReadOnlyDictionary<string, string?> values, bool devMailToFile = false)
 {
+    /// <summary>
+    /// Development only ("Site:DevMailToFile" in appsettings.Development.json): without SMTP, e-mails are
+    /// written to App_Data/dev-mail and the log instead of being sent, so login and chat can be tested locally.
+    /// </summary>
+    public bool DevMailToFile { get; } = devMailToFile;
+
     public string? Get(string key) => values.TryGetValue(key, out var v) ? v : null;
     public string Text(string key, string fallback = "") => string.IsNullOrWhiteSpace(Get(key)) ? fallback : Get(key)!.Trim();
     public bool Bool(string key) => string.Equals(Get(key), "true", StringComparison.OrdinalIgnoreCase);
@@ -24,13 +31,15 @@ public sealed class SiteSettings(IReadOnlyDictionary<string, string?> values)
     public bool NewsletterEnabled => Bool(SettingKeys.NewsletterEnabled);
     public bool ChatEnabled => Bool(SettingKeys.ChatEnabled);
     public bool SmtpConfigured => Bool(SettingKeys.SmtpEnabled) && !string.IsNullOrWhiteSpace(Get(SettingKeys.SmtpHost));
+    /// <summary>E-mails can go out (real SMTP, or the local test folder during development).</summary>
+    public bool EmailWorks => SmtpConfigured || DevMailToFile;
 
     /// <summary>The chat is for logged-in customers, so it needs customer accounts (and therefore e-mail).</summary>
     public bool ChatAvailable => ChatEnabled && AccountsAvailable;
 
     /// <summary>Customer accounts: login with an e-mail code, so they only work when e-mail sending works.</summary>
     public bool AccountsEnabled => Bool(SettingKeys.AccountsEnabled);
-    public bool AccountsAvailable => AccountsEnabled && SmtpConfigured;
+    public bool AccountsAvailable => AccountsEnabled && EmailWorks;
     public bool AccountsShowBookings => Bool(SettingKeys.AccountsShowBookings);
     /// <summary>Visitor reviews only from logged-in customers (only applies when accounts are available).</summary>
     public bool ReviewsRequireLogin => Bool(SettingKeys.ReviewsRequireLogin) && AccountsAvailable;
@@ -73,7 +82,7 @@ public interface ISettingsService
     void Invalidate();
 }
 
-public sealed class SettingsService(IServiceScopeFactory scopeFactory, IMemoryCache cache, IDataProtectionProvider protection) : ISettingsService
+public sealed class SettingsService(IServiceScopeFactory scopeFactory, IMemoryCache cache, IDataProtectionProvider protection, IConfiguration config) : ISettingsService
 {
     private const string CacheKey = "site-settings";
     private readonly IDataProtector _protector = protection.CreateProtector("BeautyByNegin.Settings.Secrets");
@@ -85,7 +94,7 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, IMemoryCa
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var dict = await db.SiteSettings.AsNoTracking().ToDictionaryAsync(s => s.Key, s => s.Value, ct);
-        var settings = new SiteSettings(dict);
+        var settings = new SiteSettings(dict, config.GetValue<bool>("Site:DevMailToFile"));
         cache.Set(CacheKey, settings, TimeSpan.FromHours(6));
         return settings;
     }

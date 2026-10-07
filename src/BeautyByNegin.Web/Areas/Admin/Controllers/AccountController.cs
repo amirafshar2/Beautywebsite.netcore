@@ -118,7 +118,7 @@ public class AccountController(
         var panel = P;
         var user = string.IsNullOrWhiteSpace(userName) ? null
             : await users.FindByNameAsync(userName.Trim()) ?? await users.FindByEmailAsync(userName.Trim());
-        if (user?.Email is not null && panel.Settings.SmtpConfigured)
+        if (user?.Email is not null && panel.Settings.EmailWorks)
         {
             var token = await users.GeneratePasswordResetTokenAsync(user);
             var link = $"{Request.Scheme}://{Request.Host}{panel.Url("account/reset")}?user={Uri.EscapeDataString(user.UserName!)}&token={Uri.EscapeDataString(token)}";

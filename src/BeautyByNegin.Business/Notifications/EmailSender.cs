@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using BeautyByNegin.Business.Settings;
 using BeautyByNegin.DataAccess;
 using MailKit.Net.Smtp;
@@ -22,12 +23,22 @@ public interface IEmailSender
 /// SMTP via MailKit (supports STARTTLS on 587 and implicit TLS on 465).
 /// Foreign SMTP servers may be unreachable from Iran, so callers always save to the database first.
 /// </summary>
-public sealed class EmailSender(ISettingsService settings, ILogger<EmailSender> logger) : IEmailSender
+public sealed class EmailSender(ISettingsService settings, ILogger<EmailSender> logger, IHostEnvironment env) : IEmailSender
 {
     public async Task<SendResult> SendAsync(string to, string subject, string body, string? replyTo = null, CancellationToken ct = default)
     {
         var s = await settings.GetAsync(ct);
-        if (!s.SmtpConfigured) return SendResult.Fail("smtp-not-configured");
+        if (!s.SmtpConfigured)
+        {
+            if (!s.DevMailToFile) return SendResult.Fail("smtp-not-configured");
+            // Local testing without SMTP: keep the e-mail as a text file and show it in the log (Visual Studio "Output").
+            var dir = Path.Combine(AppPaths.AppData(env.ContentRootPath), "dev-mail");
+            Directory.CreateDirectory(dir);
+            var file = Path.Combine(dir, $"{DateTime.Now:yyyyMMdd-HHmmss-fff}.txt");
+            await File.WriteAllTextAsync(file, $"To: {to}\nSubject: {subject}\n\n{body}\n", ct);
+            logger.LogWarning("DEV MAIL (not sent, SMTP not configured) to {To}: {Subject}\n{Body}", to, subject, body);
+            return SendResult.Success;
+        }
 
         var host = s.Text(SettingKeys.SmtpHost);
         var port = s.Int(SettingKeys.SmtpPort) ?? 587;
