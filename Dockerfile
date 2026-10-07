@@ -20,13 +20,13 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app ./
-# ALL changing data (database, keys, logs, backups, uploaded images/videos) lives in /app/App_Data:
-# one Docker volume (docker-compose) or one Render disk (render.yaml) keeps everything.
-RUN mkdir -p /app/App_Data && chown -R app:app /app/App_Data
+# ALL changing data (database, keys, logs, backups, uploaded images/videos) lives in /var/data
+# (the app sees it as /app/App_Data): one Docker volume or one Render disk (mount path /var/data) keeps everything.
+RUN mkdir -p /var/data && rm -rf /app/App_Data && ln -s /var/data /app/App_Data && chown -R app:app /var/data
 ENV ASPNETCORE_ENVIRONMENT=Production \
     Site__TrustAllProxies=true
 EXPOSE 8080
-VOLUME ["/app/App_Data"]
+VOLUME ["/var/data"]
 # Starts as root only to prepare the data folder (a freshly mounted disk/volume may belong to root),
 # then runs the app as the unprivileged "app" user. Port: $PORT (Render sets it) or 8080.
-ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /app/App_Data && chown -R app:app /app/App_Data && export ASPNETCORE_HTTP_PORTS=${PORT:-8080} && exec setpriv --reuid=app --regid=app --init-groups dotnet BeautyByNegin.Web.dll \"$@\"", "--"]
+ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /var/data && chown -R app:app /var/data && export ASPNETCORE_HTTP_PORTS=${PORT:-8080} && exec setpriv --reuid=app --regid=app --init-groups dotnet BeautyByNegin.Web.dll \"$@\"", "--"]

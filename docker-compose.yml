@@ -17,7 +17,7 @@ services:
       - Site__TrustAllProxies=true
     volumes:
       # Everything that changes (database, keys, backups, uploaded images and videos) is in this one volume.
-      - appdata:/app/App_Data
+      - appdata:/var/data
 
 volumes:
   appdata:

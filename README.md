@@ -200,7 +200,7 @@ The repository contains a [`render.yaml`](render.yaml) Blueprint that uses the s
 4. Deploy, then open `https://<your-service>.onrender.com/admin`.
 
 > **Use a paid instance with a disk.** On Render's free plan the file system is temporary: the SQLite database and uploaded images are reset after every deploy, restart or 15‑minute spin-down (the setup wizard would then be open again).
-> The Blueprint therefore uses the `starter` plan with a 1 GB disk mounted at `/app/App_Data` – database, keys, backups **and** images/videos are all stored there. A service created by hand needs a paid instance type and a disk with mount path `/app/App_Data`.
+> The Blueprint therefore uses the `starter` plan with a 1 GB disk mounted at `/var/data` (the app sees it as `App_Data`) – database, keys, backups **and** images/videos are all stored there. A service created by hand needs a paid instance type and a disk with mount path `/var/data`.
 
 ### 🎬 Video compression (ffmpeg)
 

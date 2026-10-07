@@ -282,7 +282,7 @@ docker compose up -d --build
 ```
 
 - Site `http://127.0.0.1:8080` adresinde çalışır. Port yalnızca sunucunun kendisine açıktır; dışarıya Nginx (bölüm 6.3, `proxy_pass http://127.0.0.1:8080;`) veya Caddy ile SSL'li olarak yayınlayın.
-- Tüm veriler tek bir Docker volume'ünde durur: `appdata` (`/app/App_Data`, görseller ve videolar dahil). Konteyneri silmek veya yeniden build etmek verileri silmez.
+- Tüm veriler tek bir Docker volume'ünde durur: `appdata` (`/var/data` = uygulamanın `App_Data` klasörü, görseller ve videolar dahil). Konteyneri silmek veya yeniden build etmek verileri silmez.
 - Konteyner root olmayan `app` kullanıcısı ile çalışır.
 - Ortam değişkeni `Site__TrustAllProxies=true` ayarlıdır, çünkü proxy konteynerin dışından (Docker ağı üzerinden) gelir.
 
