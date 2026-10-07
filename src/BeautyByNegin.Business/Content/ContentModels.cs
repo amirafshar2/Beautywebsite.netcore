@@ -23,6 +23,8 @@ public sealed record ServiceDetail(
     string? ExpectedResult,
     string? Duration,
     IReadOnlyList<ImageView> Gallery,
+    /// <summary>Treatment video (null when there is none or it is not ready yet).</summary>
+    VideoView? Video,
     string? MetaTitle,
     string? MetaDescription,
     /// <summary>Slug of this service in every language (for the language switcher).</summary>

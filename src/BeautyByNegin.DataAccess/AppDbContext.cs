@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
 
     public DbSet<MediaImage> MediaImages => Set<MediaImage>();
     public DbSet<MediaImageTranslation> MediaImageTranslations => Set<MediaImageTranslation>();
+    public DbSet<MediaVideo> MediaVideos => Set<MediaVideo>();
 
     public DbSet<Service> Services => Set<Service>();
     public DbSet<ServiceTranslation> ServiceTranslations => Set<ServiceTranslation>();
@@ -80,10 +81,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         b.Entity<MediaImageTranslation>().Property(x => x.AltText).HasMaxLength(300);
 
         // ---------- Services
+        b.Entity<MediaVideo>(e =>
+        {
+            e.Property(x => x.StorageKey).HasMaxLength(80);
+            e.HasIndex(x => x.StorageKey).IsUnique();
+            e.Property(x => x.OriginalFileName).HasMaxLength(260);
+            e.Property(x => x.Error).HasMaxLength(500);
+        });
         b.Entity<Service>(e =>
         {
             e.Property(x => x.Price).HasPrecision(12, 2);
             e.HasOne(x => x.CoverImage).WithMany().HasForeignKey(x => x.CoverImageId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(x => x.Video).WithMany().HasForeignKey(x => x.VideoId).OnDelete(DeleteBehavior.SetNull);
             e.HasMany(x => x.Images).WithOne().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Cascade);
         });
         Translation<Service, ServiceTranslation>(b, t => t.ServiceId);

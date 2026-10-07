@@ -28,6 +28,8 @@ public sealed class ServiceInput
     public bool ShowOnHome { get; set; }
     public decimal? Price { get; set; }
     public int? CoverImageId { get; set; }
+    /// <summary>Optional video of the treatment (shown on the detail page).</summary>
+    public int? VideoId { get; set; }
     /// <summary>Extra images, comma separated ids in display order.</summary>
     public string? ImageIds { get; set; }
     public Dictionary<string, ServiceTrInput> Tr { get; set; } = [];
@@ -145,7 +147,7 @@ public interface IAdminCatalogService
     Task SaveOpeningHoursAsync(IEnumerable<OpeningHourInput> hours, CancellationToken ct = default);
 }
 
-public sealed class AdminCatalogService(AppDbContext db, IAdminData data) : IAdminCatalogService
+public sealed class AdminCatalogService(AppDbContext db, IAdminData data, Media.IVideoService videos) : IAdminCatalogService
 {
     // ================================================================ Services
 
@@ -157,6 +159,7 @@ public sealed class AdminCatalogService(AppDbContext db, IAdminData data) : IAdm
         => db.Services.Include(s => s.Translations)
             .Include(s => s.CoverImage!).ThenInclude(i => i.Translations)
             .Include(s => s.Images.OrderBy(i => i.SortOrder)).ThenInclude(i => i.MediaImage)
+            .Include(s => s.Video)
             .AsSplitQuery().FirstOrDefaultAsync(s => s.Id == id, ct);
 
     public async Task<SaveResult> SaveServiceAsync(ServiceInput input, string defaultLanguage, CancellationToken ct = default)
@@ -187,6 +190,8 @@ public sealed class AdminCatalogService(AppDbContext db, IAdminData data) : IAdm
         service.ShowOnHome = input.ShowOnHome;
         service.Price = input.Price;
         service.CoverImageId = input.CoverImageId;
+        var oldVideoId = service.VideoId;
+        service.VideoId = input.VideoId is int vid && await db.MediaVideos.AnyAsync(v => v.Id == vid, ct) ? vid : null;
 
         foreach (var (lang, t) in input.Tr)
         {
@@ -229,6 +234,7 @@ public sealed class AdminCatalogService(AppDbContext db, IAdminData data) : IAdm
         }
 
         await db.SaveChangesAsync(ct);
+        if (oldVideoId is int old && old != service.VideoId) await videos.DeleteIfUnusedAsync(old, ct);
         data.Changed();
         return SaveResult.Success(service.Id);
     }
@@ -244,6 +250,7 @@ public sealed class AdminCatalogService(AppDbContext db, IAdminData data) : IAdm
             ShowOnHome = false,
             Price = s.Price,
             CoverImageId = s.CoverImageId,
+            VideoId = s.VideoId,
             Images = s.Images.Select(i => new ServiceImage { MediaImageId = i.MediaImageId, SortOrder = i.SortOrder }).ToList()
         };
         foreach (var t in s.Translations)

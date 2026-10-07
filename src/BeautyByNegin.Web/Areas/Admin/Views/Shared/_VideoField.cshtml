@@ -1,0 +1,34 @@
+@model (string Name, int? Value)
+@inject BeautyByNegin.Business.Media.IVideoService Videos
+@using BeautyByNegin.Business.Media
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    var v = Model.Value is int id ? await Videos.GetAsync(id) : null;
+    var status = v?.Status switch { VideoStatus.Ready => "ready", VideoStatus.Failed => "failed", VideoStatus.Processing => "processing", _ => "none" };
+}
+<div class="field video-field" data-video-field data-status="@status" data-status-url="@P.Url("videos/status/")"
+     data-upload-url="@P.Url("videos/upload")" data-max="@VideoService.MaxBytes" data-too-large="@P["video.err.tooLarge"]"
+     data-uploading="@P["video.uploading"]" data-processing="@P["video.processing"]">
+    <span class="label">@P["video.label"]</span>
+    <div class="video-box @(v is null ? "is-empty" : "")">
+        <video controls preload="metadata" playsinline data-player hidden="@(status != "ready")"
+               src="@(status == "ready" ? VideoUrls.Src(v!) : null)" poster="@(status == "ready" ? VideoUrls.Poster(v!) : null)"></video>
+        <span class="empty-text" data-empty hidden="@(v is not null)">@P["video.none"]</span>
+        <div class="video-wait" data-wait hidden="@(status != "processing")"><span class="spinner" aria-hidden="true"></span><span>@P["video.processing"]</span></div>
+        <div class="progress" data-progress hidden><span></span></div>
+    </div>
+    <p class="video-info small" data-info aria-live="polite">@(v is null ? "" : BeautyByNegin.Web.Areas.Admin.Controllers.VideosController.VideoInfo(P, v))</p>
+    <input type="hidden" name="@Model.Name" value="@Model.Value" data-value />
+    <div class="row-actions">
+        <label class="btn btn-sm">
+            <svg class="i"><use href="#a-upload" /></svg>@P["video.choose"]
+            <input type="file" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,video/x-msvideo,video/*" class="visually-hidden" data-file />
+        </label>
+        <button type="button" class="btn btn-sm btn-ghost" data-remove hidden="@(v is null)">@P["video.remove"]</button>
+    </div>
+    <p class="help">@P["video.help"]</p>
+    @if (!Videos.CanOptimize)
+    {
+        <p class="hint-note small">@P["video.noFfmpeg"]</p>
+    }
+</div>

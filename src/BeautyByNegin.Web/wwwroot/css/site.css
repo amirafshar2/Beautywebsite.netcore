@@ -591,6 +591,9 @@ body.has-action-bar .chat-panel { bottom: calc(var(--bar-h) + 86px + env(safe-ar
 .facts dd { margin: 0; }
 .service-gallery { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); }
 @media (min-width: 900px) { .service-gallery { grid-template-columns: repeat(4, 1fr); } }
+.service-video { margin: 0 auto; max-width: 1040px; border-radius: var(--radius); overflow: hidden; background: var(--bg-dark); box-shadow: 0 18px 40px -24px color-mix(in srgb, var(--bg-dark) 60%, transparent); }
+.service-video video { display: block; width: 100%; height: auto; max-height: 82vh; background: var(--bg-dark); }
+.service-video.is-portrait { max-width: 460px; }
 
 /* Home gallery + Instagram */
 .home-gallery { display: grid; gap: clamp(.6rem, 1.5vw, 1.25rem); grid-template-columns: repeat(2, 1fr); }

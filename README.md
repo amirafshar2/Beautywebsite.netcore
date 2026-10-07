@@ -28,6 +28,7 @@
 | 🧑‍💼 **Admin panel for non-technical users** | Every screen explains *what the customer does with it and why it matters* |
 | 🤖 **One-click AI translation** | Write in Persian, press a button: Google Gemini fills all other languages |
 | 🎨 **Site colors from the panel** | 20 three-color combinations or 8 fine-grained color groups, with live preview and contrast checks |
+| 🎬 **Treatment videos** | Upload a phone video, the server compresses it (often 5–10× smaller) and shows it on the treatment page |
 | 📅 **Bookings, chat & customer accounts** | Appointment requests, live chat, passwordless login with e-mail code |
 | 🔎 **SEO built in** | Sitemap with all languages, structured data, Google Search Console guide in the panel |
 | 🛡️ **Privacy & security** | Strict CSP, zero CDNs / trackers, encrypted secrets, rate limiting, spam protection |
@@ -101,6 +102,7 @@ It is an experiment in how far a complete, production-ready web application can 
 
 - Home page with hero, about, treatments, consultation block, gallery, reviews and Instagram feed
 - Treatment pages with images, duration, price (optional), FAQ and "ask about this treatment"
+- Optional **video per treatment**: uploaded in the panel, compressed in the background with ffmpeg (H.264 + AAC, CRF 23, max. 1920 px / 30 fps, faststart, metadata stripped) and shown on the detail page only when present
 - Appointment request form, contact form, newsletter sign-up
 - Gallery with categories and before/after images, customer reviews (moderated)
 - **Customer accounts** without passwords (6-digit e-mail code): profile, own booking requests, chat history
@@ -199,6 +201,15 @@ The repository contains a [`render.yaml`](render.yaml) Blueprint and a Render-sp
 
 > **Free plan = demo.** Render's free instances have a temporary file system and sleep after 15 minutes without traffic, so the SQLite database and uploaded images start fresh after every deploy, restart or spin-down.
 > For a real site use a paid instance and uncomment the `disk` block in `render.yaml` (mount path `/app/App_Data` — database, keys, backups **and** images are kept there).
+
+### 🎬 Video compression (ffmpeg)
+
+Treatment videos are compressed with **ffmpeg**. The Docker images install it automatically. On other servers:
+
+- **Linux:** `sudo apt install ffmpeg`
+- **Windows / Plesk:** put `ffmpeg.exe` and `ffprobe.exe` (e.g. from the "essentials" build at gyan.dev) into `App_Data\tools\` – or set `Site:FfmpegPath`.
+
+Without ffmpeg the panel still accepts MP4 files up to 100 MB unchanged and shows a hint.
 
 ---
 

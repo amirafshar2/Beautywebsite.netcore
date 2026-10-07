@@ -89,7 +89,10 @@ public static class SecuritySetup
     public static IApplicationBuilder UseUploadsGuard(this IApplicationBuilder app) => app.Use(async (ctx, next) =>
     {
         var path = ctx.Request.Path.Value ?? "";
-        if (path.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) && !path.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+        // Only generated files are served: WebP images and (compressed) MP4 videos.
+        if (path.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase)
+            && !path.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)
+            && !(path.StartsWith("/uploads/videos/", StringComparison.OrdinalIgnoreCase) && path.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)))
         {
             ctx.Response.StatusCode = StatusCodes.Status404NotFound;
             return;

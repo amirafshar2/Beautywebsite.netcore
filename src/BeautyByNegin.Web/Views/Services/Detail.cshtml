@@ -49,6 +49,20 @@
         </div>
     </section>
 
+    @if (Model.Video is { } video)
+    {
+        <section class="section pt-0">
+            <div class="container">
+                <figure class="service-video reveal @(video.Height > video.Width ? "is-portrait" : "")">
+                    <video controls playsinline preload="metadata" width="@video.Width" height="@video.Height"
+                           poster="@video.Poster" aria-label="@card.Name">
+                        <source src="@video.Src" type="video/mp4" />
+                    </video>
+                </figure>
+            </div>
+        </section>
+    }
+
     @if (!string.IsNullOrWhiteSpace(Model.DescriptionHtml))
     {
         <section class="section pt-0">

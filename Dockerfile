@@ -14,6 +14,10 @@ COPY docs/ docs/
 RUN dotnet publish src/BeautyByNegin.Web/BeautyByNegin.Web.csproj -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+# ffmpeg compresses the treatment videos uploaded in the panel
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ffmpeg \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app ./
 # The two folders that hold all changing data (database, logs, backups, keys / uploaded images).

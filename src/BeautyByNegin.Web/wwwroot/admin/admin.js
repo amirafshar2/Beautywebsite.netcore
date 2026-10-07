@@ -593,4 +593,84 @@
     });
     refresh();
   }
+  // ---------- Treatment video: upload with progress, then wait until the server has compressed it
+  document.querySelectorAll("[data-video-field]").forEach(function (field) {
+    var input = field.querySelector("[data-file]"), value = field.querySelector("[data-value]");
+    var player = field.querySelector("[data-player]"), empty = field.querySelector("[data-empty]");
+    var wait = field.querySelector("[data-wait]"), info = field.querySelector("[data-info]");
+    var progress = field.querySelector("[data-progress]"), bar = progress.querySelector("span");
+    var remove = field.querySelector("[data-remove]"), box = field.querySelector(".video-box");
+    var timer = null;
+
+    function show(d) {
+      field.setAttribute("data-status", d.status);
+      info.textContent = d.info || "";
+      wait.hidden = d.status !== "processing";
+      empty.hidden = true;
+      remove.hidden = false;
+      if (d.status === "ready") {
+        player.hidden = false;
+        if (d.poster) player.setAttribute("poster", d.poster); else player.removeAttribute("poster");
+        player.src = d.url;
+      } else {
+        player.hidden = true; player.removeAttribute("src");
+      }
+      if (d.status === "failed" && d.message) toast(d.message, false);
+    }
+    function poll(id) {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        fetch(field.getAttribute("data-status-url") + id, { headers: { "X-Requested-With": "fetch" } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { if (!d.ok) return; show(d); if (d.status === "processing") poll(id); })
+          .catch(function () { poll(id); });
+      }, 3000);
+    }
+    function upload(file) {
+      if (!file) return;
+      if (file.size > parseInt(field.getAttribute("data-max"), 10)) { toast(field.getAttribute("data-too-large"), false); return; }
+      var fd = new FormData(); fd.append("file", file);
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", field.getAttribute("data-upload-url"));
+      xhr.setRequestHeader("X-CSRF-TOKEN", csrf);
+      xhr.setRequestHeader("X-Requested-With", "fetch");
+      progress.hidden = false; bar.style.width = "0";
+      empty.hidden = true; player.hidden = true; wait.hidden = true;
+      info.textContent = field.getAttribute("data-uploading");
+      xhr.upload.onprogress = function (e) {
+        if (!e.lengthComputable) return;
+        var p = Math.round(e.loaded / e.total * 100);
+        bar.style.width = p + "%";
+        info.textContent = field.getAttribute("data-uploading") + " " + p + "%";
+      };
+      xhr.onload = function () {
+        progress.hidden = true;
+        var d; try { d = JSON.parse(xhr.responseText); } catch (err) { d = { ok: false }; }
+        if (!d.ok) {
+          toast(d.message || body.getAttribute("data-error"), false);
+          info.textContent = "";
+          if (!value.value) { empty.hidden = false; } else { player.hidden = field.getAttribute("data-status") !== "ready"; }
+          return;
+        }
+        value.value = d.id; value.dispatchEvent(new Event("change", { bubbles: true }));
+        dirty = true;
+        show(d);
+        if (d.status === "processing") poll(d.id);
+      };
+      xhr.onerror = function () { progress.hidden = true; info.textContent = ""; toast(body.getAttribute("data-error"), false); };
+      xhr.send(fd);
+    }
+    input.addEventListener("change", function () { upload(input.files[0]); input.value = ""; });
+    remove.addEventListener("click", function () {
+      clearTimeout(timer);
+      value.value = ""; value.dispatchEvent(new Event("change", { bubbles: true })); dirty = true;
+      player.pause(); player.hidden = true; player.removeAttribute("src");
+      wait.hidden = true; info.textContent = ""; empty.hidden = false; remove.hidden = true;
+      field.setAttribute("data-status", "none");
+    });
+    ["dragenter", "dragover"].forEach(function (ev) { box.addEventListener(ev, function (e) { e.preventDefault(); field.classList.add("is-dragover"); }); });
+    ["dragleave", "drop"].forEach(function (ev) { box.addEventListener(ev, function (e) { e.preventDefault(); field.classList.remove("is-dragover"); }); });
+    box.addEventListener("drop", function (e) { upload(e.dataTransfer.files[0]); });
+    if (field.getAttribute("data-status") === "processing" && value.value) poll(value.value);
+  });
 })();

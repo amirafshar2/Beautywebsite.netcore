@@ -25,7 +25,7 @@ public class ServicesController(IAdminCatalogService catalog, IAdminData data) :
         ViewData["Entity"] = s;
         var input = new ServiceInput
         {
-            Id = s.Id, IsVisible = s.IsVisible, ShowOnHome = s.ShowOnHome, Price = s.Price, CoverImageId = s.CoverImageId,
+            Id = s.Id, IsVisible = s.IsVisible, ShowOnHome = s.ShowOnHome, Price = s.Price, CoverImageId = s.CoverImageId, VideoId = s.VideoId,
             ImageIds = string.Join(',', s.Images.OrderBy(i => i.SortOrder).Select(i => i.MediaImageId)),
             Tr = s.Translations.ToDictionary(t => t.LanguageCode, t => new ServiceTrInput
             {

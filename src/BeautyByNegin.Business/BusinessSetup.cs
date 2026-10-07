@@ -46,6 +46,10 @@ public static class BusinessSetup
 
         // Admin panel
         services.AddScoped<IMediaService, MediaService>();
+        services.AddSingleton<VideoQueue>();
+        services.AddSingleton<FfmpegLocator>();
+        services.AddScoped<IVideoService, VideoService>();
+        services.AddHostedService<VideoWorker>();
         services.AddScoped<Content.SampleContentSeeder>();
         services.AddScoped<IAdminData, AdminData>();
         services.AddScoped<ITrashService, TrashService>();

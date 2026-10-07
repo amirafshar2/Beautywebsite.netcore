@@ -148,6 +148,14 @@ Her iki durumda da:
 
 > **İpucu:** Plesk "500.30 / 500.31" hatası verirse `web.config` içinde `stdoutLogEnabled="true"` yapın ve `App_Data\logs\stdout*.log` dosyasına bakın. Uygulamanın kendi logları her zaman `App_Data\logs\site-*.log` içindedir.
 
+### Video sıkıştırma (ffmpeg)
+
+Hizmet videoları panelde yüklendikten sonra arka planda **ffmpeg** ile sıkıştırılır (H.264 + AAC, CRF 23, en fazla 1920 px / 30 fps, meta veriler silinir).
+
+- **Windows / Plesk:** `ffmpeg.exe` ve `ffprobe.exe` dosyalarını (ör. gyan.dev "essentials" sürümü) `httpdocs\App_Data\tools\` klasörüne koyun. Alternatif: `appsettings.json` içinde `"Site": { "FfmpegPath": "C:\\ffmpeg\\bin" }`.
+- **Linux:** `sudo apt install ffmpeg` · **Docker:** imajda zaten kurulu.
+- ffmpeg yoksa panel yalnızca 100 MB'a kadar MP4 dosyalarını olduğu gibi kabul eder ve bir uyarı gösterir. Paylaşımlı hostinglerde harici program çalıştırma kapalı olabilir; bu durumda videoyu yüklemeden önce bilgisayarda küçültün.
+
 ## 6. Linux VPS (Ubuntu + Nginx + systemd + Let's Encrypt)
 
 Aşağıdaki adımlar Ubuntu 24.04 içindir. Alan adınızın DNS **A kaydı** sunucunun IP adresini göstermelidir.

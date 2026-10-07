@@ -69,6 +69,7 @@
                 <label class="switch"><input type="checkbox" name="ShowOnHome" value="true" checked="@Model.ShowOnHome" /><span class="track"></span>@P["svc.onHome"]</label>
                 <partial name="_ImageField" model='new ImageField("CoverImageId", Model.CoverImageId, cover, "svc.cover", "svc.coverHelp", 0.8)' />
                 <partial name="_ImagesField" model='("ImageIds", (IReadOnlyList<(int, string)>)extra, "svc.extraImages", "svc.extraImagesHelp")' />
+                <partial name="_VideoField" model='("VideoId", Model.VideoId)' />
                 <div class="field">
                     <label for="Price">@P["svc.price"]</label>
                     <input id="Price" name="Price" value="@Model.Price?.ToString(System.Globalization.CultureInfo.InvariantCulture)" inputmode="decimal" dir="ltr" />

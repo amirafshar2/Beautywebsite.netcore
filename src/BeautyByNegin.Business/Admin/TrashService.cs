@@ -39,7 +39,7 @@ public interface ITrashService
 }
 
 /// <summary>Deleted items stay here for 30 days and can be restored; afterwards they are removed for good.</summary>
-public sealed class TrashService(AppDbContext db, IMediaService media, ISiteCache cache) : ITrashService
+public sealed class TrashService(AppDbContext db, IMediaService media, IVideoService videos, ISiteCache cache) : ITrashService
 {
     public const int RetentionDays = 30;
 
@@ -121,9 +121,11 @@ public sealed class TrashService(AppDbContext db, IMediaService media, ISiteCach
 
         // Collect images that belong only to this item, delete them after the row is gone.
         var imageIds = new List<int>();
+        int? videoId = null;
         switch (entity)
         {
             case Service s:
+                videoId = s.VideoId;
                 if (s.CoverImageId is int cover) imageIds.Add(cover);
                 imageIds.AddRange(await db.ServiceImages.Where(i => i.ServiceId == s.Id).Select(i => i.MediaImageId).ToListAsync(ct));
                 break;
@@ -143,6 +145,7 @@ public sealed class TrashService(AppDbContext db, IMediaService media, ISiteCach
         foreach (var imageId in imageIds.Distinct())
             if (!await IsImageUsedAsync(imageId, ct))
                 await media.DeleteAsync(imageId, ct);
+        if (videoId is int v) await videos.DeleteIfUnusedAsync(v, ct);
         cache.InvalidateAll();
         return true;
     }

@@ -11,6 +11,10 @@ public class Service : ContentEntity, ITranslatable<ServiceTranslation>
     public int? CoverImageId { get; set; }
     public MediaImage? CoverImage { get; set; }
 
+    /// <summary>Optional video shown on the detail page (only when it is ready).</summary>
+    public int? VideoId { get; set; }
+    public MediaVideo? Video { get; set; }
+
     public List<ServiceImage> Images { get; set; } = [];
     public List<ServiceTranslation> Translations { get; set; } = [];
 }

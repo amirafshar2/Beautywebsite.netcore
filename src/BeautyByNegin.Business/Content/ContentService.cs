@@ -132,6 +132,7 @@ public sealed class ContentService(
             var s = await db.Services.AsNoTracking()
                 .Include(x => x.Translations)
                 .Include(x => x.Images.OrderBy(i => i.SortOrder)).ThenInclude(i => i.MediaImage!).ThenInclude(m => m.Translations)
+                .Include(x => x.Video)
                 .AsSplitQuery()
                 .FirstAsync(x => x.Id == card.Id, ct);
             var t = Tr(s.Translations, lang.Code, fallback)!;
@@ -149,7 +150,7 @@ public sealed class ContentService(
                 Pick(t.SuitableFor, f?.SuitableFor),
                 Pick(t.ExpectedResult, f?.ExpectedResult),
                 Pick(t.Duration, f?.Duration),
-                gallery, t.MetaTitle, t.MetaDescription, slugs, related);
+                gallery, VideoUrls.ToView(s.Video), t.MetaTitle, t.MetaDescription, slugs, related);
         }, ct);
 
         return new ServiceLookup(detail, null);
