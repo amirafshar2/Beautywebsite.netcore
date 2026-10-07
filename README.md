@@ -86,6 +86,14 @@
 
 ---
 
+## 🤖 Built with AI (vibe coding)
+
+This project was built through **vibe coding**: I described the requirements, design and behaviour in natural language, and an AI coding assistant wrote most of the code. My part was the product and the process – defining features from the client's real needs, reviewing and testing every step, steering architecture and design decisions, and deploying the result.
+
+It is an experiment in how far a complete, production-ready web application can be taken with AI as the main implementer, while a human stays in charge of requirements, quality and responsibility.
+
+---
+
 ## 🧩 Features
 
 <details open>
@@ -222,6 +230,6 @@ Dockerfile · docker-compose.yml · Dockerfile.render · render.yaml
 
 <div align="center">
 
-Designed & developed by **Amir Reza Afshar**
+Designed & developed by **Amir Reza Afshar** · built with AI-assisted vibe coding
 
 </div>
