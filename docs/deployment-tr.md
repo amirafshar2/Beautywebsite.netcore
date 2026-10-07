@@ -5,7 +5,7 @@ Cilt bakımı ve facial hizmetleri için çok dilli web sitesi ve yönetim panel
 - **Teknoloji:** .NET 10 (LTS), ASP.NET Core MVC + Razor, EF Core + SQLite, ASP.NET Core Identity
 - **Diller:** Farsça (RTL), Türkçe, Almanca, İngilizce, Arapça (RTL). Her dil panelden açılıp kapatılabilir.
 - **Harici istek yok:** CDN, Google Fonts, Google Maps veya analitik yok. Fontlar, kütüphaneler ve görseller sunucunun kendisinden gelir.
-- **Taşınabilir:** Değişen tüm veriler iki klasörde durur: `App_Data/` ve `wwwroot/uploads/`. Taşınmak için klasörü kopyalamak ya da panelden alınan yedek zip'ini geri yüklemek yeterlidir.
+- **Taşınabilir:** Değişen tüm veriler tek bir klasörde durur: `App_Data/` (veritabanı, anahtarlar, yedekler ve `App_Data/uploads/` içinde yüklenen görseller/videolar). Taşınmak için bu klasörü kopyalamak ya da panelden alınan yedek zip'ini geri yüklemek yeterlidir. (Eski sürümlerdeki `wwwroot/uploads/` ilk açılışta otomatik olarak buraya taşınır.)
 
 ---
 
@@ -40,7 +40,7 @@ BeautyByNegin.sln
 │   ├── BeautyByNegin.Business/     İş katmanı: içerik, ayarlar, görsel işleme, e-posta/Telegram, yedekleme, çöp kutusu
 │   └── BeautyByNegin.Web/          Sunum katmanı: ziyaretçi sayfaları, Areas/Admin (yönetim paneli), middleware
 │       ├── App_Data/               (çalışırken oluşur) site.db, logs/, backups/, keys/
-│       └── wwwroot/uploads/        (çalışırken oluşur) yüklenen görseller (yalnızca WebP)
+│       └── App_Data/uploads/       (çalışırken oluşur) yüklenen görseller (WebP) ve videolar (MP4), adres: /uploads/
 ├── docs/panel-rehberi-fa.md        Farsça panel kullanım kılavuzu (panelde "Yardım" menüsünde de görünür)
 ├── Dockerfile
 └── docker-compose.yml
@@ -126,7 +126,7 @@ dotnet publish src/BeautyByNegin.Web -c Release -o publish/app
 
 Her iki durumda da:
 
-- Publish çıktısı `App_Data/` ve `wwwroot/uploads/` klasörlerini **içermez**. Bu sayede güncelleme yüklerken canlı veriler ezilmez.
+- Publish çıktısı `App_Data/` klasörünü (ve içindeki `uploads/`) **içermez**. Bu sayede güncelleme yüklerken canlı veriler ezilmez.
 - `web.config` (IIS için) otomatik üretilir. 2 GB'a kadar yedek dosyası yüklenebilmesi için ayarlıdır.
 - `docs/panel-rehberi-fa.md` çıktıya kopyalanır, böylece panelin "Yardım" sayfası çalışır.
 
@@ -140,11 +140,10 @@ Her iki durumda da:
 3. **Dosyaları yükleyin:** `publish/win-x64` klasörünün **içeriğini** Plesk *File Manager* veya FTP ile `httpdocs` içine yükleyin. Büyük dosya sayısı için zip yükleyip Plesk'te "Extract" kullanmak daha hızlıdır.
 4. **Yazma izni verin:** *File Manager*'da `httpdocs` klasörünün yanındaki kilit simgesi (*Change Permissions*) ile uygulama havuzu kullanıcısına (ör. `IIS APPPOOL\...` veya Plesk'in site kullanıcısı) **yazma/değiştirme** izni verin. En azından şu klasörler için gereklidir:
    - `App_Data` (yoksa siz oluşturun)
-   - `wwwroot\uploads` (yoksa siz oluşturun)
 5. **Siteyi açın:** `https://alanadiniz.com/admin` adresinde kurulum sihirbazı açılır.
 6. **SSL:** Plesk'te *SSL/TLS Certificates → Let's Encrypt* ile ücretsiz sertifika alın. Sertifika çalıştıktan sonra panelde **Genel Ayarlar → Güvenlik** bölümünden "Her zaman https ile açılsın" seçeneğini açın (bkz. bölüm 8).
 
-**Güncelleme yüklerken:** Yeni publish çıktısını aynı klasöre kopyalayın. `App_Data` ve `wwwroot\uploads` publish çıktısında olmadığı için verileriniz korunur. Dosyalar kilitliyse önce kök klasöre `app_offline.htm` adında boş bir dosya koyun (site geçici olarak durur), kopyalama bitince silin.
+**Güncelleme yüklerken:** Yeni publish çıktısını aynı klasöre kopyalayın. `App_Data` publish çıktısında olmadığı için verileriniz korunur. Dosyalar kilitliyse önce kök klasöre `app_offline.htm` adında boş bir dosya koyun (site geçici olarak durur), kopyalama bitince silin.
 
 > **İpucu:** Plesk "500.30 / 500.31" hatası verirse `web.config` içinde `stdoutLogEnabled="true"` yapın ve `App_Data\logs\stdout*.log` dosyasına bakın. Uygulamanın kendi logları her zaman `App_Data\logs\site-*.log` içindedir.
 
@@ -260,7 +259,7 @@ Certbot Nginx ayarına 443 bloğunu ekler ve sertifikayı otomatik yeniler (`sys
 
 ```bash
 sudo systemctl stop beautybynegin
-sudo rsync -a --exclude App_Data --exclude wwwroot/uploads /tmp/bbn/ /var/www/beautybynegin/
+sudo rsync -a --exclude App_Data /tmp/bbn/ /var/www/beautybynegin/
 sudo chown -R bbn:bbn /var/www/beautybynegin
 sudo systemctl start beautybynegin
 ```
@@ -283,7 +282,7 @@ docker compose up -d --build
 ```
 
 - Site `http://127.0.0.1:8080` adresinde çalışır. Port yalnızca sunucunun kendisine açıktır; dışarıya Nginx (bölüm 6.3, `proxy_pass http://127.0.0.1:8080;`) veya Caddy ile SSL'li olarak yayınlayın.
-- Veriler iki Docker volume'ünde durur: `appdata` (`/app/App_Data`) ve `uploads` (`/app/wwwroot/uploads`). Konteyneri silmek veya yeniden build etmek verileri silmez.
+- Tüm veriler tek bir Docker volume'ünde durur: `appdata` (`/app/App_Data`, görseller ve videolar dahil). Konteyneri silmek veya yeniden build etmek verileri silmez.
 - Konteyner root olmayan `app` kullanıcısı ile çalışır.
 - Ortam değişkeni `Site__TrustAllProxies=true` ayarlıdır, çünkü proxy konteynerin dışından (Docker ağı üzerinden) gelir.
 
@@ -342,7 +341,7 @@ Adımlar:
 5. **Domain ve SSL:** Domain değişiyorsa bölüm 8'i uygulayın.
 6. **Eski sunucuyu kapatmadan önce** yeni sitede bir test randevusu gönderin ve panelde göründüğünü kontrol edin.
 
-Alternatif (paneline erişilemeyen durumlar için): Uygulama dururken `App_Data/` ve `wwwroot/uploads/` klasörlerini olduğu gibi yeni sunucudaki aynı yerlere kopyalamak da yeterlidir.
+Alternatif (paneline erişilemeyen durumlar için): Uygulama dururken `App_Data/` klasörünü olduğu gibi yeni sunucudaki aynı yerlere kopyalamak da yeterlidir.
 
 ## 10. Şifre sıfırlama (komut satırı)
 
@@ -414,7 +413,7 @@ Kodun geri kalanı sağlayıcıdan bağımsızdır.
   - Döndürmesi düzeltilir ve EXIF/GPS bilgisi silinir.
   - Panelde seçilen kırpma uygulanır.
   - 480/960/1600 px genişliklerde **WebP**'ye çevrilir.
-  - Dosya adları rastgeledir. `/uploads` altından yalnızca `.webp` dosyaları sunulur.
+  - Dosya adları rastgeledir. `/uploads` altından yalnızca `.webp` görseller ve `/uploads/videos/` altındaki `.mp4` videolar sunulur.
 - **Harici istek yok:**
   - Fontlar (Cormorant Garamond, Jost, Vazirmatn) lokal `woff2` dosyalarıdır.
   - Kütüphaneler (Quill, Cropper.js, SortableJS) `wwwroot/lib` içindedir.
@@ -459,7 +458,7 @@ Kodun geri kalanı sağlayıcıdan bağımsızdır.
 |---|---|
 | IIS'te **500.30 / 500.31** | `web.config` içinde `stdoutLogEnabled="true"` yapın ve `App_Data\logs\stdout*.log` dosyasına bakın. Genelde yazma izni eksiktir (bölüm 5, adım 4) ya da ANCM modülü kurulu değildir. |
 | IIS'te **500.19** | Sunucuda ASP.NET Core Module yok. Hosting sağlayıcısından "ASP.NET Core Hosting Bundle" kurmasını isteyin. |
-| Görsel yüklenmiyor | `wwwroot/uploads` klasörüne yazma izni verin. Linux'ta: `sudo chown -R bbn:bbn /var/www/beautybynegin`. |
+| Görsel yüklenmiyor | `App_Data` klasörüne yazma izni verin. Linux'ta: `sudo chown -R bbn:bbn /var/www/beautybynegin`. |
 | Büyük yedek geri yüklenmiyor (413) | Nginx'te `client_max_body_size 2G;` satırını ekleyin. IIS için `web.config` zaten 2 GB'a ayarlıdır. |
 | Panel girişinden sonra tekrar girişe dönüyor | Tarayıcı çerezlerini temizleyin. Sunucu taşındıysa `App_Data/keys` klasörünün de taşındığından emin olun (yedek zip'i bunu otomatik yapar). |
 | https altında sonsuz yönlendirme | Proxy `X-Forwarded-Proto` başlığını göndermiyor. Bölüm 6.3'teki `proxy_set_header` satırlarını ekleyin; Docker'da `Site__TrustAllProxies=true` olmalıdır. |

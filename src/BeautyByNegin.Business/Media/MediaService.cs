@@ -25,7 +25,7 @@ public interface IMediaService
 
 /// <summary>
 /// Image pipeline: validates real image content, fixes phone rotation (EXIF), crops to the chosen box,
-/// creates WebP variants (480 / 960 / 1600 px) with random file names in wwwroot/uploads/yyyy/MM/.
+/// creates WebP variants (480 / 960 / 1600 px) with random file names in App_Data/uploads/yyyy/MM/ (URL /uploads/…).
 /// Uses SixLabors.ImageSharp (pure .NET, runs the same on Windows/IIS, Linux and Docker).
 /// </summary>
 public sealed class MediaService(AppDbContext db, IMediaPaths paths, ILogger<MediaService> logger) : IMediaService
@@ -138,7 +138,7 @@ public sealed class MediaService(AppDbContext db, IMediaPaths paths, ILogger<Med
     }
 }
 
-/// <summary>Physical folders, provided by the web layer (wwwroot/uploads, App_Data).</summary>
+/// <summary>Physical folders, provided by the web layer (App_Data and App_Data/uploads).</summary>
 public interface IMediaPaths
 {
     string UploadsRoot { get; }

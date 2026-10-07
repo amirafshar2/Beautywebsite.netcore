@@ -2,7 +2,7 @@ namespace BeautyByNegin.DataAccess.Entities;
 
 /// <summary>
 /// An uploaded image. Files are removed when the owning item is permanently deleted from the Trash. The original is converted to WebP in several widths and stored as
-/// wwwroot/uploads/{StorageKey}-{width}.webp (random key, never the original file name).
+/// App_Data/uploads/{StorageKey}-{width}.webp (URL /uploads/…) (random key, never the original file name).
 /// </summary>
 public class MediaImage : ITranslatable<MediaImageTranslation>
 {
@@ -44,7 +44,7 @@ public enum VideoStatus
 /// <summary>
 /// An uploaded video (e.g. the video of a treatment). The original is compressed in the background to an
 /// H.264/AAC MP4 (max. 1920 px on the long side, max. 30 fps, metadata removed) and stored as
-/// wwwroot/uploads/videos/{StorageKey}.mp4 with a poster image {StorageKey}.webp.
+/// App_Data/uploads/videos/{StorageKey}.mp4 (URL /uploads/videos/…) with a poster image {StorageKey}.webp.
 /// </summary>
 public class MediaVideo
 {

@@ -4,7 +4,7 @@ services:
   - type: web
     name: beauty-by-negin
     runtime: docker
-    dockerfilePath: ./Dockerfile.render
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: starter         # paid: needed for the disk below (on "free" all data is reset after every deploy/restart/spin-down)
     region: frankfurt
@@ -17,7 +17,8 @@ services:
         sync: false
       - key: Site__InitialAdmin__DisplayName
         value: Admin
-    # Database, keys, backups AND uploaded images/videos live here and survive deploys and restarts.
+    # App_Data holds everything that changes: database, keys, backups and uploaded images/videos.
+    # It survives deploys and restarts.
     disk:
       name: data
       mountPath: /app/App_Data

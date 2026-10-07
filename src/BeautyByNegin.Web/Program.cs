@@ -74,6 +74,9 @@ builder.Services.AddResponseCompression(o =>
 
 var app = builder.Build();
 
+// Uploads moved from wwwroot/uploads (older versions) to App_Data/uploads: all data in one folder.
+MediaPaths.MoveLegacyUploads(app.Environment, app.Logger);
+
 // ---------- Database (auto-create + seed on first run)
 await app.Services.InitializeDatabaseAsync();
 
@@ -105,6 +108,12 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseUploadsGuard();
 app.UseMinifiedAssets();
 app.UseStaticFiles(SecuritySetup.StaticFiles());
+// Uploaded images and videos: stored in App_Data/uploads, served as /uploads/...
+var uploadFiles = SecuritySetup.StaticFiles();
+uploadFiles.FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+    Directory.CreateDirectory(AppPaths.Uploads(app.Environment.ContentRootPath)).FullName);
+uploadFiles.RequestPath = "/uploads";
+app.UseStaticFiles(uploadFiles);
 app.UseSerilogRequestLogging();
 
 app.UseRouting();

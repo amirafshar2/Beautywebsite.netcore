@@ -42,11 +42,16 @@ public static class DataAccessSetup
     }
 }
 
-/// <summary>All mutable data lives in two places: App_Data/ and wwwroot/uploads/.</summary>
+/// <summary>
+/// All mutable data lives in ONE folder, App_Data/: database, keys, logs, backups and uploads/ (images, videos).
+/// One folder to back up, one Docker volume, one Render disk. Uploads are served under the URL /uploads/.
+/// </summary>
 public static class AppPaths
 {
     public static string AppData(string contentRoot) => Path.Combine(contentRoot, "App_Data");
     public static string Logs(string contentRoot) => Path.Combine(AppData(contentRoot), "logs");
     public static string Backups(string contentRoot) => Path.Combine(AppData(contentRoot), "backups");
-    public static string Uploads(string webRoot) => Path.Combine(webRoot, "uploads");
+    public static string Uploads(string contentRoot) => Path.Combine(AppData(contentRoot), "uploads");
+    /// <summary>Where uploads were stored by earlier versions (moved automatically at start).</summary>
+    public static string LegacyUploads(string webRoot) => Path.Combine(webRoot, "uploads");
 }

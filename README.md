@@ -32,7 +32,7 @@
 | 📅 **Bookings, chat & customer accounts** | Appointment requests, live chat, passwordless login with e-mail code |
 | 🔎 **SEO built in** | Sitemap with all languages, structured data, Google Search Console guide in the panel |
 | 🛡️ **Privacy & security** | Strict CSP, zero CDNs / trackers, encrypted secrets, rate limiting, spam protection |
-| 📦 **Portable** | All data lives in two folders, one-click backup & restore, Docker and Render ready |
+| 📦 **Portable** | All data lives in one folder (`App_Data`), one-click backup & restore, Docker and Render ready |
 
 ---
 
@@ -179,7 +179,7 @@ Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
 docker compose up -d --build
-# site: http://localhost:8080   ·   data in named volumes (App_Data, uploads)
+# site: http://localhost:8080   ·   all data in one named volume (App_Data)
 ```
 
 Reset an admin password:
@@ -192,7 +192,7 @@ docker compose exec web dotnet BeautyByNegin.Web.dll admin reset-password <user>
 
 ## ☁️ Deploy on Render
 
-The repository contains a [`render.yaml`](render.yaml) Blueprint and a Render-specific [`Dockerfile.render`](Dockerfile.render).
+The repository contains a [`render.yaml`](render.yaml) Blueprint that uses the same [`Dockerfile`](Dockerfile) as Docker Compose.
 
 1. Push this repository to GitHub.
 2. In Render: **New → Blueprint** → select the repository.
@@ -200,7 +200,7 @@ The repository contains a [`render.yaml`](render.yaml) Blueprint and a Render-sp
 4. Deploy, then open `https://<your-service>.onrender.com/admin`.
 
 > **Use a paid instance with a disk.** On Render's free plan the file system is temporary: the SQLite database and uploaded images are reset after every deploy, restart or 15‑minute spin-down (the setup wizard would then be open again).
-> The Blueprint therefore uses the `starter` plan with a 1 GB disk mounted at `/app/App_Data` – database, keys, backups **and** images/videos are stored there (`Dockerfile.render` links `wwwroot/uploads` into it). A service created by hand needs: Dockerfile Path `./Dockerfile.render`, a paid instance type, and a disk with mount path `/app/App_Data`.
+> The Blueprint therefore uses the `starter` plan with a 1 GB disk mounted at `/app/App_Data` – database, keys, backups **and** images/videos are all stored there. A service created by hand needs a paid instance type and a disk with mount path `/app/App_Data`.
 
 ### 🎬 Video compression (ffmpeg)
 
@@ -224,7 +224,7 @@ src/
 ├─ BeautyByNegin.Business     services: content, settings, e-mail, Telegram, AI translation, theme, backup
 └─ BeautyByNegin.Web          MVC site, Admin area, middleware, wwwroot
 docs/                          guides and screenshots
-Dockerfile · docker-compose.yml · Dockerfile.render · render.yaml
+Dockerfile · docker-compose.yml · render.yaml
 ```
 
 ---
@@ -235,7 +235,7 @@ Dockerfile · docker-compose.yml · Dockerfile.render · render.yaml
 - Strict CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, optional HSTS
 - Uploaded files are re-encoded; only images are accepted and served
 - Login lockout, rate limits on forms, chat and login codes
-- All data stays in `App_Data/` and `wwwroot/uploads/` on your own server
+- All data stays in one folder, `App_Data/` (uploads in `App_Data/uploads/`), on your own server
 
 ---
 
