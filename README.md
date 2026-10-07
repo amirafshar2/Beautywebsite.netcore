@@ -1,462 +1,227 @@
-# Beauty by Negin
+<div align="center">
 
-Cilt bakımı ve facial hizmetleri için çok dilli web sitesi ve yönetim paneli.
+# ✦ Beauty by Negin ✦
 
-- **Teknoloji:** .NET 10 (LTS), ASP.NET Core MVC + Razor, EF Core + SQLite, ASP.NET Core Identity
-- **Diller:** Farsça (RTL), Türkçe, Almanca, İngilizce, Arapça (RTL). Her dil panelden açılıp kapatılabilir.
-- **Harici istek yok:** CDN, Google Fonts, Google Maps veya analitik yok. Fontlar, kütüphaneler ve görseller sunucunun kendisinden gelir.
-- **Taşınabilir:** Değişen tüm veriler iki klasörde durur: `App_Data/` ve `wwwroot/uploads/`. Taşınmak için klasörü kopyalamak ya da panelden alınan yedek zip'ini geri yüklemek yeterlidir.
+**A luxury, multilingual website and a no-tech-skills admin panel for a facial & skincare studio**
 
----
+[![.NET 10](https://img.shields.io/badge/.NET-10_LTS-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET_Core-MVC_%2B_Razor-5C2D91)](https://learn.microsoft.com/aspnet/core/mvc/overview)
+[![EF Core + SQLite](https://img.shields.io/badge/EF_Core-SQLite-003B57?logo=sqlite&logoColor=white)](https://learn.microsoft.com/ef/core/)
+[![Languages](https://img.shields.io/badge/languages-FA_·_TR_·_DE_·_EN_·_AR-C2A878)](#-multilingual-by-design)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](#-run-with-docker)
+[![Render](https://img.shields.io/badge/Render-Blueprint-46E3B7?logo=render&logoColor=white)](#-deploy-on-render)
+[![No CDN](https://img.shields.io/badge/external_requests-0-3A2E2B)](#-privacy--security)
 
-## İçindekiler
+[فارسی](README.fa.md) · English · [Türkçe kurulum rehberi](docs/deployment-tr.md)
 
-1. [Proje yapısı](#1-proje-yapısı)
-2. [Lokal geliştirme ve çalıştırma](#2-lokal-geliştirme-ve-çalıştırma)
-3. [İlk kurulum sihirbazı](#3-ilk-kurulum-sihirbazı)
-4. [Yayın (publish) seçenekleri](#4-yayın-publish-seçenekleri)
-5. [Plesk (Windows / IIS) hostinge kurulum](#5-plesk-windows--iis-hostinge-kurulum)
-6. [Linux VPS (Ubuntu + Nginx + systemd + Let's Encrypt)](#6-linux-vps-ubuntu--nginx--systemd--lets-encrypt)
-7. [Docker ile çalıştırma](#7-docker-ile-çalıştırma)
-8. [Domain değiştirme ve SSL](#8-domain-değiştirme-ve-ssl)
-9. [Taşınma senaryosu: İran → Türkiye → Almanya](#9-taşınma-senaryosu-i̇ran--türkiye--almanya)
-10. [Şifre sıfırlama (komut satırı)](#10-şifre-sıfırlama-komut-satırı)
-11. [E-posta ve Telegram bildirimleri](#11-e-posta-ve-telegram-bildirimleri)
-12. [Yapılandırma](#12-yapılandırma)
-13. [Teknik kararlar ve nedenleri](#13-teknik-kararlar-ve-nedenleri)
-14. [Lisanslar](#14-lisanslar)
-15. [Sorun giderme](#15-sorun-giderme)
+<img src="docs/screenshots/home-fa.jpg" alt="Beauty by Negin – home page (Persian)" width="100%">
+
+</div>
 
 ---
 
-## 1. Proje yapısı
+## ✨ Highlights
 
-Üç katmanlı mimari:
+| | |
+|---|---|
+| 🌍 **5 languages, 2 directions** | Persian & Arabic (RTL), Turkish, German, English (LTR) with translated URLs and `hreflang` |
+| 🧑‍💼 **Admin panel for non-technical users** | Every screen explains *what the customer does with it and why it matters* |
+| 🤖 **One-click AI translation** | Write in Persian, press a button: Google Gemini fills all other languages |
+| 🎨 **Site colors from the panel** | 20 three-color combinations or 8 fine-grained color groups, with live preview and contrast checks |
+| 📅 **Bookings, chat & customer accounts** | Appointment requests, live chat, passwordless login with e-mail code |
+| 🔎 **SEO built in** | Sitemap with all languages, structured data, Google Search Console guide in the panel |
+| 🛡️ **Privacy & security** | Strict CSP, zero CDNs / trackers, encrypted secrets, rate limiting, spam protection |
+| 📦 **Portable** | All data lives in two folders, one-click backup & restore, Docker and Render ready |
 
-```
-BeautyByNegin.sln
-├── src/
-│   ├── BeautyByNegin.DataAccess/   Veri katmanı: entity'ler, AppDbContext, migration'lar, seed verisi
-│   ├── BeautyByNegin.Business/     İş katmanı: içerik, ayarlar, görsel işleme, e-posta/Telegram, yedekleme, çöp kutusu
-│   └── BeautyByNegin.Web/          Sunum katmanı: ziyaretçi sayfaları, Areas/Admin (yönetim paneli), middleware
-│       ├── App_Data/               (çalışırken oluşur) site.db, logs/, backups/, keys/
-│       └── wwwroot/uploads/        (çalışırken oluşur) yüklenen görseller (yalnızca WebP)
-├── docs/panel-rehberi-fa.md        Farsça panel kullanım kılavuzu (panelde "Yardım" menüsünde de görünür)
-├── Dockerfile
-└── docker-compose.yml
-```
+---
 
-- **Çok dilli içerik:** Her içerik tablosunun bir çeviri tablosu var (ör. `Service` + `ServiceTranslation`). Bir dilde metin yoksa önce varsayılan dil, sonra herhangi bir dil gösterilir.
-- **URL'ler:** `/fa/...`, `/tr/...`, `/de/...`, `/en/...`, `/ar/...`. Sayfa adları dile göre çevrilir (ör. `/de/behandlungen`, `/tr/hizmetler`, `/en/treatments`). Kapalı bir dilin adresleri varsayılan dile yönlendirilir (404 değil).
-- **Yönetim paneli:** `Areas/Admin` altında, varsayılan adres `/admin`. Panel dili kullanıcı başına seçilir (FA/TR/DE/EN).
-- **Silme işlemi:** İçerikler önce çöp kutusuna gider (soft delete) ve 30 gün sonra otomatik silinir.
-- **Müşteri hesapları:** Ziyaretçiler sitedeki "Giriş" butonuyla yalnızca e-postalarıyla kaydolur ve giriş yapar (şifre yok; e-postaya 6 haneli kod gelir, cihaz başına oturum, çerezde yalnızca rastgele token, veritabanında SHA-256 özeti). Giriş yapan müşteri sohbet edebilir, kendi randevu taleplerini ve durumlarını görebilir, (açıksa) yorum yazabilir, adını/telefonunu düzenleyebilir ve hesabını silebilir. Panele erişimleri yoktur. Sohbet yalnızca giriş yapmış müşterilere açıktır. Yetkiler panelde **Genel Ayarlar → Müşteri hesapları** bölümünden açılıp kapatılır; hesaplar **Müşteriler** ekranından yönetilir (engelleme, tüm cihazlardan çıkış, not, silme). E-posta (SMTP) ayarlanmadan hesaplar ve sohbet görünmez.
-- **Örnek görseller:** İlk çalıştırmada `SampleContent/` klasöründeki marka renklerinde hazırlanmış görseller (hero, hakkımızda, danışmanlık, 10 hizmet, galeri, Instagram) ve örnek bir "bakım sonrası öneriler" sayfası **bir kez** eklenir. Admin sonradan silerse tekrar eklenmez. Gerçek fotoğraflar panelden yüklenip bunların yerine konur. İlk başlangıç bu yüzden 20–30 saniye sürebilir.
+## 📸 Screenshots
 
-## 2. Lokal geliştirme ve çalıştırma
+### Public website
 
-Gereken: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/home-en.jpg" alt="Home – English"><p align="center"><sub>Home · English</sub></p></td>
+<td width="50%"><img src="docs/screenshots/home-ar.jpg" alt="Home – Arabic"><p align="center"><sub>Home · Arabic (RTL)</sub></p></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/services-de.jpg" alt="Treatments – German"><p align="center"><sub>Treatments · German</sub></p></td>
+<td><img src="docs/screenshots/service-detail-en.jpg" alt="Treatment detail"><p align="center"><sub>Treatment detail</sub></p></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/gallery-fa.jpg" alt="Gallery"><p align="center"><sub>Gallery with categories</sub></p></td>
+<td><img src="docs/screenshots/booking-en.jpg" alt="Booking form"><p align="center"><sub>Appointment request</sub></p></td>
+</tr>
+</table>
+
+<p align="center"><img src="docs/screenshots/mobile.jpg" alt="Mobile views" width="85%"><br><sub>Mobile first: Persian home, treatments, English contact</sub></p>
+
+<details>
+<summary><b>Full home page (click)</b></summary>
+<p align="center"><img src="docs/screenshots/home-fa-full.jpg" alt="Full home page" width="70%"></p>
+</details>
+
+### Admin panel
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/admin-dashboard.jpg" alt="Dashboard"><p align="center"><sub>Dashboard with "what does the customer do here?" box</sub></p></td>
+<td width="50%"><img src="docs/screenshots/admin-service-edit.jpg" alt="Edit treatment"><p align="center"><sub>Editing a treatment · language tabs + AI translate button</sub></p></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/admin-colors.jpg" alt="Site colors"><p align="center"><sub>Site colors · three-color combinations & live preview</sub></p></td>
+<td><img src="docs/screenshots/admin-google.jpg" alt="Google Search Console"><p align="center"><sub>Step-by-step Google Search Console setup</sub></p></td>
+</tr>
+</table>
+
+### One click, a new look
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/home-fa.jpg" alt="Original theme"><p align="center"><sub>Original · brown & cream</sub></p></td>
+<td width="33%"><img src="docs/screenshots/theme-burgundy.jpg" alt="Burgundy theme"><p align="center"><sub>Burgundy & champagne</sub></p></td>
+<td width="33%"><img src="docs/screenshots/theme-forest.jpg" alt="Forest theme"><p align="center"><sub>Forest & sage</sub></p></td>
+</tr>
+</table>
+
+---
+
+## 🧩 Features
+
+<details open>
+<summary><b>Public website</b></summary>
+
+- Home page with hero, about, treatments, consultation block, gallery, reviews and Instagram feed
+- Treatment pages with images, duration, price (optional), FAQ and "ask about this treatment"
+- Appointment request form, contact form, newsletter sign-up
+- Gallery with categories and before/after images, customer reviews (moderated)
+- **Customer accounts** without passwords (6-digit e-mail code): profile, own booking requests, chat history
+- **Live chat** between visitors and the studio
+- Legal pages (imprint, privacy, aftercare …) freely editable
+- "Coming soon" maintenance mode, custom error pages
+- Lighthouse 97–100 (performance, accessibility, best practices, SEO)
+
+</details>
+
+<details>
+<summary><b>Admin panel</b> (Persian, Turkish, German, English)</summary>
+
+- Dashboard, appointments with status workflow, messages, chats, customer accounts
+- Treatments, gallery, reviews, home page, about, contact & social media, pages, newsletter, all site texts
+- Language tabs on every multilingual field, missing-translation warnings
+- **AI translation** (Google Gemini) next to every multilingual input — results are placed in the right fields, never saved automatically
+- **Site colors**: 20 ready three-color palettes + own palette, 8 color groups with ~20 matching suggestions each, automatic readable text color on buttons (WCAG AA)
+- **Google Search Console**: verification code field, sitemap address and an 8-step guide
+- Gmail-first e-mail setup with a step-by-step guide, Telegram notifications
+- Image upload with automatic WebP resizing, drag & drop ordering, trash with restore
+- Backup & restore as a single zip, automatic daily backups
+- Users with roles (Admin / Editor), first-run setup wizard
+- Mobile friendly with bottom navigation
+
+</details>
+
+<details>
+<summary><b>Under the hood</b></summary>
+
+- **.NET 10**, ASP.NET Core MVC + Razor, three layers: `DataAccess` → `Business` → `Web` (Admin as MVC Area)
+- **EF Core + SQLite**, migrations applied automatically, seed data in 5 languages
+- **ASP.NET Core Identity** for the panel, separate session-based customer accounts
+- **Semantic CSS tokens** + `/theme.css` generated from panel settings (only changed values, cache-busted)
+- Strict **Content-Security-Policy** (no inline scripts/styles), HSTS option, rate limiting, honeypot spam protection
+- Secrets (SMTP password, Telegram token, Gemini key) encrypted with ASP.NET Data Protection
+- Serilog rolling logs, response compression, minified & versioned assets, long-term static caching
+- No external requests: fonts, libraries (Quill, SortableJS) and images are served locally
+
+</details>
+
+---
+
+## 🌍 Multilingual by design
+
+| Language | Direction | Example URL |
+|---|---|---|
+| فارسی (default) | RTL | `/fa/services` |
+| Türkçe | LTR | `/tr/hizmetler` |
+| Deutsch | LTR | `/de/behandlungen` |
+| English | LTR | `/en/treatments` |
+| العربية | RTL | `/ar/treatments` |
+
+Each language can be switched on or off, set as default and use native digits (۱۲۳).
+
+---
+
+## 🚀 Quick start
 
 ```bash
-git clone <repo> && cd Negin
+git clone <this repository>
+cd Negin
 dotnet run --project src/BeautyByNegin.Web
 ```
 
-Tarayıcıda `http://localhost:5204` adresini açın. **Visual Studio 2022/2026** kullanıyorsanız `BeautyByNegin.sln` dosyasını açıp F5'e basmanız yeterli.
+Open `http://localhost:5xxx/admin` — the **setup wizard** creates the first admin.
+In development, e-mails (login codes) are written to `App_Data/dev-mail/` instead of being sent.
 
-İlk çalıştırmada:
+Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
-- `src/BeautyByNegin.Web/App_Data/site.db` otomatik oluşur (migration'lar uygulanır).
-- Başlangıç verisi yüklenir: 10 hizmet (5 dilde), site metinleri, galeri kategorileri, yasal sayfa taslakları ve yer tutucu görseller.
-- `/admin` adresi kurulum sihirbazını açar.
+---
 
-Faydalı komutlar:
-
-```bash
-# Yeni migration (model değiştiğinde)
-dotnet tool restore
-dotnet ef migrations add <Ad> --project src/BeautyByNegin.DataAccess --startup-project src/BeautyByNegin.Web
-
-# Production modunda dene (sıkıştırma, minify, önbellek açık)
-ASPNETCORE_ENVIRONMENT=Production dotnet run --project src/BeautyByNegin.Web
-```
-
-> **E-postasız yerel test:** `appsettings.Development.json` içindeki `"Site": { "DevMailToFile": true }` sayesinde, Development ortamında SMTP ayarlanmamışsa e-postalar (ör. müşteri giriş kodu) gönderilmez; `App_Data/dev-mail/` klasörüne ve Visual Studio'nun **Output** penceresine yazılır. Böylece "Giriş" butonu ve sohbet bilgisayarınızda da görünür ve test edilebilir. Production'da bu ayar yoktur; orada gerçek SMTP gerekir.
->
-> Site adresi `/` her zaman panelde seçilen **ana dile** (varsayılan: Farsça) yönlenir; tarayıcı dili dikkate alınmaz.
-
-> Geliştirme ortamında (`Development`) CSS/JS dosyaları olduğu gibi gelir ve yanıt sıkıştırma kapalıdır (Visual Studio'nun tarayıcı yenileme özelliği bozulmasın diye). `Production` ortamında dosyalar küçültülür ve sıkıştırılır.
-
-## 3. İlk kurulum sihirbazı
-
-Veritabanında hiç kullanıcı yoksa `/admin` adresi otomatik olarak `/admin/setup` sihirbazına yönlenir. Sihirbazda şunlar girilir:
-
-- Yönetici kullanıcı adı, görünen ad ve şifre (en az 8 karakter ve en az 1 rakam)
-- Panel dili
-- Sitenin varsayılan dili
-- Ülke (seçince saat dilimi otomatik dolar) ve saat dilimi
-- Telefon, WhatsApp, e-posta
-
-Kurulum bittikten sonra sihirbaz bir daha açılmaz. Ek kullanıcılar panelde **Kullanıcılar** menüsünden eklenir.
-
-## 4. Yayın (publish) seçenekleri
-
-### a) Self-contained publish (önerilen: ucuz Plesk hostlar)
-
-.NET runtime'ı uygulamanın içine koyar. Sunucuda .NET yüklü olmasa ya da eski bir sürüm olsa bile çalışır.
+## 🐳 Run with Docker
 
 ```bash
-# Windows sunucu (Plesk / IIS)
-dotnet publish src/BeautyByNegin.Web -c Release -r win-x64 --self-contained true -o publish/win-x64
-
-# Linux sunucu
-dotnet publish src/BeautyByNegin.Web -c Release -r linux-x64 --self-contained true -o publish/linux-x64
-```
-
-Çıktı yaklaşık 130 MB'tır ve `BeautyByNegin.Web.exe` (Windows) ya da `BeautyByNegin.Web` (Linux) dosyasını içerir.
-
-### b) Framework-dependent publish
-
-Sunucuda **ASP.NET Core Runtime 10** kurulu olmalıdır. Çıktı daha küçüktür (yaklaşık 55 MB) ve runtime güncellemelerini sunucu yapar.
-
-```bash
-dotnet publish src/BeautyByNegin.Web -c Release -o publish/app
-# çalıştırma: dotnet BeautyByNegin.Web.dll
-```
-
-Her iki durumda da:
-
-- Publish çıktısı `App_Data/` ve `wwwroot/uploads/` klasörlerini **içermez**. Bu sayede güncelleme yüklerken canlı veriler ezilmez.
-- `web.config` (IIS için) otomatik üretilir. 2 GB'a kadar yedek dosyası yüklenebilmesi için ayarlıdır.
-- `docs/panel-rehberi-fa.md` çıktıya kopyalanır, böylece panelin "Yardım" sayfası çalışır.
-
-## 5. Plesk (Windows / IIS) hostinge kurulum
-
-1. **Publish alın:** Bilgisayarınızda bölüm 4a'daki `win-x64` self-contained komutunu çalıştırın.
-2. **Plesk'te siteyi hazırlayın:**
-   - *Websites & Domains → Hosting Settings*: Belge kökü (document root) olarak ör. `httpdocs` kalabilir.
-   - *ASP.NET Settings* (veya *Dedicated IIS Application Pool*): **.NET CLR version = "No Managed Code"** seçin. ASP.NET Core kendi işlemini yönetir.
-   - Hosting sağlayıcısının sunucuda **ASP.NET Core Module (ANCM V2)** kurulu olmalıdır. Plesk'in Windows sunucularında genelde kuruludur. Emin değilseniz destek ekibine "ASP.NET Core Hosting Bundle kurulu mu?" diye sorun. Self-contained publish'te runtime sürümü önemli değildir, sadece modül gerekir.
-3. **Dosyaları yükleyin:** `publish/win-x64` klasörünün **içeriğini** Plesk *File Manager* veya FTP ile `httpdocs` içine yükleyin. Büyük dosya sayısı için zip yükleyip Plesk'te "Extract" kullanmak daha hızlıdır.
-4. **Yazma izni verin:** *File Manager*'da `httpdocs` klasörünün yanındaki kilit simgesi (*Change Permissions*) ile uygulama havuzu kullanıcısına (ör. `IIS APPPOOL\...` veya Plesk'in site kullanıcısı) **yazma/değiştirme** izni verin. En azından şu klasörler için gereklidir:
-   - `App_Data` (yoksa siz oluşturun)
-   - `wwwroot\uploads` (yoksa siz oluşturun)
-5. **Siteyi açın:** `https://alanadiniz.com/admin` adresinde kurulum sihirbazı açılır.
-6. **SSL:** Plesk'te *SSL/TLS Certificates → Let's Encrypt* ile ücretsiz sertifika alın. Sertifika çalıştıktan sonra panelde **Genel Ayarlar → Güvenlik** bölümünden "Her zaman https ile açılsın" seçeneğini açın (bkz. bölüm 8).
-
-**Güncelleme yüklerken:** Yeni publish çıktısını aynı klasöre kopyalayın. `App_Data` ve `wwwroot\uploads` publish çıktısında olmadığı için verileriniz korunur. Dosyalar kilitliyse önce kök klasöre `app_offline.htm` adında boş bir dosya koyun (site geçici olarak durur), kopyalama bitince silin.
-
-> **İpucu:** Plesk "500.30 / 500.31" hatası verirse `web.config` içinde `stdoutLogEnabled="true"` yapın ve `App_Data\logs\stdout*.log` dosyasına bakın. Uygulamanın kendi logları her zaman `App_Data\logs\site-*.log` içindedir.
-
-## 6. Linux VPS (Ubuntu + Nginx + systemd + Let's Encrypt)
-
-Aşağıdaki adımlar Ubuntu 24.04 içindir. Alan adınızın DNS **A kaydı** sunucunun IP adresini göstermelidir.
-
-### 6.1 Uygulamayı yükleyin
-
-Bilgisayarınızda Linux için publish alın (bölüm 4a, `linux-x64`) ve sunucuya kopyalayın:
-
-```bash
-# bilgisayarınızda
-rsync -avz publish/linux-x64/ kullanici@SUNUCU_IP:/tmp/bbn/
-
-# sunucuda
-sudo useradd --system --home /var/www/beautybynegin --shell /usr/sbin/nologin bbn
-sudo mkdir -p /var/www/beautybynegin
-sudo rsync -a /tmp/bbn/ /var/www/beautybynegin/
-sudo chown -R bbn:bbn /var/www/beautybynegin
-sudo chmod +x /var/www/beautybynegin/BeautyByNegin.Web
-```
-
-> Framework-dependent publish kullanacaksanız önce runtime'ı kurun: `sudo apt install -y aspnetcore-runtime-10.0`. Ubuntu deposunda yoksa Microsoft paket deposunu ekleyin. Bu durumda aşağıdaki `ExecStart` satırı `/usr/bin/dotnet /var/www/beautybynegin/BeautyByNegin.Web.dll` olur.
-
-Ubuntu'da ICU kütüphanesi genelde kuruludur (Farsça takvim ve Türkçe/Almanca dil verileri için gereklidir). Yoksa: `sudo apt install -y libicu74` (sürüm numarası dağıtıma göre değişir).
-
-### 6.2 systemd servisi
-
-`/etc/systemd/system/beautybynegin.service`:
-
-```ini
-[Unit]
-Description=Beauty by Negin
-After=network.target
-
-[Service]
-User=bbn
-WorkingDirectory=/var/www/beautybynegin
-ExecStart=/var/www/beautybynegin/BeautyByNegin.Web
-Restart=always
-RestartSec=5
-KillSignal=SIGINT
-Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
-Environment=DOTNET_NOLOGO=1
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now beautybynegin
-sudo systemctl status beautybynegin       # "active (running)" görmelisiniz
-journalctl -u beautybynegin -f            # canlı log
-```
-
-### 6.3 Nginx (reverse proxy)
-
-```bash
-sudo apt install -y nginx
-```
-
-`/etc/nginx/sites-available/beautybynegin`:
-
-```nginx
-server {
-    listen 80;
-    server_name beautybynegin.com www.beautybynegin.com;
-
-    # Yedek zip'i geri yükleme ve görsel yükleme için
-    client_max_body_size 2G;
-
-    location / {
-        proxy_pass         http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header   Host              $host;
-        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_set_header   X-Forwarded-Host  $host;
-        proxy_read_timeout 300s;
-    }
-}
-```
-
-```bash
-sudo ln -s /etc/nginx/sites-available/beautybynegin /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-Uygulama aynı sunucudaki proxy'den gelen `X-Forwarded-*` başlıklarına güvenir. Böylece https ve ziyaretçi IP'si (spam koruması için) doğru algılanır.
-
-### 6.4 Let's Encrypt (ücretsiz SSL)
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d beautybynegin.com -d www.beautybynegin.com
-```
-
-Certbot Nginx ayarına 443 bloğunu ekler ve sertifikayı otomatik yeniler (`systemctl list-timers | grep certbot`). Sonra panelde https yönlendirmesini açın (bölüm 8).
-
-### 6.5 Güncelleme
-
-```bash
-sudo systemctl stop beautybynegin
-sudo rsync -a --exclude App_Data --exclude wwwroot/uploads /tmp/bbn/ /var/www/beautybynegin/
-sudo chown -R bbn:bbn /var/www/beautybynegin
-sudo systemctl start beautybynegin
-```
-
-Veritabanı değişiklikleri (migration'lar) uygulama başlarken otomatik uygulanır.
-
-### 6.6 Güvenlik duvarı (öneri)
-
-```bash
-sudo ufw allow OpenSSH && sudo ufw allow 'Nginx Full' && sudo ufw enable
-```
-
-## 7. Docker ile çalıştırma
-
-Sunucuda Docker ve Docker Compose kurulu olmalıdır.
-
-```bash
-git clone <repo> && cd Negin
 docker compose up -d --build
+# site: http://localhost:8080   ·   data in named volumes (App_Data, uploads)
 ```
 
-- Site `http://127.0.0.1:8080` adresinde çalışır. Port yalnızca sunucunun kendisine açıktır; dışarıya Nginx (bölüm 6.3, `proxy_pass http://127.0.0.1:8080;`) veya Caddy ile SSL'li olarak yayınlayın.
-- Veriler iki Docker volume'ünde durur: `appdata` (`/app/App_Data`) ve `uploads` (`/app/wwwroot/uploads`). Konteyneri silmek veya yeniden build etmek verileri silmez.
-- Konteyner root olmayan `app` kullanıcısı ile çalışır.
-- Ortam değişkeni `Site__TrustAllProxies=true` ayarlıdır, çünkü proxy konteynerin dışından (Docker ağı üzerinden) gelir.
-
-Faydalı komutlar:
+Reset an admin password:
 
 ```bash
-docker compose logs -f                      # loglar
-git pull && docker compose up -d --build    # güncelleme
-docker compose exec web dotnet BeautyByNegin.Web.dll admin list
-docker compose exec web dotnet BeautyByNegin.Web.dll admin reset-password negin YeniSifre123
+docker compose exec web dotnet BeautyByNegin.Web.dll admin reset-password <user> <new-password>
 ```
 
-Yedek almanın en kolay yolu yine panelden **Yedekleme → Yedeği indir**'dir.
+---
 
-## 8. Domain değiştirme ve SSL
+## ☁️ Deploy on Render
 
-1. Yeni alan adının DNS **A kaydını** sunucunun IP adresine yönlendirin.
-2. Sunucu ayarına yeni adı ekleyin:
-   - Plesk: *Add Domain* veya *Domain Aliases*
-   - Nginx: `server_name` satırı
-3. SSL sertifikası alın:
-   - Plesk: *Let's Encrypt*
-   - Linux: `certbot --nginx -d yenidomain.com`
-4. Panelde **Genel Ayarlar → Genel → Sitenin ana adresi** alanına yeni adresi yazın, ör. `https://yenidomain.com`. Bu adres canonical URL, hreflang, sitemap.xml, Open Graph ve e-postalardaki linklerde kullanılır.
-5. SSL çalışıyorsa (adres kilitli açılıyorsa) **Genel Ayarlar → Güvenlik** bölümünde:
-   - **Her zaman https ile açılsın** seçeneğini açın.
-   - **HSTS** seçeneğini, her şeyin https ile sorunsuz çalıştığından emin olduktan sonra açın. HSTS, tarayıcıya bir yıl boyunca yalnızca https kullanmasını söyler; geri almak zordur.
-6. Eski domainden yeni domaine kalıcı (301) yönlendirme ekleyin (Plesk: *Hosting Settings → Preferred domain / Redirect*; Nginx: ayrı bir `server` bloğunda `return 301 https://yenidomain.com$request_uri;`).
+The repository contains a [`render.yaml`](render.yaml) Blueprint and a Render-specific [`Dockerfile.render`](Dockerfile.render).
 
-> İlk kurulumda SSL yoksa site http üzerinden normal çalışır. https yönlendirmesi varsayılan olarak kapalıdır, böylece site bozulmaz.
+1. Push this repository to GitHub.
+2. In Render: **New → Blueprint** → select the repository.
+3. Enter a password for `Site__InitialAdmin__Password` (the first admin `admin` is created automatically).
+4. Deploy, then open `https://<your-service>.onrender.com/admin`.
 
-## 9. Taşınma senaryosu: İran → Türkiye → Almanya
+> **Free plan = demo.** Render's free instances have a temporary file system and sleep after 15 minutes without traffic, so the SQLite database and uploaded images start fresh after every deploy, restart or spin-down.
+> For a real site use a paid instance and uncomment the `disk` block in `render.yaml` (mount path `/app/App_Data` — database, keys, backups **and** images are kept there).
 
-Yedek zip'i **her şeyi** içerir:
+---
 
-- Veritabanı (içerikler, çeviriler, ayarlar, randevu talepleri, mesajlar, kullanıcılar)
-- Yüklenen tüm görseller
-- Şifreleme anahtarları (`App_Data/keys`). Bunlar sayesinde SMTP şifresi ve Telegram token'ı yeni sunucuda da çözülebilir ve oturumlar geçerli kalır.
+## 🖥️ Hosting & deployment
 
-Adımlar:
+Self-contained publish for Windows/Plesk, Linux VPS (systemd + Nginx + Let's Encrypt), Docker, domain/SSL changes and moving between countries are described in detail in the [deployment guide (Turkish)](docs/deployment-tr.md).
+The admin user guide (Persian) is in [`docs/panel-rehberi-fa.md`](docs/panel-rehberi-fa.md) and is also shown inside the panel under **Help**.
 
-1. **Eski sunucuda yedek alın:** Panel → **Yedekleme → Yedeği indir**. Zip dosyasını güvenli bir yere kaydedin.
-2. **Yeni sunucuya kurun:** Bölüm 5, 6 veya 7'deki adımlarla siteyi boş olarak kurun.
-3. **Geri yükleyin:**
-   - Yeni sitede kurulum sihirbazını geçici bir kullanıcıyla tamamlayın.
-   - Panel → **Yedekleme → Yedekten geri yükle**'ye gidin, zip'i seçin, onay kutusunu işaretleyin ve geri yükleyin.
-   - Geri yüklemeden önce mevcut durumun otomatik bir yedeği alınır.
-   - Ardından **yedekteki** kullanıcı adı ve şifreyle giriş yapın. Geçici kullanıcı kaybolur.
-4. **Ayarları güncelleyin:**
-   - **Genel Ayarlar:** ülke (saat dilimi otomatik değişir), şehir, sitenin ana adresi
-   - **İletişim ve Sosyal Medya:** telefon, WhatsApp, adres, harita linki, çalışma saatleri
-   - **Diller:** yeni varsayılan dil (Türkiye için `tr`, Almanya için `de`) ve dil sırası. Farsça kapatılmak zorunda değildir; sıralamada aşağı alınabilir.
-   - **Sayfalar:** Almanya için *Impressum* ve *Datenschutz* sayfalarındaki `[ ]` alanlarını doldurun ve bir hukukçuya kontrol ettirin.
-   - **Genel Ayarlar → Site bölümleri:** Gizlilik onayı zorunluluğu (DSGVO) Almanya'da açık kalmalıdır.
-   - **E-posta (SMTP) ve Telegram:** Yeni sunucudan test mesajı gönderin. Telegram İran'daki sunuculardan erişilemez, Türkiye ve Almanya'da çalışır.
-5. **Domain ve SSL:** Domain değişiyorsa bölüm 8'i uygulayın.
-6. **Eski sunucuyu kapatmadan önce** yeni sitede bir test randevusu gönderin ve panelde göründüğünü kontrol edin.
-
-Alternatif (paneline erişilemeyen durumlar için): Uygulama dururken `App_Data/` ve `wwwroot/uploads/` klasörlerini olduğu gibi yeni sunucudaki aynı yerlere kopyalamak da yeterlidir.
-
-## 10. Şifre sıfırlama (komut satırı)
-
-E-posta ayarlıysa giriş ekranındaki **"Şifremi unuttum"** linki kullanılır. E-posta yoksa sunucuda komut satırından:
-
-```bash
-# Linux / Docker (uygulama klasöründe)
-./BeautyByNegin.Web admin reset-password <kullanici> <YeniSifre123>       # self-contained
-dotnet BeautyByNegin.Web.dll admin reset-password <kullanici> <YeniSifre123>   # framework-dependent
-
-# Windows
-BeautyByNegin.Web.exe admin reset-password <kullanici> <YeniSifre123>
-
-# Diğer komutlar
-... admin list                                     # kullanıcıları listele
-... admin create <kullanici> <Sifre123> [Admin|Editor]   # yeni kullanıcı (ilk girişte şifre değiştirilir)
+```text
+src/
+├─ BeautyByNegin.DataAccess   EF Core, entities, migrations, seed data
+├─ BeautyByNegin.Business     services: content, settings, e-mail, Telegram, AI translation, theme, backup
+└─ BeautyByNegin.Web          MVC site, Admin area, middleware, wwwroot
+docs/                          guides and screenshots
+Dockerfile · docker-compose.yml · Dockerfile.render · render.yaml
 ```
 
-- Komut hesabın kilidini de açar.
-- Uygulama çalışırken de çalıştırılabilir.
-- Uygulama, hangi klasörden çağrılırsa çağrılsın kendi klasöründeki `App_Data`'yı kullanır.
+---
 
-**Plesk'te komut satırı yoksa:**
+## 🔒 Privacy & security
 
-1. *Websites & Domains → Scheduled Tasks → Add Task* ekranını açın.
-2. *Run a command* seçin ve komut olarak `C:\...\httpdocs\BeautyByNegin.Web.exe` girin. Argüman: `admin reset-password negin YeniSifre123`.
-3. **Run Now** ile bir kez çalıştırın.
-4. Ardından görevi silin. Görevde şifre açık yazılıdır.
+- No Google Fonts, no CDN, no analytics, no tracking cookies
+- Strict CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, optional HSTS
+- Uploaded files are re-encoded; only images are accepted and served
+- Login lockout, rate limits on forms, chat and login codes
+- All data stays in `App_Data/` and `wwwroot/uploads/` on your own server
 
-## 11. E-posta ve Telegram bildirimleri
+---
 
-- **Her talep önce veritabanına kaydedilir:** randevu, iletişim mesajı, sohbet, bülten aboneliği. Bildirimler arka planda gönderilir. E-posta veya Telegram çalışmasa bile hiçbir talep kaybolmaz; hepsi panelde görünür. (İran'da Telegram ve bazı yabancı SMTP sunucuları engellidir.)
-- **E-posta (SMTP):** Panel → Genel Ayarlar → E-posta sunucusu bilgileri. Gerekli olduğu yerler:
-  - Sohbet doğrulama kodu (sohbet butonu ancak SMTP ayarlıysa görünür)
-  - Yeni talep bildirimleri
-  - Şifre sıfırlama
-- **Telegram botu:** @BotFather'dan token alın, panele girin, botunuza Telegram'da *Start* deyin, panelde **Chat ID bul** ve **Test mesajı gönder** butonlarına basın. Bildirim türleri ayrı ayrı seçilir (randevu, mesaj, sohbet, bülten).
-- **Varsayılan Gmail:** `smtp.gmail.com:587` (STARTTLS) önceden doldurulur; yalnızca Gmail adresi ve 16 haneli **uygulama şifresi** (myaccount.google.com/apppasswords, 2 adımlı doğrulama açık olmalı) gerekir. Panelde adım adım rehber var.
-- **Otomatik çeviri (Google Gemini):** Panel → Genel Ayarlar → Otomatik çeviri. aistudio.google.com'dan alınan API anahtarı şifreli saklanır (`ai.geminiKey`), model `ai.model` (varsayılan `gemini-3.5-flash`). Çok dilli her alanın yanında "Tüm dillere çevir" butonu; sonuçlar alanlara yazılır, kayıt kullanıcıya bırakılır. Google API'leri İran'daki sunuculardan erişilemez. Test için `Site:GeminiBaseUrl` ile farklı bir adres verilebilir.
-- **Site renkleri:** Panel → Site renkleri. 8 renk grubu (kahveler, kremler, koyu zeminler, açık/koyu zemin yazıları, açık/koyu zemin butonları, altın), her biri ~20 öneri + özel renk. Üstte 20 hazır **üç renk kombinasyonu** (koyu, açık, vurgu) ve kendi üç rengini seçme imkânı: tek tıkla 8 grubun tamamı bu üç renkten türetilir (`Theme.Combos`, `Theme.FromThree`). Seçimler `theme.<grup>` ayarlarında saklanır; `/theme.css?v=<hash>` yalnızca değişen değerleri `site.css` token'larının (`--bg-dark`, `--on-dark`, `--primary`, `--on-primary`, `--cream`, `--mocha` …) üzerine yazar. Türetilmiş tonlar ve buton yazı renkleri kontrast (WCAG AA) gözetilerek sunucuda hesaplanır. Varsayılan renklerde ek CSS dosyası yüklenmez.
-- SMTP şifresi ve Telegram token'ı veritabanında **şifrelenmiş** olarak saklanır (ASP.NET Data Protection, anahtarlar `App_Data/keys`).
+<div align="center">
 
-## 12. Yapılandırma
+Designed & developed by **Amir Reza Afshar**
 
-`appsettings.json` neredeyse hiç değiştirilmez; ayarların tamamı panelden yapılır. Değiştirilebilecekler:
-
-| Anahtar | Varsayılan | Açıklama |
-|---|---|---|
-| `ConnectionStrings:Default` | `Data Source=\|DataDirectory\|/site.db` | `\|DataDirectory\|` = `App_Data` klasörü |
-| `Site:AdminPath` | `/admin` | Panel adresi (ör. `/yonetim` yaparak tahmin edilmesini zorlaştırabilirsiniz) |
-| `Site:TrustAllProxies` | `false` | Proxy farklı bir makinede/konteynerdeyse `true` (Docker'da açık) |
-
-Ortam değişkeni olarak da verilebilir: `Site__AdminPath=/yonetim`.
-
-**Veritabanı sağlayıcısını değiştirmek** (ör. ileride SQL Server veya PostgreSQL):
-
-1. `BeautyByNegin.DataAccess` projesine ilgili EF Core paketini ekleyin.
-2. `DataAccessSetup.AddDataAccess` içindeki `UseSqlite` satırını değiştirin.
-3. Yeni sağlayıcı için migration'ları yeniden oluşturun.
-
-Kodun geri kalanı sağlayıcıdan bağımsızdır.
-
-## 13. Teknik kararlar ve nedenleri
-
-- **SQLite:** Tek dosya, kurulum gerektirmez, yedeklemesi ve taşıması kolaydır. Bu ölçekteki bir site için fazlasıyla hızlıdır.
-- **Çalışma anında küçültme (runtime minification):** CSS/JS dosyaları ilk istekte NUglify ile küçültülür, bellekte tutulur ve içerik hash'iyle (`?v=...`) versiyonlanır. Böylece Node.js, npm veya bir build adımı gerekmez; Visual Studio'dan publish almak yeterlidir ve her hostta aynı şekilde çalışır. Dosya değişirse otomatik yenilenir.
-- **Görseller:** Yüklenen her görsel SixLabors.ImageSharp ile işlenir:
-  - İçeriği doğrulanır (sahte uzantılı dosyalar reddedilir).
-  - Döndürmesi düzeltilir ve EXIF/GPS bilgisi silinir.
-  - Panelde seçilen kırpma uygulanır.
-  - 480/960/1600 px genişliklerde **WebP**'ye çevrilir.
-  - Dosya adları rastgeledir. `/uploads` altından yalnızca `.webp` dosyaları sunulur.
-- **Harici istek yok:**
-  - Fontlar (Cormorant Garamond, Jost, Vazirmatn) lokal `woff2` dosyalarıdır.
-  - Kütüphaneler (Quill, Cropper.js, SortableJS) `wwwroot/lib` içindedir.
-  - Google Maps yerine harita linki ve isteğe bağlı statik harita görseli kullanılır.
-  - Gizlilik (DSGVO) ve hız için bu önemlidir.
-- **Katı Content-Security-Policy:**
-  - Satır içi (inline) script ve stil yoktur.
-  - Tüm script'ler ayrı dosyalardadır.
-  - Yalnızca kendi alan adından kaynak yüklenebilir.
-- **Spam koruması:** Captcha yerine (Google reCAPTCHA harici istek olurdu):
-  - gizli honeypot alanı
-  - en az 3 saniyelik doldurma süresi
-  - IP başına hız sınırı
-  - antiforgery token
-- **Önbellek:**
-  - İçerikler bellekte önbelleklenir; panelde her kayıtta önbellek temizlenir, değişiklik anında görünür.
-  - Statik dosyalar ve görseller uzun süreli tarayıcı önbelleğiyle sunulur.
-- **Lighthouse (mobil, Production):**
-  - Performans: 98–100
-  - Erişilebilirlik: 100
-  - En İyi Uygulamalar: 100
-  - SEO: 100
-
-## 14. Lisanslar
-
-| Bileşen | Lisans | Not |
-|---|---|---|
-| **SixLabors.ImageSharp** 3.x | **Six Labors Split License** | Açık kaynak projelerde, başka bir paketin bağımlılığı olarak ve **yıllık brüt geliri 1 milyon ABD dolarının altındaki** şirketlerde ücretsizdir (Apache 2.0 koşulları). Bu sınırın üstündeki ticari kullanım için Six Labors'tan ücretli lisans gerekir. Tek kişilik bir güzellik salonu için ücretsiz kullanım kapsamındadır. Ayrıntı: sixlabors.com/pricing |
-| MailKit | MIT | |
-| HtmlSanitizer | MIT | |
-| NUglify | BSD-2-Clause | |
-| Serilog | Apache 2.0 | |
-| EF Core, ASP.NET Core | MIT | |
-| Quill | BSD-3-Clause | `wwwroot/lib/quill` |
-| Cropper.js | MIT | `wwwroot/lib/cropperjs` |
-| SortableJS | MIT | `wwwroot/lib/sortablejs` |
-| Cormorant Garamond, Jost, Vazirmatn | SIL Open Font License 1.1 | `wwwroot/fonts` |
-
-## 15. Sorun giderme
-
-| Belirti | Çözüm |
-|---|---|
-| IIS'te **500.30 / 500.31** | `web.config` içinde `stdoutLogEnabled="true"` yapın ve `App_Data\logs\stdout*.log` dosyasına bakın. Genelde yazma izni eksiktir (bölüm 5, adım 4) ya da ANCM modülü kurulu değildir. |
-| IIS'te **500.19** | Sunucuda ASP.NET Core Module yok. Hosting sağlayıcısından "ASP.NET Core Hosting Bundle" kurmasını isteyin. |
-| Görsel yüklenmiyor | `wwwroot/uploads` klasörüne yazma izni verin. Linux'ta: `sudo chown -R bbn:bbn /var/www/beautybynegin`. |
-| Büyük yedek geri yüklenmiyor (413) | Nginx'te `client_max_body_size 2G;` satırını ekleyin. IIS için `web.config` zaten 2 GB'a ayarlıdır. |
-| Panel girişinden sonra tekrar girişe dönüyor | Tarayıcı çerezlerini temizleyin. Sunucu taşındıysa `App_Data/keys` klasörünün de taşındığından emin olun (yedek zip'i bunu otomatik yapar). |
-| https altında sonsuz yönlendirme | Proxy `X-Forwarded-Proto` başlığını göndermiyor. Bölüm 6.3'teki `proxy_set_header` satırlarını ekleyin; Docker'da `Site__TrustAllProxies=true` olmalıdır. |
-| Farsça tarihler veya Türkçe karakterler bozuk (Linux) | ICU kütüphanesini kurun: `sudo apt install libicu74` (sürüm dağıtıma göre değişir). |
-| E-posta gitmiyor | Panelde **Test e-postası gönder**'e basın; hata mesajı gösterilir. Port 587 + SSL/TLS veya 465 deneyin. Hosting firmanız dış SMTP'yi engelliyor olabilir. |
-| Telegram bildirimi gelmiyor | İran'daki sunuculardan Telegram'a erişilemez; bu normaldir, talepler panelde görünür. Başka ülkede: botunuza *Start* dediğinizden ve Chat ID'nin dolu olduğundan emin olun. |
-| Şifre unutuldu | Bölüm 10. |
-| Loglar | `App_Data/logs/site-YYYYMMDD.log` (günlük dosya, 30 gün saklanır) |
+</div>

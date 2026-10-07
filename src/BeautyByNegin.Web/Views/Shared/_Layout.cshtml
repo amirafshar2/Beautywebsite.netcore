@@ -19,6 +19,8 @@
     <title>@pageTitle</title>
     <meta name="description" content="@description" />
     <meta name="theme-color" content="#F5F0E8" />
+    @{ var googleCode = ctx.Settings.Get(BeautyByNegin.DataAccess.SettingKeys.GoogleVerification); }
+    @if (!string.IsNullOrEmpty(googleCode)) { <meta name="google-site-verification" content="@googleCode" /> }
     <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <link rel="icon" href="@(ctx.Layout.FaviconUrl ?? "/favicon.ico")" />
     @if (ctx.Code is "fa" or "ar")

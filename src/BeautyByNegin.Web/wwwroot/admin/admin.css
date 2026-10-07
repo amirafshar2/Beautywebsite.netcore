@@ -365,3 +365,4 @@ a.item:hover .title { text-decoration: underline; }
 .combo-own-row label { display: inline-flex; align-items: center; gap: .45rem; font-size: .92rem; cursor: pointer; }
 .combo-own-row input[type="color"] { width: 46px; height: 36px; padding: 2px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--card); cursor: pointer; }
 .colors-advanced-title { margin: .5rem 0 0; }
+.why-list { margin: .6rem 0 1rem; padding-inline-start: 1.2rem; display: grid; gap: .3rem; }

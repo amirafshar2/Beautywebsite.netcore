@@ -1,0 +1,32 @@
+# Beauty by Negin — image for Render.com (render.yaml uses this file)
+# Differences to ./Dockerfile:
+#   * listens on Render's default port 10000
+#   * uploaded images live inside App_Data (App_Data/uploads), so ONE Render disk mounted at
+#     /app/App_Data keeps database, keys, backups AND images (paid plan). On the free plan everything
+#     here is temporary and starts fresh after each deploy / restart / spin-down.
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY BeautyByNegin.sln ./
+COPY src/BeautyByNegin.DataAccess/BeautyByNegin.DataAccess.csproj src/BeautyByNegin.DataAccess/
+COPY src/BeautyByNegin.Business/BeautyByNegin.Business.csproj src/BeautyByNegin.Business/
+COPY src/BeautyByNegin.Web/BeautyByNegin.Web.csproj src/BeautyByNegin.Web/
+RUN dotnet restore src/BeautyByNegin.Web/BeautyByNegin.Web.csproj
+COPY src/ src/
+COPY docs/ docs/
+RUN dotnet publish src/BeautyByNegin.Web/BeautyByNegin.Web.csproj -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+COPY --from=build /app ./
+RUN mkdir -p /app/App_Data/uploads \
+ && rm -rf /app/wwwroot/uploads \
+ && ln -s /app/App_Data/uploads /app/wwwroot/uploads \
+ && chown -R app:app /app/App_Data
+USER app
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    ASPNETCORE_HTTP_PORTS=10000 \
+    Site__TrustAllProxies=true
+EXPOSE 10000
+# A mounted (empty) disk hides the uploads folder created above, so create it again at start.
+ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /app/App_Data/uploads && exec dotnet BeautyByNegin.Web.dll"]

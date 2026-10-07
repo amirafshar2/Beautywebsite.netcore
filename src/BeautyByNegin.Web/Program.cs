@@ -83,6 +83,7 @@ if (!AdminCli.IsCliCall(args))
     using var seedScope = app.Services.CreateScope();
     await seedScope.ServiceProvider.GetRequiredService<BeautyByNegin.Business.Content.SampleContentSeeder>()
         .SeedAsync(Path.Combine(app.Environment.ContentRootPath, "SampleContent"));
+    await InitialAdmin.EnsureAsync(app.Services, app.Configuration, app.Logger);
 }
 
 // Command line: dotnet BeautyByNegin.Web.dll admin reset-password <user> <password>

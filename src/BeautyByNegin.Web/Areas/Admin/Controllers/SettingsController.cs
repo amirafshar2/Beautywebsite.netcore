@@ -79,6 +79,7 @@ public class SettingsController(
             [SettingKeys.SmtpFromName] = V("smtpFromName"),
             [SettingKeys.NotificationEmail] = V("notifyEmail"),
             [SettingKeys.TelegramEnabled] = B("telegramEnabled"),
+            [SettingKeys.GoogleVerification] = GoogleCode(V("googleVerification")),
             [SettingKeys.AiModel] = string.IsNullOrWhiteSpace(V("aiModel")) ? BeautyByNegin.Business.Ai.GeminiTranslator.DefaultModel : V("aiModel")!.Trim(),
             [SettingKeys.TelegramChatId] = V("telegramChatId"),
             [SettingKeys.TelegramNotifyAppointments] = B("tgAppointments"),
@@ -159,4 +160,13 @@ public class SettingsController(
 
     private async Task<string?> Preview(int? id)
         => id is int i && await media.GetAsync(i, HttpContext.RequestAborted) is { } m ? MediaUrls.Url(m, m.WidthList.Min()) : null;
+
+    /// <summary>Accepts the whole meta tag from Google or only its code; keeps only the code.</summary>
+    internal static string? GoogleCode(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var m = System.Text.RegularExpressions.Regex.Match(input, "content\\s*=\\s*[\"']([^\"']+)[\"']");
+        var code = (m.Success ? m.Groups[1].Value : input).Trim();
+        return System.Text.RegularExpressions.Regex.IsMatch(code, "^[A-Za-z0-9_\\-]{10,100}$") ? code : null;
+    }
 }

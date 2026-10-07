@@ -15,7 +15,7 @@
 <partial name="_PageIntro" model='("intro.settings", (string?)null)' />
 <partial name="_VisitorView" model='"settings"' />
 <nav class="tabs-line">
-    <a href="#general">@P["set.general"]</a><a href="#features">@P["set.features"]</a><a href="#accounts">@P["set.accounts"]</a><a href="#ai">@P["set.ai"]</a><a href="#email">@P["set.email"]</a>
+    <a href="#general">@P["set.general"]</a><a href="#features">@P["set.features"]</a><a href="#accounts">@P["set.accounts"]</a><a href="#google">@P["set.google"]</a><a href="#ai">@P["set.ai"]</a><a href="#email">@P["set.email"]</a>
     <a href="#telegram">Telegram</a><a href="#slots">@P["set.slots"]</a><a href="#security">@P["set.security"]</a>
 </nav>
 
@@ -161,6 +161,46 @@
             <button type="button" class="btn" data-post="@P.Url("settings/testemail")"><svg class="i"><use href="#a-send" /></svg>@P["set.testEmail"]</button>
             <span class="help">@P["set.testAfterSave"]</span>
         </div>
+    </div>
+
+    <div class="card form" id="google">
+        <h2>@P["set.google"]</h2>
+        <p class="help">@P["set.googleIntro"]</p>
+        <ul class="help why-list">
+            <li>@P["set.googleWhy1"]</li>
+            <li>@P["set.googleWhy2"]</li>
+            <li>@P["set.googleWhy3"]</li>
+            <li>@P["set.googleWhy4"]</li>
+        </ul>
+        @{ var googleCode = s.Get(SettingKeys.GoogleVerification); var siteBase = string.IsNullOrWhiteSpace(s.SiteUrl) ? "https://…" : s.SiteUrl!.TrimEnd('/'); }
+        @if (string.IsNullOrWhiteSpace(s.SiteUrl)) { <p class="hint-note">@P["set.googleNeedUrl"]</p> }
+        <details class="howto" open="@(string.IsNullOrEmpty(googleCode))">
+            <summary>@P["set.googleHowTo"]</summary>
+            <ol>
+                <li>@P["set.googleStep1"] <span class="ltr">search.google.com/search-console</span></li>
+                <li>@P["set.googleStep2"]</li>
+                <li>@P["set.googleStep3"] <span class="ltr">@siteBase/</span></li>
+                <li>@P["set.googleStep4"]</li>
+                <li>@P["set.googleStep5"] <span class="ltr">&lt;meta name="google-site-verification" content="…" /&gt;</span></li>
+                <li>@P["set.googleStep6"]</li>
+                <li>@P["set.googleStep7"] <span class="ltr">sitemap.xml</span></li>
+                <li>@P["set.googleStep8"]</li>
+            </ol>
+            <p class="help">@P["set.googleIranNote"]</p>
+        </details>
+        <div class="grid-2">
+            <div class="field">
+                <label for="googleVerification">@P["set.googleCode"]</label>
+                <input id="googleVerification" name="googleVerification" value="@googleCode" dir="ltr" autocomplete="off" placeholder="&lt;meta name=&quot;google-site-verification&quot; content=&quot;…&quot; /&gt;" />
+                <p class="help">@P["set.googleCodeHelp"]</p>
+            </div>
+            <div class="field">
+                <label>@P["set.googleSitemap"]</label>
+                <p><span class="ltr">@siteBase/sitemap.xml</span></p>
+                <p class="help">@P["set.googleSitemapHelp"]</p>
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(googleCode)) { <p class="chip ok">@P["set.googleActive"]</p> }
     </div>
 
     <div class="card form" id="ai">

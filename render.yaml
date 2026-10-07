@@ -1,0 +1,24 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Render dashboard → New → Blueprint → choose this GitHub repository.
+services:
+  - type: web
+    name: beauty-by-negin
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    plan: free            # free = demo: data is reset after every deploy/restart/spin-down
+    region: frankfurt
+    healthCheckPath: /robots.txt
+    autoDeploy: true
+    envVars:
+      - key: Site__InitialAdmin__UserName
+        value: admin
+      - key: Site__InitialAdmin__Password   # asked in the dashboard, never stored in Git
+        sync: false
+      - key: Site__InitialAdmin__DisplayName
+        value: Admin
+    # For a real site with permanent data, switch to a paid plan (e.g. "starter") and uncomment:
+    # disk:
+    #   name: data
+    #   mountPath: /app/App_Data
+    #   sizeGB: 1
