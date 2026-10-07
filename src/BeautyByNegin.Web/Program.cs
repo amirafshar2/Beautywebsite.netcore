@@ -122,6 +122,14 @@ app.MapAreaControllerRoute(
     pattern: adminPath + "/{controller=Dashboard}/{action=Index}/{id?}");
 
 // Public site: every page lives under a language prefix with translated segments, e.g. /de/behandlungen
+// Site colors chosen in the panel ("Colors"): overrides the defaults of site.css. Versioned (?v=), so cached long.
+app.MapGet("/theme.css", async (HttpContext http, BeautyByNegin.Business.Settings.ISettingsService settings) =>
+{
+    var css = BeautyByNegin.Business.Content.Theme.BuildCss(await settings.GetAsync(http.RequestAborted));
+    http.Response.Headers.CacheControl = http.Request.Query.ContainsKey("v") ? "public, max-age=31536000, immutable" : "no-cache";
+    return Results.Text(css, "text/css; charset=utf-8");
+});
+
 app.MapSiteRoutes();
 
 // "/" -> default language (or the visitor's browser language when it is enabled)

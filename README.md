@@ -372,6 +372,9 @@ BeautyByNegin.Web.exe admin reset-password <kullanici> <YeniSifre123>
   - Yeni talep bildirimleri
   - Şifre sıfırlama
 - **Telegram botu:** @BotFather'dan token alın, panele girin, botunuza Telegram'da *Start* deyin, panelde **Chat ID bul** ve **Test mesajı gönder** butonlarına basın. Bildirim türleri ayrı ayrı seçilir (randevu, mesaj, sohbet, bülten).
+- **Varsayılan Gmail:** `smtp.gmail.com:587` (STARTTLS) önceden doldurulur; yalnızca Gmail adresi ve 16 haneli **uygulama şifresi** (myaccount.google.com/apppasswords, 2 adımlı doğrulama açık olmalı) gerekir. Panelde adım adım rehber var.
+- **Otomatik çeviri (Google Gemini):** Panel → Genel Ayarlar → Otomatik çeviri. aistudio.google.com'dan alınan API anahtarı şifreli saklanır (`ai.geminiKey`), model `ai.model` (varsayılan `gemini-3.5-flash`). Çok dilli her alanın yanında "Tüm dillere çevir" butonu; sonuçlar alanlara yazılır, kayıt kullanıcıya bırakılır. Google API'leri İran'daki sunuculardan erişilemez. Test için `Site:GeminiBaseUrl` ile farklı bir adres verilebilir.
+- **Site renkleri:** Panel → Site renkleri. 8 renk grubu (kahveler, kremler, koyu zeminler, açık/koyu zemin yazıları, açık/koyu zemin butonları, altın), her biri ~20 öneri + özel renk. Seçimler `theme.<grup>` ayarlarında saklanır; `/theme.css?v=<hash>` yalnızca değişen değerleri `site.css` token'larının (`--bg-dark`, `--on-dark`, `--primary`, `--on-primary`, `--cream`, `--mocha` …) üzerine yazar. Türetilmiş tonlar ve buton yazı renkleri kontrast (WCAG AA) gözetilerek sunucuda hesaplanır. Varsayılan renklerde ek CSS dosyası yüklenmez.
 - SMTP şifresi ve Telegram token'ı veritabanında **şifrelenmiş** olarak saklanır (ASP.NET Data Protection, anahtarlar `App_Data/keys`).
 
 ## 12. Yapılandırma

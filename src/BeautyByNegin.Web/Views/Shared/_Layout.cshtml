@@ -31,6 +31,8 @@
         <link rel="preload" href="/fonts/jost-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin />
     }
     <link rel="stylesheet" href="@Assets.Url("/css/site.css")" />
+    @{ var themeCss = BeautyByNegin.Business.Content.Theme.BuildCss(ctx.Settings); }
+    @if (themeCss.Length > 0) { <link rel="stylesheet" href="/theme.css?v=@BeautyByNegin.Business.Content.Theme.Version(themeCss)" /> }
     @await Html.PartialAsync("_Seo", ctx)
     @await RenderSectionAsync("Head", required: false)
 </head>

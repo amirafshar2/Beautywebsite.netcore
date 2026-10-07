@@ -1,0 +1,70 @@
+@using BeautyByNegin.Business.Content
+@{
+    var P = (PanelContext)ViewData["Panel"]!;
+    ViewData["Title"] = P["nav.colors"];
+    ViewData["Nav"] = "colors";
+    var s = P.Settings;
+}
+<partial name="_PageIntro" model='("intro.colors", "/" + P.DefaultLanguage.Code)' />
+<partial name="_VisitorView" model='"colors"' />
+
+<form asp-antiforgery="true" method="post" class="colors-layout" data-dirty data-colors>
+    <div class="colors-groups">
+        @foreach (var g in Theme.Groups)
+        {
+            var current = Theme.Value(s, g);
+            var isPreset = g.Presets.Any(p => string.Equals(p, current, StringComparison.OrdinalIgnoreCase));
+            <section class="card color-group" data-group="@g.Key">
+                <h2>@P["col." + g.Key]</h2>
+                <p class="help">@P["col." + g.Key + "Help"]</p>
+                <input type="hidden" name="@Theme.SettingKey(g.Key)" value="@current" data-color-value data-default="@g.Default" />
+                <div class="swatches" role="radiogroup" aria-label="@P["col." + g.Key]">
+                    @foreach (var c in g.Presets)
+                    {
+                        var on = string.Equals(c, current, StringComparison.OrdinalIgnoreCase);
+                        <button type="button" class="swatch @(on ? "is-on" : "")" data-color="@c" role="radio" aria-checked="@(on ? "true" : "false")" title="@c@(c == g.Default ? " · " + P["col.default"] : "")">
+                            <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="@c" stroke="#00000022" stroke-width="1" /></svg>
+                            @if (c == g.Default) { <span class="swatch-default" aria-hidden="true">★</span> }
+                        </button>
+                    }
+                </div>
+                <div class="color-custom">
+                    <label>
+                        <input type="color" value="@current.ToLowerInvariant()" data-color-custom />
+                        <span>@P["col.custom"]</span>
+                    </label>
+                    <span class="ltr soft" data-color-code>@current</span>
+                    <span class="chip" data-custom-chip hidden="@(isPreset ? "hidden" : null)">@P["col.customChosen"]</span>
+                    <button type="button" class="link-btn" data-color-default>@P["col.backToDefault"]</button>
+                </div>
+                <p class="warn-note" data-contrast-warning hidden>@P["col.lowContrast"]</p>
+            </section>
+        }
+    </div>
+
+    <aside class="colors-preview-wrap">
+        <div class="card">
+            <h2>@P["col.preview"]</h2>
+            <p class="help">@P["col.previewHelp"]</p>
+            <div class="theme-preview" data-theme-preview>
+                <div class="tp-header"><span class="tp-brand">BEAUTY BY NEGIN</span><span class="tp-link">@P["col.pvMenu"]</span><span class="tp-btn">@P["col.pvBook"]</span></div>
+                <div class="tp-hero"><span class="tp-eyebrow">FACIAL &amp; SKINCARE</span><strong>@P["col.pvHero"]</strong><span class="tp-btn-dark">@P["col.pvBook"]</span></div>
+                <div class="tp-body">
+                    <div class="tp-card"><span class="tp-num">01 — CARBOXY FACIAL</span><strong>Carboxy Facial</strong><span class="tp-soft">@P["col.pvText"]</span><span class="tp-more">@P["col.pvDetails"] →</span></div>
+                    <span class="tp-btn">@P["col.pvAsk"]</span>
+                </div>
+                <div class="tp-footer"><span class="tp-brand">BEAUTY BY NEGIN</span><span class="tp-gold">@P["col.pvHours"]</span><span>10:00 – 19:00</span></div>
+            </div>
+            <div class="row-actions mt">
+                <button class="btn btn-primary" type="submit">@P["common.save"]</button>
+                <a class="btn" href="/@P.DefaultLanguage.Code" target="_blank" rel="noopener"><svg class="i"><use href="#a-external" /></svg>@P["common.viewOnSite"]</a>
+            </div>
+        </div>
+    </aside>
+</form>
+
+<form asp-antiforgery="true" method="post" action="@P.Url("colors/reset")" class="card" data-confirm="@P["col.resetConfirm"]">
+    <h2>@P["col.reset"]</h2>
+    <p class="help">@P["col.resetHelp"]</p>
+    <div><button class="btn btn-danger" type="submit">@P["col.reset"]</button></div>
+</form>

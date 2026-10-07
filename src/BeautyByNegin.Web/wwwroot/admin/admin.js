@@ -496,4 +496,76 @@
     b.textContent = body.getAttribute("data-ai-label-short");
     row.parentNode.insertBefore(b, row.nextSibling);
   });
+  // ---------- Site colors: pick a color per group, live preview, contrast warnings
+  var colorsForm = document.querySelector("[data-colors]");
+  if (colorsForm) {
+    var hexRe = /^#[0-9a-f]{6}$/i;
+    var rgb = function (h) { var v = parseInt(h.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; };
+    var hex = function (c) { return "#" + c.map(function (x) { return Math.round(Math.max(0, Math.min(255, x))).toString(16).padStart(2, "0"); }).join("").toUpperCase(); };
+    var mix = function (a, b, t) { var x = rgb(a), y = rgb(b); return hex([0, 1, 2].map(function (i) { return x[i] + (y[i] - x[i]) * t; })); };
+    var lum = function (h) { var c = rgb(h).map(function (v) { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+    var contrast = function (a, b) { var l1 = lum(a), l2 = lum(b); return (Math.max(l1, l2) + .05) / (Math.min(l1, l2) + .05); };
+    var readable = function (c, bg) { var t = lum(bg) > .4 ? "#000000" : "#FFFFFF"; for (var i = 0; i < 20 && contrast(c, bg) < 4.5; i++) c = mix(c, t, .1); return c; };
+    var bestText = function (bg, light, dark) {
+      var best = contrast(bg, light) >= contrast(bg, dark) ? light : dark;
+      if (contrast(bg, best) >= 4.5) return best;
+      return contrast(bg, "#FFFFFF") >= contrast(bg, "#1A1A1A") ? "#FFFFFF" : "#1A1A1A";
+    };
+    var groups = {};
+    colorsForm.querySelectorAll("[data-group]").forEach(function (g) { groups[g.getAttribute("data-group")] = g; });
+    var val = function (k) { var v = groups[k] && groups[k].querySelector("[data-color-value]").value; return hexRe.test(v || "") ? v.toUpperCase() : "#000000"; };
+    var preview = colorsForm.querySelector("[data-theme-preview]");
+    var warn = function (k, bad) { var w = groups[k] && groups[k].querySelector("[data-contrast-warning]"); if (w) w.hidden = !bad; };
+
+    var refresh = function () {
+      var brown = val("brown"), cream = val("cream"), dark = val("darkBg"), text = val("textLight"),
+          onDark = val("textDark"), btn = val("btnLight"), btnDark = val("btnDark"), gold = val("gold");
+      var set = function (n, v) { preview.style.setProperty("--t-" + n, v); };
+      set("cream", cream); set("ivory", mix(cream, "#FFFFFF", .55)); set("text", text);
+      set("soft", readable(mix(text, cream, .28), cream)); set("brown", readable(brown, cream)); set("gold", gold);
+      set("dark", dark); set("on-dark", onDark); set("btn", btn); set("on-btn", bestText(btn, onDark, text));
+      set("btn-dark", btnDark); set("on-btn-dark", bestText(btnDark, onDark, text));
+      warn("textLight", contrast(text, cream) < 4.5);
+      warn("cream", contrast(text, cream) < 4.5);
+      warn("textDark", contrast(onDark, dark) < 4.5);
+      warn("darkBg", contrast(onDark, dark) < 4.5);
+      warn("btnDark", contrast(btnDark, dark) < 1.6);
+      warn("btnLight", contrast(btn, cream) < 1.6);
+    };
+
+    var choose = function (g, color) {
+      color = color.toUpperCase();
+      g.querySelector("[data-color-value]").value = color;
+      var preset = false;
+      g.querySelectorAll(".swatch").forEach(function (s) {
+        var on = s.getAttribute("data-color").toUpperCase() === color;
+        if (on) preset = true;
+        s.classList.toggle("is-on", on); s.setAttribute("aria-checked", on ? "true" : "false");
+      });
+      g.querySelector("[data-color-code]").textContent = color;
+      g.querySelector("[data-color-custom]").value = color.toLowerCase();
+      var chip = g.querySelector("[data-custom-chip]"); if (chip) chip.hidden = preset;
+      dirty = true;
+      refresh();
+    };
+
+    colorsForm.addEventListener("click", function (e) {
+      var g = e.target.closest("[data-group]"); if (!g) return;
+      var s = e.target.closest(".swatch");
+      if (s) { e.preventDefault(); choose(g, s.getAttribute("data-color")); return; }
+      if (e.target.closest("[data-color-default]")) { e.preventDefault(); choose(g, g.querySelector("[data-color-value]").getAttribute("data-default")); }
+    });
+    colorsForm.addEventListener("input", function (e) {
+      if (e.target.matches("[data-color-custom]")) choose(e.target.closest("[data-group]"), e.target.value);
+    });
+    // Arrow keys move between the swatches of a group (radio group behaviour).
+    colorsForm.addEventListener("keydown", function (e) {
+      var s = e.target.closest(".swatch"); if (!s || ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].indexOf(e.key) < 0) return;
+      var list = Array.prototype.slice.call(s.parentNode.querySelectorAll(".swatch")), i = list.indexOf(s);
+      var rtl = document.documentElement.dir === "rtl";
+      var step = (e.key === "ArrowRight" || e.key === "ArrowDown") ? 1 : -1; if (rtl && (e.key === "ArrowLeft" || e.key === "ArrowRight")) step = -step;
+      var next = list[(i + step + list.length) % list.length]; next.focus(); next.click(); e.preventDefault();
+    });
+    refresh();
+  }
 })();
