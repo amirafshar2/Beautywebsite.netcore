@@ -60,11 +60,29 @@ public class AccountController(ICustomerAccountService accounts, IChatService ch
             }
         }
 
+        // Local test mode only (no SMTP, Development): show the code that was "sent", so nobody has to search for it.
+        if (current.Step == LoginStep.Verify && Ctx.Settings.DevMailToFile && !Ctx.Settings.SmtpConfigured)
+            ViewData["DevCode"] = DevCode(current.PendingEmail);
+
         var error = TempData["AccountError"] as string;
         if (Request.Query["rl"] == "1") error = Ctx.T["form.error.rateLimit"];
 
         return View(new AccountPage(current, TempData["NeedName"] as string, error,
             TempData["AccountNotice"] as string, bookings, messages, Url.IsLocalUrl(returnUrl) ? returnUrl : null));
+    }
+
+    private string? DevCode(string? email)
+    {
+        if (string.IsNullOrEmpty(email)) return null;
+        var dir = Path.Combine(DataAccess.AppPaths.AppData(HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().ContentRootPath), "dev-mail");
+        if (!Directory.Exists(dir)) return null;
+        foreach (var file in new DirectoryInfo(dir).GetFiles("*.txt").OrderByDescending(f => f.LastWriteTimeUtc).Take(20))
+        {
+            var text = System.IO.File.ReadAllText(file.FullName);
+            if (!text.Contains(email, StringComparison.OrdinalIgnoreCase)) continue;
+            return System.Text.RegularExpressions.Regex.Match(text, @"\b\d{6}\b").Value is { Length: 6 } code ? code : null;
+        }
+        return null;
     }
 
     /// <summary>Step 1: e-mail (and name for new customers) → code by e-mail.</summary>

@@ -63,6 +63,10 @@
                 <div class="panel">
                     <h2 class="h3">@T["account.code.title"]</h2>
                     <p class="muted">@T["account.code.intro"].Replace("{email}", current.PendingEmail ?? "")</p>
+                    @if (ViewData["DevCode"] is string devCode)
+                    {
+                        <p class="alert alert-info" dir="auto">Test mode (no e-mail server on this computer) · <strong dir="ltr">@devCode</strong></p>
+                    }
                     <form class="form" method="post" action="@api/verify" novalidate>
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
