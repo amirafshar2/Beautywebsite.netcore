@@ -32,7 +32,7 @@
                     <partial name="_LangMissing" model="missing.Contains(l.Code)" />
                     <div class="field @Err(p + ".Name")">
                         <label>@P["svc.name"] @(l.Code == P.DefaultLanguage.Code ? "*" : "")</label>
-                        <input name="@(p).Name" value="@t.Name" maxlength="150" />
+                        <input name="@(p).Name" value="@t.Name" maxlength="150" data-translate-copy />
                         <p class="help">@P["svc.nameHelp"]</p>
                         @if (errors.TryGetValue(p + ".Name", out var e1)) { <p class="err">@e1</p> }
                     </div>
@@ -44,7 +44,7 @@
                         <p class="hint-note">@P["svc.hwg"]</p>
                     </div>
                     <div class="field"><label>@P["svc.suitable"]</label><input name="@(p).SuitableFor" value="@t.SuitableFor" maxlength="1000" /><p class="help">@P["svc.suitableHelp"]</p></div>
-                    <div class="field"><label>@P["svc.result"]</label><input name="@(p).ExpectedResult" value="@t.ExpectedResult" maxlength="1000" /></div>
+                    <div class="field"><label>@P["svc.result"]</label><input name="@(p).ExpectedResult" value="@t.ExpectedResult" maxlength="1000" /><p class="help">@P["svc.resultHelp"]</p></div>
                     <div class="field"><label>@P["svc.duration"]</label><input name="@(p).Duration" value="@t.Duration" maxlength="100" /><p class="help">@P["svc.durationHelp"]</p></div>
                     <details class="advanced" open="@errors.ContainsKey(p + ".Slug")">
                         <summary>@P["common.advanced"]</summary>

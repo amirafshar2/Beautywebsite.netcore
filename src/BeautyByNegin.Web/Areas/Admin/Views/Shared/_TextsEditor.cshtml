@@ -31,6 +31,7 @@
                 }
                 @if (string.IsNullOrWhiteSpace(value)) { <p class="help">⚠ @P["tabs.textMissing"]</p> }
                 else if (t.Hint is not null && PanelText.Has("text." + t.Key)) { <p class="help">@t.Hint</p> }
+                else { <p class="help">@P[t.Kind == TextKind.Line ? "texts.lineHelp" : t.Kind == TextKind.Multiline ? "texts.multiHelp" : "texts.richHelp"]</p> }
             </div>
         }
     </div>

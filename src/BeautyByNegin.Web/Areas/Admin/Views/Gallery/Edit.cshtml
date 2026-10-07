@@ -24,6 +24,7 @@
                     <option value="">@P["gal.noCategory"]</option>
                     @foreach (var c in cats) { <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@((c.Translations.FirstOrDefault(t => t.LanguageCode == lang) ?? c.Translations.FirstOrDefault())?.Name)</option> }
                 </select>
+                <p class="help">@P["gal.categoryHelp"]</p>
             </div>
             <label class="switch"><input type="checkbox" name="IsVisible" value="true" checked="@Model.IsVisible" /><span class="track"></span>@P["common.showOnSite"]</label>
             <label class="switch"><input type="checkbox" name="ShowOnHome" value="true" checked="@Model.ShowOnHome" /><span class="track"></span>@P["gal.onHome"]</label>

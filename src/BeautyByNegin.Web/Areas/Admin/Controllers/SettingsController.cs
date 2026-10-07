@@ -39,6 +39,7 @@ public class SettingsController(
         };
         ViewData["HasSmtpPassword"] = await settings.GetSecretAsync(SettingKeys.SmtpPassword) is not null;
         ViewData["HasTelegramToken"] = await settings.GetSecretAsync(SettingKeys.TelegramBotToken) is not null;
+        ViewData["HasGeminiKey"] = await settings.GetSecretAsync(SettingKeys.AiGeminiKey) is not null;
         return View();
     }
 
@@ -78,6 +79,7 @@ public class SettingsController(
             [SettingKeys.SmtpFromName] = V("smtpFromName"),
             [SettingKeys.NotificationEmail] = V("notifyEmail"),
             [SettingKeys.TelegramEnabled] = B("telegramEnabled"),
+            [SettingKeys.AiModel] = string.IsNullOrWhiteSpace(V("aiModel")) ? BeautyByNegin.Business.Ai.GeminiTranslator.DefaultModel : V("aiModel")!.Trim(),
             [SettingKeys.TelegramChatId] = V("telegramChatId"),
             [SettingKeys.TelegramNotifyAppointments] = B("tgAppointments"),
             [SettingKeys.TelegramNotifyMessages] = B("tgMessages"),
@@ -92,6 +94,8 @@ public class SettingsController(
         // Secrets: an empty field keeps the saved value; the "remove" box clears it.
         if (!string.IsNullOrEmpty(V("smtpPassword"))) await settings.SaveSecretAsync(SettingKeys.SmtpPassword, V("smtpPassword"));
         else if (B("smtpPasswordClear") == "true") await settings.SaveSecretAsync(SettingKeys.SmtpPassword, null);
+        if (!string.IsNullOrEmpty(V("geminiKey"))) await settings.SaveSecretAsync(SettingKeys.AiGeminiKey, V("geminiKey")!.Trim());
+        else if (B("geminiKeyClear") == "true") await settings.SaveSecretAsync(SettingKeys.AiGeminiKey, null);
         if (!string.IsNullOrEmpty(V("telegramToken"))) await settings.SaveSecretAsync(SettingKeys.TelegramBotToken, V("telegramToken"));
         else if (B("telegramTokenClear") == "true") await settings.SaveSecretAsync(SettingKeys.TelegramBotToken, null);
 

@@ -23,6 +23,7 @@
                 <option value="">@P["gal.noCategory"]</option>
                 @foreach (var c in cats) { <option value="@c.Id" selected="@(current == c.Id)">@CatName(c)</option> }
             </select>
+            <p class="help">@P["gal.categoryHelp"]</p>
         </div>
         <div class="row-actions">
             <label class="btn btn-primary btn-lg"><svg class="i"><use href="#a-upload" /></svg>@P["gal.choosePhotos"]

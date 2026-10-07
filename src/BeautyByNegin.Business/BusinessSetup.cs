@@ -30,6 +30,10 @@ public static class BusinessSetup
             c.Timeout = TimeSpan.FromSeconds(12);
         });
         services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
+
+        // Automatic translation in the panel (Google Gemini)
+        services.AddHttpClient(Ai.GeminiTranslator.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(90));
+        services.AddSingleton<Ai.IAiTranslator, Ai.GeminiTranslator>();
         services.AddSingleton<IEmailSender, EmailSender>();
         services.AddSingleton<NotificationQueue>();
         services.AddSingleton<INotificationQueue>(sp => sp.GetRequiredService<NotificationQueue>());

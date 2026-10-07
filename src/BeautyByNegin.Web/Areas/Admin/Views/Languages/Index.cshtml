@@ -8,6 +8,7 @@
 <partial name="_VisitorView" model='"languages"' />
 <form asp-antiforgery="true" class="card form" method="post" data-dirty>
     <p class="help">@P["lang.orderHelp"]</p>
+    <p class="help">@P["lang.switchesHelp"]</p>
     <div class="list" data-sortable-local>
         @foreach (var l in Model)
         {

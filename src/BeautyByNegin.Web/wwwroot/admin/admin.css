@@ -298,3 +298,16 @@ code { direction: ltr; unicode-bidi: isolate; }
 /* whole-row links (chats, customers): no underline */
 a.item { color: inherit; text-decoration: none; }
 a.item:hover .title { text-decoration: underline; }
+
+/* Step-by-step setup guides (Gmail, Gemini) */
+.howto { border: 1px solid var(--line); border-radius: var(--radius); background: #FBF6EE; padding: .9rem 1.1rem; }
+.howto summary { cursor: pointer; font-weight: 600; }
+.howto ol { margin: .8rem 0 .4rem; padding-inline-start: 1.4rem; display: grid; gap: .55rem; line-height: 1.75; }
+.howto .ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 0 .4rem; font-family: ui-monospace, Consolas, monospace; font-size: .9em; user-select: all; }
+
+/* Automatic translation button next to the language tabs */
+.translate-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; margin: -.25rem 0 1rem; }
+.translate-bar .help { flex: 1 1 260px; }
+.translate-btn { border-color: var(--accent-2); color: var(--accent-2); }
+.translate-btn.is-busy { opacity: .7; cursor: progress; }
+.translate-inline { margin-top: .4rem; }

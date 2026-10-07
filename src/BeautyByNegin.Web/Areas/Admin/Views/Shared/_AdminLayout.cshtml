@@ -43,7 +43,11 @@
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="@(loggedIn ? "with-nav" : "no-nav")" data-base="@P.BasePath"
-      data-confirm-leave="@P["common.unsavedWarning"]" data-saved="@P["toast.saved"]" data-error="@P["toast.error"]">
+      data-confirm-leave="@P["common.unsavedWarning"]" data-saved="@P["toast.saved"]" data-error="@P["toast.error"]"
+      data-ai-url="@P.Url("ai/translate")" data-ai-ready="@((loggedIn && !string.IsNullOrWhiteSpace(P.Settings.Get(BeautyByNegin.DataAccess.SettingKeys.AiGeminiKey))).ToString().ToLowerInvariant())"
+      data-ai-source="@(P.ContentLanguages.Any(l => l.Code == "fa") ? "fa" : P.DefaultLanguage.Code)"
+      data-ai-label="@P["ai.button"]" data-ai-label-short="@P["ai.buttonShort"]" data-ai-busy="@P["ai.busy"]" data-ai-overwrite="@P["ai.overwrite"]"
+      data-ai-not-ready="@P["ai.notReady"]" data-ai-empty="@P["ai.empty"]" data-ai-settings="@P.Url("settings#ai")">
     @await Html.PartialAsync("_AdminIcons")
 
     @if (loggedIn)

@@ -71,6 +71,11 @@ public static class SettingKeys
     public const string TelegramNotifyNewsletter = "telegram.notifyNewsletter";
 
     // Backups
+    /// <summary>Google Gemini API key for automatic translation in the panel (stored encrypted).</summary>
+    public const string AiGeminiKey = "ai.geminiKey";
+    /// <summary>Gemini model used for translation, e.g. "gemini-3.5-flash".</summary>
+    public const string AiModel = "ai.model";
+
     public const string AutoBackupEnabled = "backup.auto";
     public const string AutoBackupKeep = "backup.keep";
 

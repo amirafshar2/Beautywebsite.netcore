@@ -5,6 +5,7 @@
     ViewData["Title"] = P["nav.settings"];
     ViewData["Nav"] = "settings";
     var s = P.Settings;
+    var hasGeminiKey = ViewData["HasGeminiKey"] is true;
     var images = (Dictionary<string, string?>)ViewData["Images"]!;
     var slots = (IReadOnlyList<TimeSlot>)ViewData["Slots"]!;
     var hasSmtpPassword = ViewData["HasSmtpPassword"] is true;
@@ -14,7 +15,7 @@
 <partial name="_PageIntro" model='("intro.settings", (string?)null)' />
 <partial name="_VisitorView" model='"settings"' />
 <nav class="tabs-line">
-    <a href="#general">@P["set.general"]</a><a href="#features">@P["set.features"]</a><a href="#accounts">@P["set.accounts"]</a><a href="#email">@P["set.email"]</a>
+    <a href="#general">@P["set.general"]</a><a href="#features">@P["set.features"]</a><a href="#accounts">@P["set.accounts"]</a><a href="#ai">@P["set.ai"]</a><a href="#email">@P["set.email"]</a>
     <a href="#telegram">Telegram</a><a href="#slots">@P["set.slots"]</a><a href="#security">@P["set.security"]</a>
 </nav>
 
@@ -117,31 +118,82 @@
     <div class="card form" id="email">
         <h2>@P["set.email"]</h2>
         <p class="help">@P["set.emailIntro"]</p>
+        <details class="howto" open="@(!s.SmtpConfigured)">
+            <summary>@P["set.gmailHowTo"]</summary>
+            <ol>
+                <li>@P["set.gmailStep1"]</li>
+                <li>@P["set.gmailStep2"] <span class="ltr">myaccount.google.com/security</span></li>
+                <li>@P["set.gmailStep3"]</li>
+                <li>@P["set.gmailStep4"] <span class="ltr">myaccount.google.com/apppasswords</span></li>
+                <li>@P["set.gmailStep5"]</li>
+                <li>@P["set.gmailStep6"]</li>
+                <li>@P["set.gmailStep7"]</li>
+            </ol>
+            <p class="help">@P["set.gmailOther"]</p>
+        </details>
         <label class="switch"><input type="checkbox" name="smtpEnabled" value="true" @Chk(SettingKeys.SmtpEnabled) /><span class="track"></span>@P["set.smtpEnabled"]</label>
+        <p class="help">@P["set.smtpEnabledHelp"]</p>
         <div class="grid-2">
+            <div class="field"><label for="smtpUser">@P["set.smtpUser"]</label><input id="smtpUser" name="smtpUser" value="@s.Text(SettingKeys.SmtpUser)" dir="ltr" autocomplete="off" placeholder="beautybynegin@gmail.com" /><p class="help">@P["set.smtpUserHelp"]</p></div>
+            <div class="field">
+                <label for="smtpPassword">@P["set.smtpPassword"]</label>
+                <input id="smtpPassword" name="smtpPassword" type="password" dir="ltr" autocomplete="new-password" placeholder="@(hasSmtpPassword ? "●●●●●●●● " + P["set.secretSaved"] : "abcd efgh ijkl mnop")" />
+                @if (hasSmtpPassword) { <label class="check small"><input type="checkbox" name="smtpPasswordClear" value="true" /> @P["set.secretClear"]</label> }
+                <p class="help">@P["set.smtpPasswordHelp"]</p>
+            </div>
+            <div class="field"><label for="smtpFrom">@P["set.smtpFrom"]</label><input id="smtpFrom" name="smtpFrom" value="@s.Text(SettingKeys.SmtpFromAddress)" dir="ltr" type="email" placeholder="beautybynegin@gmail.com" /><p class="help">@P["set.smtpFromHelp"]</p></div>
+            <div class="field"><label for="smtpFromName">@P["set.smtpFromName"]</label><input id="smtpFromName" name="smtpFromName" value="@s.Text(SettingKeys.SmtpFromName)" /><p class="help">@P["set.smtpFromNameHelp"]</p></div>
             <div class="field"><label for="notifyEmail">@P["set.notifyEmail"]</label><input id="notifyEmail" name="notifyEmail" value="@s.Text(SettingKeys.NotificationEmail)" dir="ltr" type="email" /><p class="help">@P["set.notifyEmailHelp"]</p></div>
-            <div class="field"><label for="smtpFrom">@P["set.smtpFrom"]</label><input id="smtpFrom" name="smtpFrom" value="@s.Text(SettingKeys.SmtpFromAddress)" dir="ltr" type="email" /></div>
-            <div class="field"><label for="smtpFromName">@P["set.smtpFromName"]</label><input id="smtpFromName" name="smtpFromName" value="@s.Text(SettingKeys.SmtpFromName)" /></div>
         </div>
-        <details class="advanced" open="@(!s.SmtpConfigured)">
+        <details class="advanced">
             <summary>@P["set.smtpServer"]</summary>
             <div class="form">
+                <p class="help">@P["set.smtpServerHelp"]</p>
                 <div class="grid-2">
-                    <div class="field"><label for="smtpHost">@P["set.smtpHost"]</label><input id="smtpHost" name="smtpHost" value="@s.Text(SettingKeys.SmtpHost)" dir="ltr" placeholder="smtp.gmail.com" /></div>
+                    <div class="field"><label for="smtpHost">@P["set.smtpHost"]</label><input id="smtpHost" name="smtpHost" value="@s.Text(SettingKeys.SmtpHost, "smtp.gmail.com")" dir="ltr" placeholder="smtp.gmail.com" /><p class="help">@P["set.smtpHostHelp"]</p></div>
                     <div class="field"><label for="smtpPort">@P["set.smtpPort"]</label><input id="smtpPort" name="smtpPort" value="@(s.Int(SettingKeys.SmtpPort) ?? 587)" dir="ltr" inputmode="numeric" /><p class="help">@P["set.smtpPortHelp"]</p></div>
-                    <div class="field"><label for="smtpUser">@P["set.smtpUser"]</label><input id="smtpUser" name="smtpUser" value="@s.Text(SettingKeys.SmtpUser)" dir="ltr" autocomplete="off" /></div>
-                    <div class="field">
-                        <label for="smtpPassword">@P["set.smtpPassword"]</label>
-                        <input id="smtpPassword" name="smtpPassword" type="password" dir="ltr" autocomplete="new-password" placeholder="@(hasSmtpPassword ? "●●●●●●●● " + P["set.secretSaved"] : "")" />
-                        @if (hasSmtpPassword) { <label class="check small"><input type="checkbox" name="smtpPasswordClear" value="true" /> @P["set.secretClear"]</label> }
-                        <p class="help">@P["set.secretHelp"]</p>
-                    </div>
                 </div>
                 <label class="check"><input type="checkbox" name="smtpSsl" value="true" @Chk(SettingKeys.SmtpUseSsl) /> @P["set.smtpSsl"]</label>
+                <p class="help">@P["set.smtpSslHelp"]</p>
             </div>
         </details>
         <div class="row-actions">
             <button type="button" class="btn" data-post="@P.Url("settings/testemail")"><svg class="i"><use href="#a-send" /></svg>@P["set.testEmail"]</button>
+            <span class="help">@P["set.testAfterSave"]</span>
+        </div>
+    </div>
+
+    <div class="card form" id="ai">
+        <h2>@P["set.ai"]</h2>
+        <p class="help">@P["set.aiIntro"]</p>
+        <p class="hint-note">@P["set.aiIranNote"]</p>
+        <details class="howto" open="@(!hasGeminiKey)">
+            <summary>@P["set.aiHowTo"]</summary>
+            <ol>
+                <li>@P["set.aiStep1"] <span class="ltr">aistudio.google.com</span></li>
+                <li>@P["set.aiStep2"]</li>
+                <li>@P["set.aiStep3"]</li>
+                <li>@P["set.aiStep4"]</li>
+                <li>@P["set.aiStep5"]</li>
+                <li>@P["set.aiStep6"]</li>
+            </ol>
+            <p class="help">@P["set.aiCost"]</p>
+        </details>
+        <div class="grid-2">
+            <div class="field">
+                <label for="geminiKey">@P["set.aiKey"]</label>
+                <input id="geminiKey" name="geminiKey" type="password" dir="ltr" autocomplete="off" placeholder="@(hasGeminiKey ? "●●●●●●●● " + P["set.secretSaved"] : "AIza…")" />
+                @if (hasGeminiKey) { <label class="check small"><input type="checkbox" name="geminiKeyClear" value="true" /> @P["set.secretClear"]</label> }
+                <p class="help">@P["set.aiKeyHelp"]</p>
+            </div>
+            <div class="field">
+                <label for="aiModel">@P["set.aiModel"]</label>
+                <input id="aiModel" name="aiModel" value="@s.Text(SettingKeys.AiModel, BeautyByNegin.Business.Ai.GeminiTranslator.DefaultModel)" dir="ltr" />
+                <p class="help">@P["set.aiModelHelp"]</p>
+            </div>
+        </div>
+        <div class="row-actions">
+            <button type="button" class="btn" data-post="@P.Url("ai/test")"><svg class="i"><use href="#a-send" /></svg>@P["set.aiTest"]</button>
             <span class="help">@P["set.testAfterSave"]</span>
         </div>
     </div>
@@ -160,6 +212,7 @@
             <div class="field">
                 <label for="telegramToken">@P["set.tgToken"]</label>
                 <input id="telegramToken" name="telegramToken" type="password" dir="ltr" autocomplete="off" placeholder="@(hasToken ? "●●●●●●●● " + P["set.secretSaved"] : "123456:ABC-DEF…")" />
+                <p class="help">@P["set.tgTokenHelp"]</p>
                 @if (hasToken) { <label class="check small"><input type="checkbox" name="telegramTokenClear" value="true" /> @P["set.secretClear"]</label> }
             </div>
             <div class="field">
@@ -172,6 +225,7 @@
             </div>
         </div>
         <span class="label">@P["set.tgWhat"]</span>
+        <p class="help">@P["set.tgWhatHelp"]</p>
         <div class="row-actions">
             <label class="check"><input type="checkbox" name="tgAppointments" value="true" @Chk(SettingKeys.TelegramNotifyAppointments) /> @P["nav.appointments"]</label>
             <label class="check"><input type="checkbox" name="tgMessages" value="true" @Chk(SettingKeys.TelegramNotifyMessages) /> @P["nav.messages"]</label>

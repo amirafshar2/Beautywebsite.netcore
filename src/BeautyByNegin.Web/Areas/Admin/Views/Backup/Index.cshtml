@@ -18,8 +18,8 @@
         <h2>@P["backup.restore"]</h2>
         <p class="hint-note">⚠ @P["backup.restoreWarning"]</p>
         <form asp-antiforgery="true" class="form" method="post" action="@P.Url("backup/restore")" enctype="multipart/form-data" data-confirm="@P["backup.restoreConfirm"]">
-            <div class="field"><label for="file">@P["backup.file"]</label><input id="file" name="file" type="file" accept=".zip,application/zip" required /></div>
-            <label class="check"><input type="checkbox" name="confirm" value="true" required /> @P["backup.understand"]</label>
+            <div class="field"><label for="file">@P["backup.file"]</label><input id="file" name="file" type="file" accept=".zip,application/zip" required /><p class="help">@P["backup.fileHelp"]</p></div>
+            <label class="check"><input type="checkbox" name="confirm" value="true" required /> @P["backup.understand"]</label><p class="help">@P["backup.understandHelp"]</p>
             <div><button class="btn btn-danger" type="submit"><svg class="i"><use href="#a-restore" /></svg>@P["backup.restoreBtn"]</button></div>
         </form>
     </div>

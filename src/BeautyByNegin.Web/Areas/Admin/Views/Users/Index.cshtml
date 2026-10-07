@@ -35,8 +35,8 @@
     <h2>@P["users.add"]</h2>
     <form asp-antiforgery="true" class="form" method="post" action="@P.Url("users/create")">
         <div class="grid-2">
-            <div class="field"><label for="userName">@P["login.user"]</label><input id="userName" name="userName" required dir="ltr" autocomplete="off" /></div>
-            <div class="field"><label for="displayName">@P["users.displayName"]</label><input id="displayName" name="displayName" /></div>
+            <div class="field"><label for="userName">@P["login.user"]</label><input id="userName" name="userName" required dir="ltr" autocomplete="off" /><p class="help">@P["users.userNameHelp"]</p></div>
+            <div class="field"><label for="displayName">@P["users.displayName"]</label><input id="displayName" name="displayName" /><p class="help">@P["users.displayNameHelp"]</p></div>
             <div class="field"><label for="email">@P["appt.emailAddress"]</label><input id="email" name="email" type="email" dir="ltr" /><p class="help">@P["users.emailHelp"]</p></div>
             <div class="field"><label for="password">@P["users.tempPassword"]</label><input id="password" name="password" required dir="ltr" autocomplete="off" /><p class="help">@P["account.passwordRules"]</p></div>
             <div class="field">

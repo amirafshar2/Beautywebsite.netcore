@@ -13,7 +13,7 @@
     t.className = "toast " + (ok === false ? "toast-err" : "toast-ok");
     t.textContent = message;
     host.appendChild(t);
-    setTimeout(function () { t.remove(); }, 3200);
+    setTimeout(function () { t.remove(); }, Math.max(3200, message.length * 70));
   }
   function post(url, data) {
     var fd = data instanceof FormData ? data : new FormData();
@@ -347,6 +347,7 @@
         });
         if (rtl) { q.format("direction", "rtl"); q.format("align", "right"); }
         q.clipboard.dangerouslyPasteHTML(ta.value || "");
+        ta._quill = q; // used by the translate button
         q.on("text-change", function () {
           ta.value = q.root.innerHTML === "<p><br></p>" ? "" : q.root.innerHTML;
           dirty = true;
@@ -403,5 +404,96 @@
       : kind === "tg" ? "https://t.me/" + v.replace(/^@/, "")
       : (/^https?:/.test(v) ? v : "https://" + v);
     window.open(url, "_blank", "noopener");
+  });
+
+  /* ---------------- automatic translation (Gemini): <button data-translate> next to language tabs,
+     plus a small button under every row of side-by-side language fields (.lang-inline).
+     Fields are matched by name: "Tr[fa].Name" ↔ "Tr[de].Name", "Texts[key][fa]" ↔ "Texts[key][de]".
+     Results are only filled in – the admin checks them and presses Save. ---------------- */
+  var LANGS = ["fa", "tr", "de", "en", "ar"];
+  var langRe = /\[(fa|tr|de|en|ar)\]/;
+  function translatable(el) {
+    if (!el.name || el.disabled || el.readOnly || el.hasAttribute("data-no-translate")) return false;
+    if (el.tagName === "INPUT" && ["hidden", "checkbox", "radio", "password", "file", "number", "date", "email", "url", "tel"].indexOf(el.type) >= 0) return false;
+    if (el.getAttribute("dir") === "ltr" && el.closest(".advanced")) return false; // page addresses (slugs)
+    return langRe.test(el.name);
+  }
+  function setValue(el, value) {
+    if (el._quill) { el._quill.setContents([]); el._quill.clipboard.dangerouslyPasteHTML(value || ""); el.value = value || ""; }
+    else { el.value = value || ""; }
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function translateScope(btn) {
+    var scope = btn.closest("form") || btn.closest(".card") || document;
+    var activeTab = scope.querySelector(".lang-tab.is-active") || document.querySelector(".lang-tab.is-active");
+    var groups = {};
+    scope.querySelectorAll("input[name], textarea[name]").forEach(function (el) {
+      if (!translatable(el)) return;
+      var code = el.name.match(langRe)[1];
+      var key = el.name.replace("[" + code + "]", "[*]");
+      (groups[key] = groups[key] || {})[code] = el;
+    });
+    var keys = Object.keys(groups);
+    // Source: the open tab; otherwise Persian (or the main language), otherwise the first language that has text.
+    var source = activeTab ? activeTab.getAttribute("data-tab") : body.getAttribute("data-ai-source") || "fa";
+    var hasText = function (code) { return keys.some(function (k) { var el = groups[k][code]; return el && el.value.trim(); }); };
+    if (!hasText(source)) { var other = LANGS.filter(hasText)[0]; if (other) source = other; }
+    var items = [], copies = [], targets = {}, overwrite = false;
+    keys.forEach(function (k, i) {
+      var g = groups[k], src = g[source];
+      if (!src || !src.value.trim()) return;
+      Object.keys(g).forEach(function (c) {
+        if (c === source) return;
+        targets[c] = true;
+        var v = g[c].value.trim();
+        if (v && v !== src.value.trim()) overwrite = true;
+      });
+      if (src.hasAttribute("data-translate-copy")) { copies.push(k); return; }
+      items.push({ key: String(i), text: src.value, html: src.hasAttribute("data-rich"), field: k });
+    });
+    return { groups: groups, source: source, items: items, copies: copies, targets: Object.keys(targets), overwrite: overwrite };
+  }
+  function runTranslate(btn) {
+    if (body.getAttribute("data-ai-ready") !== "true") {
+      confirmBox(body.getAttribute("data-ai-not-ready")).then(function (ok) { if (ok) location.href = body.getAttribute("data-ai-settings"); });
+      return;
+    }
+    var job = translateScope(btn);
+    if ((!job.items.length && !job.copies.length) || !job.targets.length) { toast(body.getAttribute("data-ai-empty"), false); return; }
+    var go = function () {
+      var label = btn.innerHTML;
+      btn.disabled = true; btn.classList.add("is-busy"); btn.textContent = body.getAttribute("data-ai-busy");
+      var finish = function () { btn.disabled = false; btn.classList.remove("is-busy"); btn.innerHTML = label; };
+      job.copies.forEach(function (k) { var g = job.groups[k]; job.targets.forEach(function (c) { if (g[c]) setValue(g[c], g[job.source].value); }); });
+      if (!job.items.length) { finish(); toast(body.getAttribute("data-saved"), true); return; }
+      var payload = { source: job.source, targets: job.targets, items: job.items.map(function (i) { return { key: i.key, text: i.text, html: i.html }; }) };
+      post(body.getAttribute("data-ai-url"), { payload: JSON.stringify(payload) }).then(function (d) {
+        finish();
+        if (!d.ok) { toast(d.message || body.getAttribute("data-error"), false); return; }
+        job.items.forEach(function (i) {
+          var g = job.groups[i.field];
+          job.targets.forEach(function (c) {
+            var value = d.translations && d.translations[c] && d.translations[c][i.key];
+            if (g[c] && value) setValue(g[c], value);
+          });
+        });
+        dirty = true;
+        toast(d.message, true);
+      }).catch(function () { finish(); toast(body.getAttribute("data-error"), false); });
+    };
+    if (job.overwrite) confirmBox(body.getAttribute("data-ai-overwrite")).then(function (ok) { if (ok) go(); });
+    else go();
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-translate]");
+    if (b) { e.preventDefault(); runTranslate(b); }
+  });
+  // Rows with all languages side by side (lists, categories, booking times): add a small button to each.
+  document.querySelectorAll(".lang-inline").forEach(function (row) {
+    if (row.querySelectorAll("input[name]").length < 2) return;
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "btn btn-sm translate-btn translate-inline"; b.setAttribute("data-translate", "");
+    b.textContent = body.getAttribute("data-ai-label-short");
+    row.parentNode.insertBefore(b, row.nextSibling);
   });
 })();

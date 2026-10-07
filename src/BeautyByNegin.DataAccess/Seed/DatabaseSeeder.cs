@@ -80,6 +80,7 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
             [SettingKeys.AccountsShowBookings] = "true",
             [SettingKeys.ReviewsRequireLogin] = "true",
             [SettingKeys.SmtpEnabled] = "false",
+            [SettingKeys.SmtpHost] = "smtp.gmail.com",
             [SettingKeys.SmtpPort] = "587",
             [SettingKeys.SmtpUseSsl] = "true",
             [SettingKeys.SmtpFromName] = "Beauty by Negin",
@@ -88,6 +89,7 @@ public sealed class DatabaseSeeder(AppDbContext db, RoleManager<IdentityRole> ro
             [SettingKeys.TelegramNotifyMessages] = "true",
             [SettingKeys.TelegramNotifyChat] = "true",
             [SettingKeys.TelegramNotifyNewsletter] = "true",
+            [SettingKeys.AiModel] = "gemini-3.5-flash",
             [SettingKeys.AutoBackupEnabled] = "true",
             [SettingKeys.AutoBackupKeep] = "7",
         };

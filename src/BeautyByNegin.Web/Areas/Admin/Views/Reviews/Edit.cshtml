@@ -20,8 +20,10 @@
         <div class="field @(errors.ContainsKey("AuthorName") ? "has-error" : "")">
             <label for="AuthorName">@P["rev.name"] *</label>
             <input id="AuthorName" name="AuthorName" value="@Model.AuthorName" maxlength="100" />
+            <p class="help">@P["rev.nameHelp"]</p>
             @if (errors.TryGetValue("AuthorName", out var e1)) { <p class="err">@e1</p> }
             <label class="check"><input type="checkbox" name="ShowInitialsOnly" value="true" checked="@Model.ShowInitialsOnly" /> @P["rev.initials"]</label>
+            <p class="help">@P["rev.initialsHelp"]</p>
         </div>
         <div class="field">
             <label for="Rating">@P["rev.rating"]</label>
@@ -29,6 +31,7 @@
                 <option value="">@P["rev.noRating"]</option>
                 @for (var i = 5; i >= 1; i--) { <option value="@i" selected="@(Model.Rating == i)">@(new string('★', i))</option> }
             </select>
+            <p class="help">@P["rev.ratingHelp"]</p>
         </div>
     </div>
     <div class="field @(errors.ContainsKey("Text") ? "has-error" : "")">
@@ -45,19 +48,21 @@
             </select>
             <p class="help">@P["rev.languageHelp"]</p>
         </div>
-        <div class="field"><label for="ReviewDate">@P["rev.date"]</label><input id="ReviewDate" name="ReviewDate" type="date" value="@Model.ReviewDate?.ToString("yyyy-MM-dd")" /></div>
+        <div class="field"><label for="ReviewDate">@P["rev.date"]</label><input id="ReviewDate" name="ReviewDate" type="date" value="@Model.ReviewDate?.ToString("yyyy-MM-dd")" /><p class="help">@P["rev.dateHelp"]</p></div>
         <div class="field">
             <label for="ServiceId">@P["rev.service"]</label>
             <select id="ServiceId" name="ServiceId">
                 <option value="">—</option>
                 @foreach (var s in services) { <option value="@s.Id" selected="@(Model.ServiceId == s.Id)">@((s.Translations.FirstOrDefault(t => t.LanguageCode == lang) ?? s.Translations.FirstOrDefault())?.Name)</option> }
             </select>
+            <p class="help">@P["rev.serviceHelp"]</p>
         </div>
         <div class="field">
             <label for="Source">@P["rev.source"]</label>
             <select id="Source" name="Source">
                 @foreach (var s in Enum.GetValues<ReviewSource>()) { <option value="@s" selected="@(Model.Source == s)">@P["source." + s.ToString().ToLowerInvariant()]</option> }
             </select>
+            <p class="help">@P["rev.sourceHelp"]</p>
         </div>
     </div>
     <label class="switch"><input type="checkbox" name="IsVisible" value="true" checked="@Model.IsVisible" /><span class="track"></span>@P["common.showOnSite"]</label>
