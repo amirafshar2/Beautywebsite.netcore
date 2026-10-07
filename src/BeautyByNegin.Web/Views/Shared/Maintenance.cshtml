@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>@T["maintenance.title"] · @ctx.Settings.BrandName</title>
+    <partial name="_Favicons" model="ctx.Layout.FaviconUrl" />
     <link rel="stylesheet" href="@Assets.Url("/css/site.css")" />
     @{ var themeCss = BeautyByNegin.Business.Content.Theme.BuildCss(ctx.Settings); }
     @if (themeCss.Length > 0) { <link rel="stylesheet" href="/theme.css?v=@BeautyByNegin.Business.Content.Theme.Version(themeCss)" /> }

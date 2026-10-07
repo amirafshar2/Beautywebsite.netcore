@@ -40,6 +40,9 @@
     <meta name="robots" content="noindex, nofollow" />
     <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <title>@title · @P["panel.name"]</title>
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/img/apple-touch-icon.png" />
     <link rel="stylesheet" href="@Assets.Url("/admin/admin.css")" />
     @await RenderSectionAsync("Head", required: false)
 </head>

@@ -22,7 +22,7 @@
     @{ var googleCode = ctx.Settings.Get(BeautyByNegin.DataAccess.SettingKeys.GoogleVerification); }
     @if (!string.IsNullOrEmpty(googleCode)) { <meta name="google-site-verification" content="@googleCode" /> }
     <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
-    <link rel="icon" href="@(ctx.Layout.FaviconUrl ?? "/favicon.ico")" />
+    <partial name="_Favicons" model="ctx.Layout.FaviconUrl" />
     @if (ctx.Code is "fa" or "ar")
     {
         <link rel="preload" href="/fonts/Vazirmatn-Light.woff2" as="font" type="font/woff2" crossorigin />
