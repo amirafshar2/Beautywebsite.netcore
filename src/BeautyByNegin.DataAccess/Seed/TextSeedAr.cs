@@ -21,6 +21,8 @@ internal static class TextSeedAr
         ["nav.skip"] = "الانتقال إلى المحتوى",
 
         // Customer account
+        ["nav.admin"] = "لوحة الإدارة",
+        ["account.adminLink"] = "هل أنتِ صاحبة الصالون؟ الدخول إلى لوحة الإدارة",
         ["nav.login"] = "تسجيل الدخول",
         ["nav.account"] = "حسابي",
         ["account.title"] = "حسابي",

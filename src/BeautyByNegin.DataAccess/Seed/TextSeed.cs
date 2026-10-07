@@ -265,6 +265,8 @@ internal static class TextSeed
             "Hello {name},\nYour verification code is: {code}\nThis code is valid for 15 minutes."),
 
         // ---------------- Customer account (login button, "My account" page)
+        L("nav.admin", "nav", "دکمه‌ی بالای سایت وقتی مدیر وارد پنل شده است", "پنل مدیریت", "Yönetim paneli", "Verwaltung", "Admin panel"),
+        L("account.adminLink", "account", "لینک ورود مدیر زیر فرم ورود مشتری", "مدیر سالن هستید؟ ورود به پنل مدیریت", "Salon yöneticisi misiniz? Yönetim paneline giriş", "Sie sind die Inhaberin? Zur Verwaltung", "Are you the salon owner? Go to the admin panel"),
         L("nav.login", "nav", "دکمه‌ی ورود بالای سایت", "ورود", "Giriş", "Anmelden", "Log in"),
         L("nav.account", "nav", "دکمه‌ی حساب بالای سایت وقتی مشتری وارد شده", "حساب من", "Hesabım", "Mein Konto", "My account"),
         L("account.title", "account", "عنوان صفحه‌ی حساب کاربری", "حساب کاربری", "Hesabım", "Mein Konto", "My account"),

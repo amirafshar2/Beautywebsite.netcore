@@ -1,5 +1,9 @@
 @model PageContext
+@inject IConfiguration Config
 @{
+    // Logged in to the admin panel (same browser): show a direct way back to the panel.
+    var isAdmin = Context.User.Identity?.IsAuthenticated == true;
+    var adminUrl = BeautyByNegin.Web.Infrastructure.Startup.IdentitySetup.AdminPath(Config);
     var T = Model.T;
     var lang = Model.Code;
     (string Key, string Url, string Label)[] nav =
@@ -75,6 +79,10 @@
 
         <div class="header-tools">
             @{ await LangSwitch(Model); }
+            @if (isAdmin)
+            {
+                <a class="account-link admin-link" href="@adminUrl" title="@T["nav.admin"]"><svg class="icon" aria-hidden="true"><use href="#i-gear" /></svg><span class="label">@T["nav.admin"]</span></a>
+            }
             @if (Model.Settings.AccountsAvailable)
             {
                 <a class="account-link @(loggedIn ? "is-in" : "")" href="@accountUrl" aria-current="@(Model.ActiveNav == SiteRoutes.Account ? "page" : null)" title="@accountLabel">
@@ -117,6 +125,10 @@
     </nav>
     <div class="mobile-menu-foot">
         <a class="btn btn-primary btn-block" href="@SiteUrls.Booking(lang)">@T["btn.book"]</a>
+        @if (isAdmin)
+        {
+            <a class="btn btn-block" href="@adminUrl"><svg class="icon" aria-hidden="true"><use href="#i-gear" /></svg>@T["nav.admin"]</a>
+        }
         @if (Model.Settings.AccountsAvailable)
         {
             <a class="btn btn-block" href="@accountUrl"><svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>@accountLabel</a>

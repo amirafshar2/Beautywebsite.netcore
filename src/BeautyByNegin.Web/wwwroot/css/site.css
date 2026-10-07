@@ -757,3 +757,7 @@ body.has-action-bar .chat-panel { bottom: calc(var(--bar-h) + 86px + env(safe-ar
 .btn-danger:hover { --btn-bg: #F8ECE8; }
 .chat-account-link { display: inline-flex; align-items: center; gap: .4rem; align-self: center; margin-top: .5rem; font-size: .82rem; color: var(--mocha-text); }
 .chat-account-link .icon { width: 16px; height: 16px; }
+.admin-link { border: 1px solid var(--line); }
+.admin-entry { margin: 1.25rem 0 0; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .85rem; }
+.admin-entry a { display: inline-flex; align-items: center; gap: .4rem; color: var(--text-soft); }
+.admin-entry .icon { width: 16px; height: 16px; }

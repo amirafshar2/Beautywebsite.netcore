@@ -2,6 +2,7 @@
 @using BeautyByNegin.Business.Customers
 @using BeautyByNegin.DataAccess.Entities
 @inject SiteContext Site
+@inject IConfiguration Config
 @{
     var ctx = await Site.GetAsync();
     var T = ctx.T;
@@ -53,6 +54,7 @@
                         }
                         <button class="btn btn-primary btn-block" type="submit">@T["account.sendCode"]</button>
                     </form>
+                    <p class="admin-entry"><a href="@BeautyByNegin.Web.Infrastructure.Startup.IdentitySetup.AdminPath(Config)/login"><svg class="icon" aria-hidden="true"><use href="#i-gear" /></svg>@T["account.adminLink"]</a></p>
                 </div>
                 <partial name="_AccountCan" model="ctx" />
             </div>
