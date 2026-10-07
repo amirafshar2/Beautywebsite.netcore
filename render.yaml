@@ -6,7 +6,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile.render
     dockerContext: .
-    plan: free            # free = demo: data is reset after every deploy/restart/spin-down
+    plan: starter         # paid: needed for the disk below (on "free" all data is reset after every deploy/restart/spin-down)
     region: frankfurt
     healthCheckPath: /robots.txt
     autoDeploy: true
@@ -17,8 +17,8 @@ services:
         sync: false
       - key: Site__InitialAdmin__DisplayName
         value: Admin
-    # For a real site with permanent data, switch to a paid plan (e.g. "starter") and uncomment:
-    # disk:
-    #   name: data
-    #   mountPath: /app/App_Data
-    #   sizeGB: 1
+    # Database, keys, backups AND uploaded images/videos live here and survive deploys and restarts.
+    disk:
+      name: data
+      mountPath: /app/App_Data
+      sizeGB: 1

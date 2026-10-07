@@ -199,8 +199,8 @@ The repository contains a [`render.yaml`](render.yaml) Blueprint and a Render-sp
 3. Enter a password for `Site__InitialAdmin__Password` (the first admin `admin` is created automatically).
 4. Deploy, then open `https://<your-service>.onrender.com/admin`.
 
-> **Free plan = demo.** Render's free instances have a temporary file system and sleep after 15 minutes without traffic, so the SQLite database and uploaded images start fresh after every deploy, restart or spin-down.
-> For a real site use a paid instance and uncomment the `disk` block in `render.yaml` (mount path `/app/App_Data` — database, keys, backups **and** images are kept there).
+> **Use a paid instance with a disk.** On Render's free plan the file system is temporary: the SQLite database and uploaded images are reset after every deploy, restart or 15‑minute spin-down (the setup wizard would then be open again).
+> The Blueprint therefore uses the `starter` plan with a 1 GB disk mounted at `/app/App_Data` – database, keys, backups **and** images/videos are stored there (`Dockerfile.render` links `wwwroot/uploads` into it). A service created by hand needs: Dockerfile Path `./Dockerfile.render`, a paid instance type, and a disk with mount path `/app/App_Data`.
 
 ### 🎬 Video compression (ffmpeg)
 

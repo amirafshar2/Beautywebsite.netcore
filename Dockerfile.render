@@ -27,10 +27,10 @@ RUN mkdir -p /app/App_Data/uploads \
  && rm -rf /app/wwwroot/uploads \
  && ln -s /app/App_Data/uploads /app/wwwroot/uploads \
  && chown -R app:app /app/App_Data
-USER app
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_HTTP_PORTS=10000 \
     Site__TrustAllProxies=true
 EXPOSE 10000
-# A mounted (empty) disk hides the uploads folder created above, so create it again at start.
-ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /app/App_Data/uploads && exec dotnet BeautyByNegin.Web.dll"]
+# Start as root only to prepare the data folder: a newly mounted Render disk is empty and may belong to root.
+# Then the app itself runs as the unprivileged "app" user (setpriv is part of Debian's util-linux).
+ENTRYPOINT ["/bin/sh", "-c", "mkdir -p /app/App_Data/uploads && chown -R app:app /app/App_Data && exec setpriv --reuid=app --regid=app --init-groups dotnet BeautyByNegin.Web.dll"]
