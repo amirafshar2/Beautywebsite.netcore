@@ -140,6 +140,13 @@ app.MapGet("/theme.css", async (HttpContext http, BeautyByNegin.Business.Setting
     return Results.Text(css, "text/css; charset=utf-8");
 });
 
+app.MapGet("/theme-admin.css", async (HttpContext http, BeautyByNegin.Business.Settings.ISettingsService settings) =>
+{
+    var css = BeautyByNegin.Business.Content.Theme.BuildAdminCss(await settings.GetAsync(http.RequestAborted));
+    http.Response.Headers.CacheControl = http.Request.Query.ContainsKey("v") ? "public, max-age=31536000, immutable" : "no-cache";
+    return Results.Text(css, "text/css; charset=utf-8");
+});
+
 app.MapSiteRoutes();
 
 // "/" -> default language (or the visitor's browser language when it is enabled)

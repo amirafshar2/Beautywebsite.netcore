@@ -44,6 +44,8 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/img/apple-touch-icon.png" />
     <link rel="stylesheet" href="@Assets.Url("/admin/admin.css")" />
+    @{ var adminTheme = BeautyByNegin.Business.Content.Theme.BuildAdminCss(P.Settings); }
+    @if (adminTheme.Length > 0) { <link rel="stylesheet" href="/theme-admin.css?v=@BeautyByNegin.Business.Content.Theme.Version(adminTheme)" /> }
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="@(loggedIn ? "with-nav" : "no-nav")" data-base="@P.BasePath"

@@ -141,6 +141,34 @@ public static class Theme
         return css.ToString();
     }
 
+    /// <summary>The same colors for the admin panel (/theme-admin.css), so the panel matches the site.</summary>
+    public static string BuildAdminCss(SiteSettings s)
+    {
+        if (!IsChanged(s)) return "";
+        string V(string key) => Value(s, Groups.First(g => g.Key == key));
+        var brown = V("brown"); var cream = V("cream"); var darkBg = V("darkBg"); var text = V("textLight");
+        var onDark = V("textDark"); var gold = V("gold");
+
+        var css = new System.Text.StringBuilder("/* Panel colors = site colors chosen under \"Site colors\" */\n:root {\n");
+        void Var(string name, string value) => css.Append("  --").Append(name).Append(": ").Append(value).Append(";\n");
+        Var("bg", cream);
+        Var("card", Mix(cream, "#FFFFFF", .6));
+        Var("surface-2", Mix(cream, "#FFFFFF", .3));
+        Var("surface-3", Mix(cream, brown, .10));
+        Var("line", Mix(cream, brown, .18));
+        Var("line-strong", Mix(cream, brown, .30));
+        Var("track", Mix(cream, brown, .38));
+        Var("text", text);
+        Var("soft", Readable(Mix(text, cream, .3), cream));
+        Var("muted", Mix(text, cream, .5));
+        Var("accent", darkBg);
+        Var("on-accent", BestText(darkBg, onDark, text));
+        Var("accent-2", Readable(brown, cream));
+        Var("gold", gold);
+        css.Append("}\n");
+        return css.ToString();
+    }
+
     public static string Version(string css) => css.Length == 0 ? "0" : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(css)))[..10].ToLowerInvariant();
 
     // ---------------------------------------------------------------- color helpers
