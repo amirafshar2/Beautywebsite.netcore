@@ -41,7 +41,7 @@ public sealed class TelegramNotifier(IHttpClientFactory httpFactory, ISettingsSe
         try
         {
             var http = httpFactory.CreateClient(HttpClientName);
-            using var response = await http.PostAsJsonAsync($"bot{token.Trim()}/sendMessage", new
+            using var response = await http.PostAsJsonAsync(ApiPath(token, "sendMessage"), new
             {
                 chat_id = chatId.Trim(),
                 text = html.Length > 4000 ? html[..4000] + "…" : html,
@@ -60,7 +60,7 @@ public sealed class TelegramNotifier(IHttpClientFactory httpFactory, ISettingsSe
                 _ => "telegram-error"
             });
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or ArgumentException or NotSupportedException or UriFormatException)
         {
             logger.LogWarning(ex, "Telegram is unreachable from this server");
             return SendResult.Fail("telegram-unreachable");
@@ -72,7 +72,7 @@ public sealed class TelegramNotifier(IHttpClientFactory httpFactory, ISettingsSe
         try
         {
             var http = httpFactory.CreateClient(HttpClientName);
-            using var doc = JsonDocument.Parse(await http.GetStringAsync($"bot{token.Trim()}/getUpdates", ct));
+            using var doc = JsonDocument.Parse(await http.GetStringAsync(ApiPath(token, "getUpdates"), ct));
             var chats = new List<(string, string)>();
             foreach (var update in doc.RootElement.GetProperty("result").EnumerateArray())
             {
@@ -94,6 +94,13 @@ public sealed class TelegramNotifier(IHttpClientFactory httpFactory, ISettingsSe
             return (SendResult.Fail("telegram-unreachable"), []);
         }
     }
+
+    /// <summary>
+    /// Full URL https://api.telegram.org/bot{token}/{method}. Built as an absolute URI on purpose: a relative
+    /// "bot123:ABC/..." is read as an absolute URI with the scheme "bot123" (because of the ":" in the token),
+    /// and "/bot..." becomes a file path on Linux – both make HttpClient throw (500 on the "Test" button).
+    /// </summary>
+    private static Uri ApiPath(string token, string method) => new($"https://api.telegram.org/bot{token.Trim()}/{method}");
 
     /// <summary>Escapes text for Telegram's HTML parse mode.</summary>
     public static string Html(string? text) => WebUtility.HtmlEncode(text ?? "");
