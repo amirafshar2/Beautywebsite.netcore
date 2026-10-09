@@ -60,10 +60,9 @@
             </div>
             <div class="save-bar">
                 <button class="btn btn-primary" type="submit">@P["common.save"]</button>
+                <span class="spacer"></span>
+                <button class="btn btn-danger" type="submit" formaction="@P.Url($"appointments/delete/{Model.Id}")" formnovalidate data-confirm-btn="@P["common.confirmTrash"]"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
             </div>
-        </form>
-        <form asp-antiforgery="true" method="post" action="@P.Url($"appointments/delete/{Model.Id}")" data-confirm="@P["common.confirmTrash"]">
-            <button class="btn btn-danger" type="submit"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
         </form>
     </div>
 </div>

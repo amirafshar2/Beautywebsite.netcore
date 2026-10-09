@@ -62,7 +62,7 @@
         <span class="spacer"></span>
         @if (!isNew && systemKey is null)
         {
-            <button class="btn btn-danger" type="submit" formaction="@P.Url($"pages/delete/{Model.Id}")" data-confirm-btn="@P["common.confirmTrash"]"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
+            <button class="btn btn-danger" type="submit" formaction="@P.Url($"pages/delete/{Model.Id}")" formnovalidate data-confirm-btn="@P["common.confirmTrash"]"><svg class="i"><use href="#a-trash" /></svg>@P["common.delete"]</button>
         }
     </div>
 </form>

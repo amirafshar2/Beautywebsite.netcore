@@ -110,6 +110,7 @@ h2 { font-size: 1.2rem; } h3 { font-size: 1.05rem; }
 /* Save bar: primary action always in the same place (bottom) */
 .save-bar { position: sticky; bottom: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; padding: .9rem 1.2rem; margin: 1.5rem -1.2rem -1.2rem; background: color-mix(in srgb, var(--card) 96%, transparent); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); }
 .save-bar .spacer { flex: 1; }
+.save-bar .btn { min-height: 50px; padding-inline: 1.4rem; font-size: 1rem; } /* all buttons in the save row the same size */
 @media (max-width: 900px) { .save-bar { bottom: calc(62px + env(safe-area-inset-bottom)); } }
 
 /* ---------- Forms ---------- */
