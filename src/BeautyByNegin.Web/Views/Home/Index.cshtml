@@ -23,12 +23,14 @@
             <section class="hero @(Model.Hero.IsPlaceholder ? "is-placeholder" : "")">
                 <div class="hero-media">@Html.Img(Model.Hero, "100vw", "", priority: true)</div>
                 <div class="container hero-content">
+                    <div class="hero-card">
                     <p class="eyebrow">@T["home.hero.eyebrow"]</p>
                     <h1 class="@(T["home.hero.title"].Any(c => c > 0x0600 && c < 0x06FF) ? "" : "latin")">@T["home.hero.title"]</h1>
                     <p class="slogan">@T["home.hero.slogan"]</p>
                     <div class="btn-row">
                         <a class="btn @(Model.Hero.IsPlaceholder ? "btn-primary" : "btn-light")" href="@SiteUrls.Booking(lang)">@T["btn.book"]</a>
                         <a class="btn btn-ghost-light" href="@SiteUrls.Page(SiteRoutes.Contact, lang)">@T["btn.contact"]</a>
+                    </div>
                     </div>
                 </div>
             </section>
