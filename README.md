@@ -27,7 +27,7 @@
 | 🌍 **5 languages, 2 directions** | Persian & Arabic (RTL), Turkish, German, English (LTR) with translated URLs and `hreflang` |
 | 🧑‍💼 **Admin panel for non-technical users** | Every screen explains *what the customer does with it and why it matters* |
 | 🤖 **One-click AI translation** | Write in Persian, press a button: Google Gemini fills all other languages |
-| 💎 **Soft, premium design** | "Soft UI Evolution" + "Nature Distilled" design system (built with the [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) skill): soft layered shadows, frosted-glass hero card, paper grain, visible focus, WCAG AA contrast, reduced motion |
+| 💎 **Soft admin design** | Admin panel styled with the "Soft UI Evolution" design system (built with the [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) skill): soft layered shadows, clear focus states, reduced motion |
 | 🎨 **Site colors from the panel** | 20 three-color combinations or 8 fine-grained color groups, with live preview and contrast checks |
 | 🎬 **Treatment videos** | Upload a phone video, the server compresses it (often 5–10× smaller) and shows it on the treatment page |
 | 📅 **Bookings, chat & customer accounts** | Appointment requests, live chat, passwordless login with e-mail code |
