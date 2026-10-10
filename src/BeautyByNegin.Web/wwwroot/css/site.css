@@ -680,6 +680,10 @@ body.has-action-bar .chat-panel { bottom: calc(var(--bar-h) + 86px + env(safe-ar
 /* Lightbox */
 .lightbox { position: fixed; inset: 0; z-index: 150; background: rgba(30, 24, 22, .94); display: flex; align-items: center; justify-content: center; padding: 3.5rem 1rem; touch-action: pan-y; }
 .lightbox[hidden] { display: none; }
+/* Morph canvas: sits over the whole lightbox and dissolves one photo into the next (gallery.js) */
+.lb-morph { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; z-index: 1; }
+.lightbox img.is-morphing { visibility: hidden; }
+.lightbox button { z-index: 2; }
 .lightbox figure { margin: 0; max-width: min(1200px, 100%); max-height: 100%; display: flex; flex-direction: column; align-items: center; gap: .9rem; }
 .lightbox img { max-width: 100%; max-height: calc(100dvh - 9rem); width: auto; height: auto; object-fit: contain; border-radius: 4px; }
 .lightbox figcaption { color: rgba(251,248,243,.8); font-size: .92rem; text-align: center; }
