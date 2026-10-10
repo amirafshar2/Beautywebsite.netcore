@@ -780,3 +780,30 @@ body.has-action-bar .chat-panel { bottom: calc(var(--bar-h) + 86px + env(safe-ar
 .admin-entry { margin: 1.25rem 0 0; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .85rem; }
 .admin-entry a { display: inline-flex; align-items: center; gap: .4rem; color: var(--text-soft); }
 .admin-entry .icon { width: 16px; height: 16px; }
+
+/* ---------- 3D gallery (test page /{lang}/gallery/3d, js/gallery3d.js) ---------- */
+.g3d { position: relative; height: calc(100svh - var(--header-h)); min-height: 460px; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, color-mix(in srgb, var(--bg-dark) 82%, var(--on-dark)) 0%, var(--bg-dark) 70%); color: var(--on-dark); }
+body.has-action-bar .g3d { height: calc(100svh - var(--header-h) - var(--bar-h)); }
+@media (min-width: 900px) { body.has-action-bar .g3d { height: calc(100svh - var(--header-h)); } }
+.g3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .6s var(--ease); outline-offset: -4px; }
+.g3d.is-ready .g3d-canvas { opacity: 1; }
+.g3d-title {
+  position: absolute; inset: 0; z-index: 2; margin: 0; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; color: #fff; mix-blend-mode: exclusion; text-align: center; padding-inline: 1rem;
+}
+.g3d-title span { font-family: var(--font-heading); font-style: italic; font-weight: 300; font-size: clamp(2.6rem, 8vw, 6rem); line-height: 1.1; direction: ltr; unicode-bidi: isolate; }
+.g3d-hint {
+  position: absolute; inset-inline: 0; bottom: clamp(1rem, 4vh, 2.5rem); z-index: 3; text-align: center; pointer-events: none;
+  font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--on-dark); padding-inline: 1rem; text-shadow: 0 1px 8px rgba(0,0,0,.45);
+}
+[dir="rtl"] .g3d-hint { font-size: .9rem; letter-spacing: 0; text-transform: none; }
+.g3d-hint p { margin: 0; }
+.g3d-hint .g3d-hint-2 { opacity: .6; margin-block: .2rem .6rem; }
+.g3d-hint a { pointer-events: auto; color: var(--on-dark); }
+/* the photo links: lightbox targets; only shown (as a grid) when WebGL is not available */
+.g3d-list { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); margin: 0; padding: 0; list-style: none; }
+.g3d.is-fallback { height: auto; min-height: 0; padding-block: 2rem 9rem; background: var(--cream); color: var(--text); }
+.g3d.is-fallback .g3d-hint { color: var(--text); text-shadow: none; }
+.g3d.is-fallback .g3d-hint a { color: var(--mocha-text); }
+.g3d.is-fallback .g3d-canvas, .g3d.is-fallback .g3d-title { display: none; }
+.g3d.is-fallback .g3d-list { position: static; width: auto; height: auto; clip-path: none; overflow: visible; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); }

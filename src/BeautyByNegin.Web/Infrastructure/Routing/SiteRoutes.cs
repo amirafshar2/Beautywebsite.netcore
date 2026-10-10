@@ -12,6 +12,8 @@ public static class SiteRoutes
     public const string Services = "services";
     public const string ServiceDetail = "service";
     public const string Gallery = "gallery";
+    /// <summary>Test page: 3D "fly-through" gallery. Not in the menu or sitemap, noindex.</summary>
+    public const string Gallery3d = "gallery3d";
     public const string Reviews = "reviews";
     public const string Contact = "contact";
     public const string Booking = "booking";
@@ -29,6 +31,7 @@ public static class SiteRoutes
         new(Services, "Services", "Index", false, ServiceSegments),
         new(ServiceDetail, "Services", "Detail", true, ServiceSegments),
         new(Gallery, "Gallery", "Index", false, Seg("gallery", "galeri", "galerie", "gallery")),
+        new(Gallery3d, "Gallery", "Immersive", false, Seg("gallery/3d", "galeri/3d", "galerie/3d", "gallery/3d")),
         new(Reviews, "Reviews", "Index", false, Seg("reviews", "yorumlar", "bewertungen", "reviews")),
         new(Contact, "Contact", "Index", false, Seg("contact", "iletisim", "kontakt", "contact")),
         new(Booking, "Booking", "Index", false, Seg("booking", "randevu", "termin", "booking")),

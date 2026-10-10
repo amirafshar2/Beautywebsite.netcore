@@ -1,0 +1,60 @@
+@inject BeautyByNegin.Web.Infrastructure.AssetUrls Assets
+@model GalleryData
+@inject SiteContext Site
+@{
+    // Test page: the gallery photos as a 3D fly-through (WebGL, js/gallery3d.js).
+    // Clicking a photo opens the normal lightbox (js/gallery.js). Without WebGL the links below are shown as a plain grid.
+    var ctx = await Site.GetAsync();
+    var T = ctx.T;
+    var lang = ctx.Code;
+    var (hint, hint2, classic) = lang switch
+    {
+        "fa" => ("با چرخ موس، کلیدهای جهت یا کشیدن انگشت حرکت کنید", "روی هر عکس بزنید تا بزرگ شود · بعد از ۳ ثانیه خودکار ادامه می‌دهد", "نمای معمولی گالری"),
+        "ar" => ("تنقّل بعجلة الفأرة أو مفاتيح الأسهم أو بالسحب", "اضغط على أي صورة لتكبيرها · يستمر تلقائياً بعد ٣ ثوانٍ", "العرض العادي للمعرض"),
+        "de" => ("Mit Mausrad, Pfeiltasten oder Wischen bewegen", "Bild antippen zum Vergrößern · läuft nach 3 Sekunden von selbst weiter", "Klassische Galerie"),
+        "tr" => ("Fare tekerleği, ok tuşları veya kaydırarak gezinin", "Büyütmek için bir fotoğrafa dokunun · 3 saniye sonra kendiliğinden devam eder", "Klasik galeri"),
+        _ => ("Use the mouse wheel, arrow keys or swipe to move", "Tap a photo to enlarge it · autoplay resumes after 3 seconds", "Classic gallery"),
+    };
+    var photos = Model.Items.Select(i => i.AfterImage ?? i.Image).Zip(Model.Items, (img, item) => (img, item.Caption)).ToList();
+}
+<h1 class="visually-hidden">@T["gallery.title"]</h1>
+
+<section class="g3d" data-g3d aria-label="@T["gallery.title"]">
+    <canvas class="g3d-canvas" data-g3d-canvas tabindex="0" aria-label="@T["gallery.title"] — @hint"></canvas>
+
+    <p class="g3d-title" aria-hidden="true"><span>@ctx.Settings.BrandName</span></p>
+
+    <div class="g3d-hint">
+        <p>@hint</p>
+        <p class="g3d-hint-2">@hint2</p>
+        <a href="@SiteUrls.Page(SiteRoutes.Gallery, lang)">@classic</a>
+    </div>
+
+    @* Photo list: texture sources for WebGL, lightbox targets, and the fallback grid when WebGL is missing. *@
+    <ul class="g3d-list" data-lightbox-group>
+        @foreach (var (img, caption) in photos)
+        {
+            <li>
+                <a class="media ratio-1x1" href="@img.Src" data-lightbox data-full="@img.Src" data-caption="@caption" data-g3d-src="@img.Src">
+                    @Html.Img(img, "(min-width: 1000px) 300px, 45vw", caption ?? img.Alt)
+                </a>
+            </li>
+        }
+    </ul>
+    @if (photos.Count == 0)
+    {
+        <p class="empty-state">@T["gallery.empty"]</p>
+    }
+</section>
+
+<div class="lightbox" data-lightbox-box hidden role="dialog" aria-modal="true" aria-label="@T["gallery.title"]">
+    <button class="lb-close" type="button" data-lb-close><svg class="icon" aria-hidden="true"><use href="#i-close" /></svg><span class="visually-hidden">@T["nav.close"]</span></button>
+    <button class="lb-prev" type="button" data-lb-prev><svg class="icon" aria-hidden="true"><use href="#i-chevron" /></svg><span class="visually-hidden">@T["gallery.prev"]</span></button>
+    <figure><img alt="" data-lb-img /><figcaption data-lb-caption></figcaption></figure>
+    <button class="lb-next" type="button" data-lb-next><svg class="icon" aria-hidden="true"><use href="#i-chevron" /></svg><span class="visually-hidden">@T["gallery.next"]</span></button>
+</div>
+
+@section Scripts {
+    <script src="@Assets.Url("/js/gallery.js")" defer></script>
+    <script src="@Assets.Url("/js/gallery3d.js")" defer></script>
+}
