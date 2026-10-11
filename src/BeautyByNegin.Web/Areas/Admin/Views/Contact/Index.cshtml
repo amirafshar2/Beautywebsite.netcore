@@ -1,3 +1,4 @@
+@using BeautyByNegin.DataAccess
 @{
     var P = (PanelContext)ViewData["Panel"]!;
     ViewData["Title"] = P["nav.contact"];
@@ -13,24 +14,47 @@
 <form asp-antiforgery="true" method="post" data-dirty>
     <div class="card form">
         <h2>@P["contact.channels"]</h2>
-        @foreach (var (name, id, value, label, help, kind, type) in new[]
+        <p class="help">@P["contact.perLangHelp"]</p>
+        @foreach (var (name, id, key, label, help, kind, type) in new[]
         {
-            ("phone", "c-phone", s.Phone, "contact.phone", "contact.phoneHelp", "tel", "tel"),
-            ("whatsApp", "c-wa", s.WhatsApp, "contact.whatsapp", "contact.whatsappHelp", "wa", "tel"),
-            ("email", "c-mail", s.Email, "contact.email", "contact.emailHelp", "mail", "email"),
-            ("instagram", "c-ig", s.Instagram, "contact.instagram", "contact.instagramHelp", "ig", "text"),
-            ("telegram", "c-tg", s.Telegram, "contact.telegram", "contact.telegramHelp", "tg", "text"),
-            ("mapUrl", "c-map", s.MapUrl, "contact.mapUrl", "contact.mapUrlHelp", "url", "url"),
+            ("phone", "c-phone", SettingKeys.Phone, "contact.phone", "contact.phoneHelp", "tel", "tel"),
+            ("whatsApp", "c-wa", SettingKeys.WhatsApp, "contact.whatsapp", "contact.whatsappHelp", "wa", "tel"),
+            ("email", "c-mail", SettingKeys.Email, "contact.email", "contact.emailHelp", "mail", "email"),
+            ("instagram", "c-ig", SettingKeys.InstagramUsername, "contact.instagram", "contact.instagramHelp", "ig", "text"),
+            ("telegram", "c-tg", SettingKeys.TelegramUsername, "contact.telegram", "contact.telegramHelp", "tg", "text"),
+            ("mapUrl", "c-map", SettingKeys.MapUrl, "contact.mapUrl", "contact.mapUrlHelp", "url", "url"),
         })
         {
-            <div class="field">
-                <label for="@id">@P[label]</label>
-                <div class="input-row">
-                    <input id="@id" name="@name" value="@value" type="@type" dir="ltr" />
-                    <button type="button" class="btn" data-test-link="@id" data-kind="@kind">@P["common.test"]</button>
+            var general = s.Text(key);
+            var own = P.ContentLanguages.Count(l => s.Text(SettingKeys.ForLanguage(key, l.Code)).Length > 0);
+            <fieldset class="channel">
+                <legend>@P[label]</legend>
+                <div class="field">
+                    <label for="@id">@P["contact.general"]</label>
+                    <div class="input-row">
+                        <input id="@id" name="@name" value="@general" type="@type" dir="ltr" />
+                        <button type="button" class="btn" data-test-link="@id" data-kind="@kind">@P["common.test"]</button>
+                    </div>
+                    <p class="help">@P[help]</p>
                 </div>
-                <p class="help">@P[help]</p>
-            </div>
+                <details class="per-lang" open="@(own > 0)">
+                    <summary>@P["contact.perLang"]@if (own > 0) { <span class="chip ok">@own</span> }</summary>
+                    <div class="per-lang-grid">
+                        @foreach (var l in P.ContentLanguages)
+                        {
+                            var lid = $"{id}-{l.Code}";
+                            <div class="field @(l.IsEnabled ? "" : "is-off")">
+                                <label for="@lid">@l.NativeName <span class="muted">(@l.Code.ToUpperInvariant())</span></label>
+                                <div class="input-row">
+                                    <input id="@lid" name="@($"{name}_{l.Code}")" value="@s.Text(SettingKeys.ForLanguage(key, l.Code))" type="@type" dir="ltr"
+                                           placeholder="@(general.Length > 0 ? general : P["contact.sameAsGeneral"])" data-ph-text="@(general.Length == 0 ? "true" : null)" />
+                                    <button type="button" class="btn btn-sm" data-test-link="@lid" data-kind="@kind" aria-label="@P["common.test"] @l.Code">@P["common.test"]</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </details>
+            </fieldset>
         }
     </div>
 

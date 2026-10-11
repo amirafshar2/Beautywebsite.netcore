@@ -1,6 +1,7 @@
 using System.Text;
 using BeautyByNegin.Business.Localization;
 using BeautyByNegin.Business.Settings;
+using BeautyByNegin.DataAccess;
 
 namespace BeautyByNegin.Business.Content;
 
@@ -51,16 +52,28 @@ public static class ContactLinks
             : username.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? username
             : "https://t.me/" + username.Trim().TrimStart('@');
 
-    /// <summary>All links of the site in one object (used by header, footer, mobile bar, modals).</summary>
-    public static ContactInfo From(SiteSettings s) => new(
-        Phone: s.Phone,
-        PhoneUrl: Tel(s.Phone),
-        WhatsAppNumber: s.WhatsApp,
-        Email: s.Email,
-        InstagramUser: s.Instagram,
-        InstagramUrl: Instagram(s.Instagram),
-        TelegramUrl: Telegram(s.Telegram),
-        MapUrl: string.IsNullOrWhiteSpace(s.MapUrl) ? null : s.MapUrl);
+    /// <summary>
+    /// All links of the site in one object (used by header, footer, mobile bar, modals), for the page language:
+    /// each channel can have its own value per language (Turkish number on the Turkish pages …), else the general one.
+    /// </summary>
+    public static ContactInfo From(SiteSettings s, string? languageCode = null)
+    {
+        string V(string key) => s.ContactFor(key, languageCode);
+        var phone = V(SettingKeys.Phone);
+        var instagram = V(SettingKeys.InstagramUsername).TrimStart('@');
+        var telegram = V(SettingKeys.TelegramUsername).TrimStart('@');
+        var map = V(SettingKeys.MapUrl);
+        return new(
+            Phone: phone,
+            PhoneUrl: Tel(phone),
+            WhatsAppNumber: V(SettingKeys.WhatsApp),
+            Email: V(SettingKeys.Email),
+            InstagramUser: instagram,
+            InstagramUrl: Instagram(instagram),
+            TelegramUrl: Telegram(telegram),
+            MapUrl: string.IsNullOrWhiteSpace(map) ? null : map,
+            TelegramUser: telegram);
+    }
 }
 
 public sealed record ContactInfo(
@@ -71,7 +84,8 @@ public sealed record ContactInfo(
     string InstagramUser,
     string? InstagramUrl,
     string? TelegramUrl,
-    string? MapUrl)
+    string? MapUrl,
+    string TelegramUser = "")
 {
     public string? WhatsAppUrl(string? message = null) => ContactLinks.WhatsApp(WhatsAppNumber, message);
     public string? MailUrl(string? subject = null) => ContactLinks.Mail(Email, subject);

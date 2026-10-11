@@ -182,7 +182,7 @@ public sealed class ContentService(
             var insta = await db.InstagramPosts.AsNoTracking().Where(p => p.IsVisible)
                 .OrderBy(p => p.SortOrder).Include(p => p.Image!).ThenInclude(i => i.Translations)
                 .Take(9).ToListAsync(ct);
-            var profile = ContactLinks.Instagram(settings.Instagram);
+            var profile = ContactLinks.Instagram(settings.ContactFor(DataAccess.SettingKeys.InstagramUsername, lang.Code).TrimStart('@'));
             var instaViews = insta
                 .Select(p => (Img: MediaUrls.ToView(p.Image, lang.Code, fallback, 480), Url: string.IsNullOrWhiteSpace(p.LinkUrl) ? profile : p.LinkUrl))
                 .Where(x => x.Img is not null && x.Url is not null)

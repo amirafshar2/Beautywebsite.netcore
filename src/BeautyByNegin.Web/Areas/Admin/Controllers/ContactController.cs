@@ -26,25 +26,44 @@ public class ContactController(IAdminCatalogService catalog, IAdminTextService t
         return View();
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Index(string? phone, string? whatsApp, string? email, string? instagram, string? telegram,
-        string? mapUrl, int? mapImageId, List<OpeningHourInput> hours)
+    /// <summary>Form field name per setting key ("phone", "whatsApp" …); per-language fields are "{name}_{lang}".</summary>
+    internal static readonly (string Key, string Field)[] Channels =
+    [
+        (SettingKeys.Phone, "phone"), (SettingKeys.WhatsApp, "whatsApp"), (SettingKeys.Email, "email"),
+        (SettingKeys.InstagramUsername, "instagram"), (SettingKeys.TelegramUsername, "telegram"), (SettingKeys.MapUrl, "mapUrl"),
+    ];
+
+    private static string? Clean(string key, string? value)
     {
-        if (!string.IsNullOrWhiteSpace(email) && !Business.Inbox.InboxService.IsValidEmail(email))
+        var v = value?.Trim();
+        if (string.IsNullOrEmpty(v)) return null;
+        if (key is SettingKeys.InstagramUsername or SettingKeys.TelegramUsername) v = v.TrimStart('@');
+        if (key == SettingKeys.MapUrl && !v.StartsWith("http", StringComparison.OrdinalIgnoreCase)) v = "https://" + v;
+        return v;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Index(int? mapImageId, List<OpeningHourInput> hours)
+    {
+        var form = Request.Form;
+        var values = new Dictionary<string, string?> { [SettingKeys.MapImageId] = mapImageId?.ToString() };
+        foreach (var (key, field) in Channels)
         {
-            Problem("err.emailInvalid");
-            return Back("contact");
+            values[key] = Clean(key, form[field]);
+            // Own value per language (Turkish number on the Turkish pages …); empty = the general value is shown.
+            foreach (var lang in P.ContentLanguages)
+                values[SettingKeys.ForLanguage(key, lang.Code)] = Clean(key, form[$"{field}_{lang.Code}"]);
         }
-        await settings.SaveAsync(new Dictionary<string, string?>
+        foreach (var (k, v) in values)
         {
-            [SettingKeys.Phone] = phone?.Trim(),
-            [SettingKeys.WhatsApp] = whatsApp?.Trim(),
-            [SettingKeys.Email] = email?.Trim(),
-            [SettingKeys.InstagramUsername] = instagram?.Trim().TrimStart('@'),
-            [SettingKeys.TelegramUsername] = telegram?.Trim().TrimStart('@'),
-            [SettingKeys.MapUrl] = string.IsNullOrWhiteSpace(mapUrl) ? null : mapUrl.Trim().StartsWith("http") ? mapUrl.Trim() : "https://" + mapUrl.Trim(),
-            [SettingKeys.MapImageId] = mapImageId?.ToString()
-        }, Ct);
+            if ((k == SettingKeys.Email || k.StartsWith(SettingKeys.Email + ".", StringComparison.Ordinal))
+                && v is not null && !Business.Inbox.InboxService.IsValidEmail(v))
+            {
+                Problem("err.emailInvalid");
+                return Back("contact");
+            }
+        }
+        await settings.SaveAsync(values, Ct);
         await texts.SaveTextsAsync(await TextForm.ReadAsync(Request), Ct);
         if (hours.Count > 0) await catalog.SaveOpeningHoursAsync(hours, Ct);
         data.Changed();

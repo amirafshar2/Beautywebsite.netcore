@@ -410,3 +410,15 @@ a.item:hover .title { text-decoration: underline; }
   *, *::before, *::after { transition-duration: .01ms !important; scroll-behavior: auto !important; }
   .btn:hover, .tile:hover { transform: none; }
 }
+
+/* Contact channels: general value + optional own value per language */
+fieldset.channel { border: 1px solid var(--line); border-radius: var(--radius); padding: .9rem 1.1rem 1rem; margin: 0; min-width: 0; display: grid; gap: .6rem; }
+fieldset.channel legend { font-weight: 500; padding-inline: .4rem; }
+details.per-lang summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; gap: .5rem; color: var(--accent-2); font-weight: 500; }
+.per-lang-grid { display: grid; gap: .75rem; margin-top: .4rem; }
+@media (min-width: 700px) { .per-lang-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.per-lang-grid .field > label { font-weight: 400; font-size: .92rem; }
+.per-lang-grid .field.is-off { opacity: .6; }
+.per-lang-grid input::placeholder { color: var(--muted); opacity: .8; }
+/* placeholder "same as all languages" is a sentence: show it in the panel's own direction */
+[dir="rtl"] .per-lang-grid input[data-ph-text]:placeholder-shown { direction: rtl; }

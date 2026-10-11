@@ -44,6 +44,17 @@ public sealed class SiteSettings(IReadOnlyDictionary<string, string?> values, bo
     /// <summary>Visitor reviews only from logged-in customers (only applies when accounts are available).</summary>
     public bool ReviewsRequireLogin => Bool(SettingKeys.ReviewsRequireLogin) && AccountsAvailable;
 
+    /// <summary>Contact value for one language: its own value if the admin entered one, otherwise the general value.</summary>
+    public string ContactFor(string key, string? languageCode)
+    {
+        if (!string.IsNullOrEmpty(languageCode))
+        {
+            var own = Text(SettingKeys.ForLanguage(key, languageCode));
+            if (own.Length > 0) return own;
+        }
+        return Text(key);
+    }
+
     public string Phone => Text(SettingKeys.Phone);
     public string WhatsApp => Text(SettingKeys.WhatsApp);
     public string Email => Text(SettingKeys.Email);

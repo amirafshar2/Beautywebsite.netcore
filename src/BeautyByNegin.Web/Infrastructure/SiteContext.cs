@@ -59,7 +59,7 @@ public sealed class SiteContext(
             Languages = enabled,
             T = await texts.GetAsync(lang.Code, context.RequestAborted),
             Settings = s,
-            Contact = ContactLinks.From(s),
+            Contact = ContactLinks.From(s, lang.Code),
             Layout = await layout.GetAsync(lang, context.RequestAborted),
             // Default: same path with another language prefix (controllers override for translated URLs).
             Alternates = enabled.ToDictionary(l => l.Code, l => CultureUrl.ReplaceCulture(context.Request, l.Code))

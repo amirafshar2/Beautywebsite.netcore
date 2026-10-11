@@ -38,7 +38,7 @@
             }
             @if (c.TelegramUrl is not null)
             {
-                <a class="contact-tile" href="@c.TelegramUrl" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-telegram" /></svg><span class="t">@T["btn.telegram"]</span><span class="v ltr-value">@ctx.Settings.Telegram</span></a>
+                <a class="contact-tile" href="@c.TelegramUrl" rel="noopener" target="_blank"><svg class="icon" aria-hidden="true"><use href="#i-telegram" /></svg><span class="t">@T["btn.telegram"]</span><span class="v ltr-value">@c.TelegramUser</span></a>
             }
         </div>
 

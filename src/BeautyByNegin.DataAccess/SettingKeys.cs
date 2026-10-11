@@ -48,6 +48,12 @@ public static class SettingKeys
     public const string TelegramUsername = "contact.telegram";
     public const string MapUrl = "contact.mapUrl";
 
+    /// <summary>Contact channels that can differ per language (e.g. a Turkish number on the Turkish pages).</summary>
+    public static readonly string[] PerLanguageContact = [Phone, WhatsApp, Email, InstagramUsername, TelegramUsername, MapUrl];
+
+    /// <summary>"contact.phone" + "tr" -> "contact.phone.tr". Empty/missing = the general value is used.</summary>
+    public static string ForLanguage(string key, string languageCode) => $"{key}.{languageCode}";
+
     // E-mail (SMTP)
     public const string SmtpEnabled = "smtp.enabled";
     public const string SmtpHost = "smtp.host";
