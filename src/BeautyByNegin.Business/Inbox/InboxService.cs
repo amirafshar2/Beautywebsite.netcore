@@ -56,6 +56,22 @@ public sealed class InboxService(
         return digits.Length is >= 7 and <= 16;
     }
 
+    /// <summary>Spam check (see <see cref="SpamFilter"/>); the site's own host and contact e-mail domains never count as fake.</summary>
+    private static string? SpamReason(SiteSettings settings, string panelBaseUrl, params string?[] fields)
+    {
+        var own = new List<string>();
+        foreach (var url in new[] { settings.SiteUrl, panelBaseUrl })
+            if (Uri.TryCreate(url, UriKind.Absolute, out var u)) own.Add(u.Host);
+        foreach (var key in new[] { SettingKeys.Email }.Concat(Enumerable.Empty<string>()))
+        {
+            foreach (var v in new[] { settings.Text(key) }.Concat(new[] { "fa", "tr", "de", "en", "ar" }.Select(l => settings.Text(SettingKeys.ForLanguage(key, l)))))
+                if (v.Contains('@')) own.Add(v[(v.IndexOf('@') + 1)..]);
+        }
+        return SpamFilter.Check(settings.BrandName, own, fields);
+    }
+
+    private static string SpamNote(string reason) => $"{SpamFilter.NoteMarker} ({reason})";
+
     private static string Clean(string? s, int max) => (s ?? "").Trim() is var t && t.Length > max ? t[..max] : (s ?? "").Trim();
 
     public async Task<SubmitResult> SubmitBookingAsync(BookingInput input, SiteLanguage lang, string panelBaseUrl, CancellationToken ct = default)
@@ -94,8 +110,12 @@ public sealed class InboxService(
             PrivacyAccepted = input.PrivacyAccepted,
             CustomerId = input.CustomerId
         };
+        // Spam: kept in the trash with the reason (restorable), no notification. The sender sees the normal "thank you".
+        var spam = input.CustomerId is null ? SpamReason(settings, panelBaseUrl, request.FullName, request.Email, request.Message) : null;
+        if (spam is not null) { request.DeletedAtUtc = DateTime.UtcNow; request.AdminNotes = SpamNote(spam); }
         db.AppointmentRequests.Add(request);
         await db.SaveChangesAsync(ct);
+        if (spam is not null) return SubmitResult.Success(request.Id);
 
         var faLang = new SiteLanguage("fa", "fa-IR", "فارسی", "FA", true, true, true, 0, true);
         var serviceText = request.WantsConsultation ? "مشاوره (مطمئن نیست)" : request.ServiceNameSnapshot ?? "—";
@@ -136,8 +156,11 @@ public sealed class InboxService(
             LanguageCode = lang.Code,
             PrivacyAccepted = input.PrivacyAccepted
         };
+        var spam = SpamReason(settings, panelBaseUrl, msg.Name, msg.ContactInfo, msg.Message);
+        if (spam is not null) { msg.DeletedAtUtc = DateTime.UtcNow; msg.AdminNotes = SpamNote(spam); }
         db.ContactMessages.Add(msg);
         await db.SaveChangesAsync(ct);
+        if (spam is not null) return SubmitResult.Success(msg.Id);
 
         var link = $"{panelBaseUrl}/messages/details/{msg.Id}";
         notifications.Enqueue(new Notification(NotificationKinds.Message,
@@ -175,8 +198,11 @@ public sealed class InboxService(
             IsVisible = true,
             SortOrder = 0
         };
+        var spam = input.CustomerId is null ? SpamReason(settings, panelBaseUrl, review.AuthorName, review.Text) : null;
+        if (spam is not null) review.DeletedAtUtc = DateTime.UtcNow;
         db.Reviews.Add(review);
         await db.SaveChangesAsync(ct);
+        if (spam is not null) return SubmitResult.Success(review.Id);
 
         notifications.Enqueue(new Notification(NotificationKinds.Review,
             $"⭐ <b>نظر جدید (منتظر تأیید)</b>\n\n👤 {Html(review.AuthorName)}" + (review.Rating is int st ? $" — {new string('★', st)}" : "") +

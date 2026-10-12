@@ -69,9 +69,9 @@ public sealed class TrashService(AppDbContext db, IMediaService media, IVideoSer
         foreach (var p in await Deleted<Page>().Include(x => x.Translations).ToListAsync(ct))
             r.Add(new(TrashKinds.Page, p.Id, Name(p.Translations, t => t.Title) ?? $"#{p.Id}", p.DeletedAtUtc!.Value));
         foreach (var a in await Deleted<AppointmentRequest>().ToListAsync(ct))
-            r.Add(new(TrashKinds.Appointment, a.Id, a.FullName, a.DeletedAtUtc!.Value));
+            r.Add(new(TrashKinds.Appointment, a.Id, SpamLabel(a.AdminNotes) + a.FullName, a.DeletedAtUtc!.Value));
         foreach (var m in await Deleted<ContactMessage>().ToListAsync(ct))
-            r.Add(new(TrashKinds.Message, m.Id, m.Name, m.DeletedAtUtc!.Value));
+            r.Add(new(TrashKinds.Message, m.Id, SpamLabel(m.AdminNotes) + m.Name, m.DeletedAtUtc!.Value));
         foreach (var v in await Deleted<ChatVisitor>().ToListAsync(ct))
             r.Add(new(TrashKinds.Chat, v.Id, $"{v.Name} ({v.Email})", v.DeletedAtUtc!.Value));
         foreach (var s in await Deleted<NewsletterSubscriber>().ToListAsync(ct))
@@ -84,6 +84,10 @@ public sealed class TrashService(AppDbContext db, IMediaService media, IVideoSer
             r.Add(new(TrashKinds.TimeSlot, t.Id, Name(t.Translations, x => x.Label) ?? $"#{t.Id}", t.DeletedAtUtc!.Value));
         return r.OrderByDescending(x => x.DeletedAtUtc).ToList();
     }
+
+    /// <summary>Automatically filtered spam is marked in the trash list ("🚫 Spam · name").</summary>
+    private static string SpamLabel(string? notes)
+        => notes is not null && notes.StartsWith(Inbox.SpamFilter.NoteMarker, StringComparison.Ordinal) ? Inbox.SpamFilter.NoteMarker + " · " : "";
 
     public async Task<int> CountAsync(CancellationToken ct = default) => (await ListAsync(null, ct)).Count;
 
