@@ -22,14 +22,24 @@ public interface ITelegramNotifier
 /// Telegram Bot API client. api.telegram.org is blocked from Iranian servers, so this is always an
 /// optional extra: failures are logged, never shown to visitors, and data is saved before notifying.
 /// </summary>
-public sealed class TelegramNotifier(IHttpClientFactory httpFactory, ISettingsService settings, ILogger<TelegramNotifier> logger) : ITelegramNotifier
+public sealed class TelegramNotifier(IHttpClientFactory httpFactory, ISettingsService settings, ILogger<TelegramNotifier> logger, Microsoft.Extensions.Hosting.IHostEnvironment env) : ITelegramNotifier
 {
     public const string HttpClientName = "telegram";
 
     public async Task<SendResult> SendAsync(string html, CancellationToken ct = default)
     {
         var s = await settings.GetAsync(ct);
-        if (!s.Bool(SettingKeys.TelegramEnabled)) return SendResult.Fail("telegram-disabled");
+        if (!s.Bool(SettingKeys.TelegramEnabled))
+        {
+            // Development only (same switch as dev-mail): keep the message as a file so its wording can be checked.
+            if (s.DevMailToFile)
+            {
+                var dir = Path.Combine(AppPaths.AppData(env.ContentRootPath), "dev-telegram");
+                Directory.CreateDirectory(dir);
+                await File.WriteAllTextAsync(Path.Combine(dir, $"{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}.html"), html, ct);
+            }
+            return SendResult.Fail("telegram-disabled");
+        }
         var token = await settings.GetSecretAsync(SettingKeys.TelegramBotToken, ct);
         var chatId = s.Text(SettingKeys.TelegramChatId);
         if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(chatId)) return SendResult.Fail("telegram-not-configured");

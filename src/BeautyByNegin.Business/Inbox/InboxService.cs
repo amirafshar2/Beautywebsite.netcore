@@ -30,7 +30,7 @@ public interface IInboxService
     Task<SubmitResult> SubmitBookingAsync(BookingInput input, SiteLanguage lang, string panelBaseUrl, CancellationToken ct = default);
     Task<SubmitResult> SubmitContactAsync(ContactInput input, SiteLanguage lang, string panelBaseUrl, CancellationToken ct = default);
     Task<SubmitResult> SubmitReviewAsync(ReviewInput input, SiteLanguage lang, string panelBaseUrl, CancellationToken ct = default);
-    Task<SubmitResult> SubscribeAsync(string? email, bool privacyAccepted, SiteLanguage lang, CancellationToken ct = default);
+    Task<SubmitResult> SubscribeAsync(string? email, bool privacyAccepted, SiteLanguage lang, CancellationToken ct = default, string panelBaseUrl = "");
 }
 
 /// <summary>
@@ -117,18 +117,38 @@ public sealed class InboxService(
         await db.SaveChangesAsync(ct);
         if (spam is not null) return SubmitResult.Success(request.Id);
 
-        var faLang = new SiteLanguage("fa", "fa-IR", "فارسی", "FA", true, true, true, 0, true);
+        var faLang = TelegramText.Fa;
+        // Service name in Persian for the owner (the client may have booked on the Turkish or German page).
+        var faServices = request.ServiceId is int fsid ? await content.GetServicesAsync(faLang, ct) : [];
+        var serviceFa = request.WantsConsultation ? "هنوز مطمئن نیست؛ مشاوره می‌خواهد"
+            : faServices.FirstOrDefault(x => x.Id == request.ServiceId)?.Name ?? request.ServiceNameSnapshot;
         var serviceText = request.WantsConsultation ? "مشاوره (مطمئن نیست)" : request.ServiceNameSnapshot ?? "—";
         var dateText = request.PreferredDate is DateOnly pd ? DateDisplay.FormatDate(pd.ToDateTime(TimeOnly.MinValue), faLang) : "—";
         var link = $"{panelBaseUrl}/appointments/details/{request.Id}";
 
+        // Time slot label as written in the Persian panel (the client saw it in their own language).
+        var slotFa = request.TimeSlotId is int fslot
+            ? (await content.GetTimeSlotsAsync(faLang, ct)).FirstOrDefault(x => x.Id == fslot)?.Label ?? request.TimeSlotSnapshot
+            : null;
+        var when = request.PreferredDate is DateOnly wd
+            ? TelegramText.Date(wd) + (slotFa is null ? "" : $" — {slotFa}")
+            : slotFa;
+        var tg = new TelegramText("📅", "درخواست نوبت جدید",
+                "یک نفر در سایت فرم «رزرو نوبت» را پر کرده است. این نوبت هنوز قطعی نیست؛ سایت فقط درخواست را گرفته و شما باید با مشتری هماهنگ کنید.")
+            .Line("👤", "نام", request.FullName)
+            .Line("📞", "تلفن", request.Phone)
+            .Line("✉️", "ایمیل", request.Email, "وارد نکرده")
+            .Line("💆‍♀️", "خدمت", serviceFa, "انتخاب نکرده")
+            .Line("🗓", "زمان دلخواه", when, "زمانی انتخاب نکرده")
+            .Line("🌐", "زبان صفحه‌ی مشتری", TelegramText.LanguageLine(request.LanguageCode))
+            .Line("🙋‍♀️", "حساب کاربری", request.CustomerId is null ? null : "مشتری عضو سایت است و درخواست را در صفحه‌ی «حساب من» می‌بیند")
+            .Line("🕒", "زمان ارسال", TelegramText.Now(settings.TimeZone))
+            .Block("💬", "توضیحات مشتری", request.Message)
+            .Next("با مشتری تماس بگیرید یا در واتس‌اپ پیام بدهید و زمان را هماهنگ کنید. بعد در پنل وضعیت را «تماس گرفته شد» یا «تأیید شد» کنید تا یادتان بماند.",
+                ("باز کردن درخواست در پنل", link), ("پیام در واتس‌اپ به مشتری", TelegramText.WhatsApp(request.Phone)));
+
         notifications.Enqueue(new Notification(NotificationKinds.Appointment,
-            $"📅 <b>درخواست نوبت جدید</b>\n\n" +
-            $"👤 {Html(request.FullName)}\n📞 {Html(request.Phone)}\n" +
-            (request.Email is null ? "" : $"✉️ {Html(request.Email)}\n") +
-            $"💆‍♀️ {Html(serviceText)}\n🗓 {Html(dateText)}" + (request.TimeSlotSnapshot is null ? "" : $" — {Html(request.TimeSlotSnapshot)}") + "\n" +
-            (request.Message is null ? "" : $"\n💬 {Html(request.Message)}\n") +
-            $"\n🌐 زبان: {request.LanguageCode.ToUpperInvariant()}\n<a href=\"{Html(link)}\">مشاهده در پنل</a>",
+            tg.ToString(),
             $"درخواست نوبت جدید: {request.FullName}",
             $"نام: {request.FullName}\nتلفن: {request.Phone}\nایمیل: {request.Email ?? "—"}\nخدمت: {serviceText}\nتاریخ: {dateText} {request.TimeSlotSnapshot}\n\n{request.Message}\n\n{link}",
             request.Email));
@@ -163,8 +183,20 @@ public sealed class InboxService(
         if (spam is not null) return SubmitResult.Success(msg.Id);
 
         var link = $"{panelBaseUrl}/messages/details/{msg.Id}";
+        var isMail = TelegramText.IsEmail(msg.ContactInfo);
+        var tg = new TelegramText("✉️", "پیام جدید از فرم «تماس با ما»",
+                "یک نفر از طریق سایت برای شما پیام فرستاده است (فرم تماس یا دکمه‌ی «درباره‌ی این خدمت بپرسید»).")
+            .Line("👤", "نام", msg.Name)
+            .Line(isMail ? "📧" : "📞", isMail ? "ایمیل برای جواب" : "تلفن برای جواب", msg.ContactInfo)
+            .Line("🌐", "زبان صفحه‌ی مشتری", TelegramText.LanguageLine(msg.LanguageCode))
+            .Line("🕒", "زمان ارسال", TelegramText.Now(settings.TimeZone))
+            .Block("💬", "متن پیام", msg.Message)
+            .Next(isMail
+                    ? "به همین ایمیل جواب بدهید. در پنل دکمه‌ی «ایمیل» متن آماده دارد."
+                    : "با همین شماره تماس بگیرید یا در واتس‌اپ جواب بدهید. در پنل دکمه‌های «تماس» و «واتس‌اپ» آماده‌اند.",
+                ("باز کردن پیام در پنل", link), ("پیام در واتس‌اپ به مشتری", isMail ? null : TelegramText.WhatsApp(msg.ContactInfo)));
         notifications.Enqueue(new Notification(NotificationKinds.Message,
-            $"✉️ <b>پیام جدید از فرم تماس</b>\n\n👤 {Html(msg.Name)}\n📞 {Html(msg.ContactInfo)}\n\n💬 {Html(msg.Message)}\n\n<a href=\"{Html(link)}\">مشاهده در پنل</a>",
+            tg.ToString(),
             $"پیام جدید: {msg.Name}",
             $"نام: {msg.Name}\nراه تماس: {msg.ContactInfo}\n\n{msg.Message}\n\n{link}",
             IsValidEmail(msg.ContactInfo) ? msg.ContactInfo : null));
@@ -204,14 +236,25 @@ public sealed class InboxService(
         await db.SaveChangesAsync(ct);
         if (spam is not null) return SubmitResult.Success(review.Id);
 
+        var reviewService = review.ServiceId is int rsid
+            ? (await content.GetServicesAsync(TelegramText.Fa, ct)).FirstOrDefault(x => x.Id == rsid)?.Name : null;
+        var tg = new TelegramText("⭐", "نظر جدید — منتظر تأیید شما",
+                "یک مشتری در صفحه‌ی «نظرات» سایت نظر نوشته است. این نظر تا وقتی شما آن را تأیید نکنید در سایت نمایش داده نمی‌شود.")
+            .Line("👤", "نام", review.AuthorName + (review.ShowInitialsOnly ? " (خواسته فقط حرف اول نامش نمایش داده شود)" : ""))
+            .Line("⭐", "امتیاز", review.Rating is int st ? TelegramText.Stars(st) : null, "امتیاز نداده")
+            .Line("💆‍♀️", "درباره‌ی خدمت", reviewService)
+            .Line("🌐", "زبان", TelegramText.LanguageName(review.LanguageCode))
+            .Line("🕒", "زمان ارسال", TelegramText.Now(settings.TimeZone))
+            .Block("💬", "متن نظر", review.Text)
+            .Next("نظر را در پنل بخوانید و «تأیید» یا «رد» را بزنید. فقط نظرهای تأییدشده در سایت دیده می‌شوند.",
+                ("نظرهای منتظر تأیید در پنل", $"{panelBaseUrl}/reviews?tab=pending"));
         notifications.Enqueue(new Notification(NotificationKinds.Review,
-            $"⭐ <b>نظر جدید (منتظر تأیید)</b>\n\n👤 {Html(review.AuthorName)}" + (review.Rating is int st ? $" — {new string('★', st)}" : "") +
-            $"\n\n{Html(review.Text)}\n\n<a href=\"{Html(panelBaseUrl)}/reviews?tab=pending\">تأیید در پنل</a>",
+            tg.ToString(),
             "نظر جدید", review.Text));
         return SubmitResult.Success(review.Id);
     }
 
-    public async Task<SubmitResult> SubscribeAsync(string? email, bool privacyAccepted, SiteLanguage lang, CancellationToken ct = default)
+    public async Task<SubmitResult> SubscribeAsync(string? email, bool privacyAccepted, SiteLanguage lang, CancellationToken ct = default, string panelBaseUrl = "")
     {
         var settings = await settingsService.GetAsync(ct);
         var errors = new Dictionary<string, string>();
@@ -236,7 +279,14 @@ public sealed class InboxService(
         await db.SaveChangesAsync(ct);
 
         notifications.Enqueue(new Notification(NotificationKinds.Newsletter,
-            $"📰 <b>عضو جدید خبرنامه</b>\n\n✉️ {Html(sub.Email)}\n🌐 {sub.LanguageCode.ToUpperInvariant()}",
+            new TelegramText("📰", "عضو جدید خبرنامه",
+                    "یک نفر در پایین صفحه‌ی اصلی سایت ایمیلش را برای دریافت خبرها و نکته‌های مراقبت پوست ثبت کرده است.")
+                .Line("📧", "ایمیل", sub.Email)
+                .Line("🌐", "زبان", TelegramText.LanguageName(sub.LanguageCode))
+                .Line("🕒", "زمان ثبت", TelegramText.Now(settings.TimeZone))
+                .Next("کاری لازم نیست. فهرست کامل اعضا در پنل، بخش «خبرنامه» است و می‌توانید آن را دانلود کنید.",
+                    ("خبرنامه در پنل", panelBaseUrl.Length > 0 ? $"{panelBaseUrl}/newsletter" : null))
+                .ToString(),
             "عضو جدید خبرنامه", sub.Email));
         return SubmitResult.Success(sub.Id);
     }

@@ -19,7 +19,7 @@ public class NewsletterController(IInboxService inbox) : PublicController
         }
         else
         {
-            var result = await inbox.SubscribeAsync(email, privacyAccepted, Ctx.Lang, HttpContext.RequestAborted);
+            var result = await inbox.SubscribeAsync(email, privacyAccepted, Ctx.Lang, HttpContext.RequestAborted, PanelBaseUrl);
             ok = result.Ok;
             message = ok ? Ctx.T["newsletter.success"] : string.Join(" ", Translate(result.Errors).Values.Distinct());
         }

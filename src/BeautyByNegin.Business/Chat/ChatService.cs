@@ -43,7 +43,8 @@ public interface IChatService
 public sealed class ChatService(
     AppDbContext db,
     ICustomerAccountService accounts,
-    INotificationQueue notifications) : IChatService
+    INotificationQueue notifications,
+    ISettingsService settingsService) : IChatService
 {
     private const int MaxMessagesPerHour = 40;
 
@@ -103,8 +104,20 @@ public sealed class ChatService(
 
         var messageId = message.Id;
         var link = $"{panelBaseUrl}/chats/conversation/{v.Id}";
+        var settings = await settingsService.GetAsync(ct);
+        var tg = new TelegramText("💬", "پیام جدید در چت سایت",
+                "یک مشتری در چت آنلاین سایت برایتان نوشته و منتظر جواب است. جواب شما در همان چت سایت به دستش می‌رسد.")
+            .Line("👤", "نام", v.Name)
+            .Line("📧", "ایمیل", v.Email)
+            .Line("📞", "تلفن", v.Phone)
+            .Line("🌐", "زبان", TelegramText.LanguageName(v.LanguageCode))
+            .Line("📄", "صفحه‌ای که در آن بود", message.PageUrl)
+            .Line("🕒", "زمان ارسال", TelegramText.Now(settings.TimeZone))
+            .Block("💬", "پیام", clean)
+            .Next("در پنل گفتگو را باز کنید و جواب بدهید؛ هرچه زودتر جواب بدهید، احتمال رزرو بیشتر است.",
+                ("پاسخ در پنل", link));
         notifications.Enqueue(new Notification(NotificationKinds.Chat,
-            $"💬 <b>پیام جدید در چت سایت</b>\n\n👤 {Html(v.Name)}\n✉️ {Html(v.Email)}\n\n{Html(clean)}\n\n<a href=\"{Html(link)}\">پاسخ در پنل</a>",
+            tg.ToString(),
             $"پیام چت از {v.Name}",
             $"{v.Name} <{v.Email}>:\n\n{clean}\n\n{link}",
             v.Email,

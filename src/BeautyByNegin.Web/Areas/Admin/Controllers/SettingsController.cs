@@ -122,8 +122,25 @@ public class SettingsController(
         var token = await settings.GetSecretAsync(SettingKeys.TelegramBotToken);
         var chat = P.Settings.Text(SettingKeys.TelegramChatId);
         if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(chat)) return Fail("set.tgMissing");
-        var r = await telegram.SendWithAsync(token, chat, "✅ " + P["set.tgTestText"], Ct);
+        // Always Persian (like all Telegram messages to the owner), with what will arrive from now on.
+        string On(string key) => P.Settings.Bool(key) ? "✅" : "⛔️";
+        var text = new Business.Notifications.TelegramText("✅", "پیام آزمایشی از سایت " + P.Settings.BrandName,
+                "اتصال تلگرام درست کار می‌کند. از این به بعد خبرهای سایت در همین گفتگو برای شما می‌آید.")
+            .Raw($"{On(SettingKeys.TelegramNotifyAppointments)} درخواست نوبت جدید\n" +
+                 $"{On(SettingKeys.TelegramNotifyMessages)} پیام‌های فرم «تماس با ما»\n" +
+                 $"{On(SettingKeys.TelegramNotifyChat)} پیام‌های چت سایت\n" +
+                 "✅ نظرهای جدید (منتظر تأیید)\n" +
+                 $"{On(SettingKeys.TelegramNotifyNewsletter)} عضو جدید خبرنامه\n")
+            .Next("اگر کنار موردی ⛔️ است و می‌خواهید خبرش را بگیرید، در پنل «تنظیمات کلی» ← «تلگرام» تیکش را بزنید. پیام‌های تبلیغاتی (اسپم) خودکار جدا می‌شوند و به تلگرام نمی‌آیند.",
+                ("باز کردن پنل", PanelBaseUrlOrNull()));
+        var r = await telegram.SendWithAsync(token, chat, text.ToString(), Ct);
         return r.Ok ? Json(new { ok = true, message = P["set.tgTestOk"] }) : Json(new { ok = false, message = P["set." + r.Error] });
+    }
+
+    private string? PanelBaseUrlOrNull()
+    {
+        var site = P.Settings.SiteUrl;
+        return string.IsNullOrWhiteSpace(site) ? $"{Request.Scheme}://{Request.Host}{P.Url("")}".TrimEnd('/') : site.TrimEnd('/') + P.Url("").TrimEnd('/');
     }
 
     /// <summary>Finds the Chat ID of people who wrote "hello" to the bot.</summary>
