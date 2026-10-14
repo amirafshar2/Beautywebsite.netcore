@@ -56,7 +56,7 @@
 </tr>
 </table>
 
-<p align="center"><img src="docs/screenshots/mobile.jpg" alt="Mobile views" width="85%"><br><sub>Mobile first: Persian home, treatments, English contact</sub></p>
+<p align="center"><img src="docs/screenshots/mobile.jpg" alt="Mobile views" width="85%"><br><sub>Mobile first: home, treatment, gallery</sub></p>
 
 <details>
 <summary><b>Full home page (click)</b></summary>
