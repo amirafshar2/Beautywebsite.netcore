@@ -13,3 +13,29 @@ amirrezaafshar.de, www.amirrezaafshar.de, afsharweb.com, www.afsharweb.com {
 	encode zstd gzip
 	reverse_proxy portfolio-web:8080
 }
+
+# Portfolio-Demos (Container im Projekt "demos", Netzwerk "web")
+blog.amirrezaafshar.de {
+	encode zstd gzip
+	reverse_proxy demo-blog:8080
+}
+traversal.amirrezaafshar.de {
+	encode zstd gzip
+	reverse_proxy demo-traversal:8080
+}
+nega.amirrezaafshar.de {
+	encode zstd gzip
+	reverse_proxy demo-nega:8080
+}
+gym.amirrezaafshar.de {
+	encode zstd gzip
+	reverse_proxy demo-gym:8080
+}
+gold.amirrezaafshar.de {
+	encode zstd gzip
+	reverse_proxy demo-gold:10000
+}
+carshop.amirrezaafshar.de {
+	encode zstd gzip
+	reverse_proxy demo-carshop:10000
+}
