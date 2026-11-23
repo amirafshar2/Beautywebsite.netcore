@@ -1,0 +1,15 @@
+# One block per domain. Later the portfolio (amirrezaafshar.de) gets its own block here.
+beautybynegin.com {
+	encode zstd gzip
+	reverse_proxy negin-web:8080
+}
+
+www.beautybynegin.com {
+	redir https://beautybynegin.com{uri} permanent
+}
+
+# Portfolio + Web-Studio (one app, it picks the site by domain)
+amirrezaafshar.de, www.amirrezaafshar.de, afsharweb.com, www.afsharweb.com {
+	encode zstd gzip
+	reverse_proxy portfolio-web:8080
+}

@@ -8,3 +8,13 @@ publish/
 # runtime data (database, logs, backups, uploaded images)
 **/App_Data/
 **/wwwroot/uploads/
+
+# site backups (database, customer data, encryption keys) - never commit
+*backup-*.zip
+_backup-*/
+
+# Oracle server SSH key - never commit
+_oracle-ssh/
+_deploy/
+deploy/oracle/last-run.log
+deploy/oracle/*.txt

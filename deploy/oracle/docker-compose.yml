@@ -1,0 +1,44 @@
+# Beauty by Negin on an Oracle Cloud "Always Free" server (Ampere A1, Ubuntu, ARM64)
+#   cd ~/negin/deploy/oracle && docker compose up -d --build
+# Caddy takes ports 80/443, gets the Let's Encrypt certificate itself and forwards to the app.
+# All app data (database, keys, uploads, backups) lives in /srv/negin/data on the server disk.
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    image: beautybynegin:latest
+    container_name: negin-web
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Site__TrustAllProxies=true
+    ports:
+      - "127.0.0.1:8080:8080"   # only for tests on the server itself (curl localhost:8080)
+    volumes:
+      - /srv/negin/data:/var/data
+    networks: [web]
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web]
+    networks: [web]
+
+networks:
+  web:
+    name: web
+
+volumes:
+  caddy_data:
+  caddy_config:
