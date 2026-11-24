@@ -39,3 +39,11 @@ carshop.amirrezaafshar.de {
 	encode zstd gzip
 	reverse_proxy demo-carshop:10000
 }
+
+# Karnama (API mit eigener Datenbank + Next.js-Seite)
+karnama.amirrezaafshar.de {
+	encode zstd gzip
+	@api path /api/* /hubs/* /media/* /health/*
+	reverse_proxy @api demo-karnama-api:8080
+	reverse_proxy demo-karnama-web:3000
+}
